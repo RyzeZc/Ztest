@@ -429,6 +429,7 @@ function initializeMusicPlayer(): void {
         }> = [];
 
     let youtubeQueueCurrentIndex = -1;
+    let youtubeCurrentIndex = -1;
 
 
     async function loadYouTubePlaylist(
@@ -484,7 +485,98 @@ function initializeMusicPlayer(): void {
     }
 
 
-    function showStationsPanel(): void {
+    async function searchYouTubePlaylistsInternal(
+        query: string
+    ): Promise<void> {
+
+        try {
+
+            const params =
+                new URLSearchParams();
+
+            params.set(
+                'q',
+                query
+            );
+
+            params.set(
+                'type',
+                'playlist'
+            );
+
+            const response =
+                await fetch(
+                    `/api/youtube/search?${params.toString()}`
+                );
+
+            if (!response.ok) {
+
+                throw new Error(
+                    `YouTube playlist search failed: ${response.status}`
+                );
+            }
+
+            const data =
+                await response.json();
+
+            const playlists =
+                data.results ?? [];
+
+            console.log(
+                '[MusicPlayer] Internal YouTube playlists:',
+                playlists
+            );
+
+            if (
+                playlists.length === 0
+            ) {
+
+                return;
+            }
+
+            const testPlaylist =
+                playlists[8];
+
+            console.log(
+                '[MusicPlayer] Test playlist:',
+                testPlaylist
+            );
+
+            const tracks =
+                await loadYouTubePlaylist(
+                    testPlaylist.playlistId
+                );
+
+            console.log(
+                '[MusicPlayer] Test playlist tracks:',
+                tracks
+            );
+
+            const selectedVideo =
+                'CCHdMIEGaaM';
+
+            const selectedVideoInPlaylist =
+                tracks.some(
+                    track =>
+                        track.videoId ===
+                        selectedVideo
+                );
+
+            console.log(
+                '[MusicPlayer] Selected video in playlist:',
+                selectedVideoInPlaylist
+            );
+
+        } catch (error) {
+
+            console.error(
+                '[MusicPlayer] Internal YouTube playlist search failed:',
+                error
+            );
+        }
+    }
+
+    function showYouTubePanel(): void {
 
         stationPanel.classList.remove(
             'is-active'
@@ -495,6 +587,18 @@ function initializeMusicPlayer(): void {
         );
 
         youtubeSearchInput.focus();
+    }
+
+
+    function showStationsPanel(): void {
+
+        youtubePanel.classList.remove(
+            'is-active'
+        );
+
+        stationPanel.classList.add(
+            'is-active'
+        );
     }
 
 
@@ -676,7 +780,14 @@ function initializeMusicPlayer(): void {
             youtubeLoadMore.hidden =
                 true;
         }
+        
+        if (!append) {
 
+            searchYouTubePlaylistsInternal(
+                youtubeCurrentQuery
+            );
+
+        }
 
         youtubeSearchInput.disabled =
             true;
