@@ -1,6 +1,9 @@
 import { audioPlayer } from '../../lib/audio/audio-player';
 import { audioStations } from '../../lib/audio/audio-stations';
 import { YouTubePlayer } from '../../lib/youtube/youtube-player';
+import {
+    getYouTubePlaylistItems,
+} from '../../lib/youtube/youtube-api';
 
 function initializeMusicPlayer(): void {
 
@@ -406,8 +409,31 @@ function initializeMusicPlayer(): void {
         '';
 
     let activePlaybackSource:
-    'radio' | 'youtube' =
-    'radio';
+        'radio' | 'youtube' =
+        'radio';
+
+    let youtubeTracks:
+        Array<{
+            videoId: string;
+            title: string;
+            channelTitle: string;
+            thumbnail: string;
+        }> = [];
+
+    let youtubeCurrentIndex =
+        -1;
+    
+    let youtubeQueue:
+    Array<{
+        videoId: string;
+        title: string;
+        channelTitle: string;
+        description: string;
+        thumbnail: string;
+        publishedAt: string;
+    }> = [];
+
+    let youtubeQueueCurrentIndex = -1;
 
     function showStationsPanel(): void {
 
@@ -550,6 +576,13 @@ function initializeMusicPlayer(): void {
                             return;
                         }
 
+                        youtubeCurrentIndex =
+                            youtubeTracks.findIndex(
+                                track =>
+                                    track.videoId ===
+                                    videoId
+                            );
+
                         console.log(
                             '[MusicPlayer] YouTube video selected:',
                             videoId
@@ -589,12 +622,17 @@ function initializeMusicPlayer(): void {
 
 
         if (!append) {
-
             youtubeCurrentQuery =
                 query;
 
             youtubeNextPageToken =
                 undefined;
+
+            youtubeTracks =
+                [];
+
+            youtubeCurrentIndex =
+                -1;
 
             youtubeResults.innerHTML = '';
 
@@ -663,8 +701,15 @@ function initializeMusicPlayer(): void {
             }
 
 
+            const newTracks =
+                data.results ?? [];
+
+            youtubeTracks.push(
+                ...newTracks
+            );
+
             appendYouTubeResults(
-                data.results ?? []
+                newTracks
             );
 
 
