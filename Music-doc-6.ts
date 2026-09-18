@@ -1369,6 +1369,15 @@ item.addEventListener(
             youtubeCurrentIndex
         );
 
+        const artistName =
+            result.artists
+                ?.map(
+                    artist =>
+                        artist.name
+                )
+                .join(', ') ??
+            '';
+
         const artistId =
             result.artists?.[0]?.id ??
             null;
@@ -1380,6 +1389,41 @@ item.addEventListener(
                 name: artistName,
             }
         );
+
+        if (artistId) {
+
+            const artistTracks =
+                await loadDeezerArtistTracks(
+                    artistId
+                );
+
+            console.log(
+                '[MusicPlayer] Artist tracks received:',
+                artistTracks
+            );
+
+            youtubeQueue =
+                artistTracks;
+
+            youtubeQueueCurrentIndex =
+                youtubeQueue.findIndex(
+                    track =>
+                        track.id ===
+                        result.id
+                );
+
+            console.log(
+                '[MusicPlayer] YouTube queue loaded:',
+                youtubeQueue
+            );
+
+            console.log(
+                '[MusicPlayer] YouTube queue current index:',
+                youtubeQueueCurrentIndex
+            );
+
+        }
+
 
         const trackName =
             result.name;
@@ -1508,6 +1552,89 @@ item.addEventListener(
             }
         );
     }
+
+
+async function loadDeezerArtistTracks(
+    artistId: number
+): Promise<DeezerTrack[]> {
+
+    if (
+        !Number.isInteger(artistId) ||
+        artistId <= 0
+    ) {
+        console.log(
+            '[MusicPlayer] Invalid Deezer artist ID:',
+            artistId
+        );
+
+        return [];
+    }
+
+    console.log(
+        '[MusicPlayer] Loading Deezer artist tracks:',
+        artistId
+    );
+
+    try {
+
+        const params =
+            new URLSearchParams();
+
+        params.set(
+            'id',
+            String(artistId)
+        );
+
+        const response =
+            await fetch(
+                `/api/v2/music/artist-tracks?${params.toString()}`
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Artist tracks request failed: ${response.status}`
+            );
+        }
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+
+            throw new Error(
+                data.error ??
+                'Artist tracks request failed.'
+            );
+        }
+
+        const tracks:
+            DeezerTrack[] =
+            data.pagination?.data ??
+            [];
+
+        console.log(
+            '[MusicPlayer] Deezer artist tracks loaded:',
+            tracks
+        );
+
+        console.log(
+            '[MusicPlayer] Deezer artist tracks count:',
+            tracks.length
+        );
+
+        return tracks;
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Failed to load Deezer artist tracks:',
+            error
+        );
+
+        return [];
+    }
+}
 
 async function searchYouTube(
     query: string,
