@@ -429,14 +429,7 @@ function initializeMusicPlayer(): void {
         'radio';
     
     let youtubeQueue:
-    Array<{
-        videoId: string;
-        title: string;
-        channelTitle: string;
-        description: string;
-        thumbnail: string;
-        publishedAt: string;
-    }> = [];
+    DeezerTrack[] = [];
 
 
     let youtubeTracks:
@@ -909,9 +902,9 @@ async function searchYouTubePlaylistsInternal(
     }
 }
 
-function playYouTubeQueueTrack(
+async function playYouTubeQueueTrack(
     index: number
-): void {
+): Promise<void> {
 
     if (
         index < 0 ||
@@ -921,7 +914,6 @@ function playYouTubeQueueTrack(
             '[MusicPlayer] Invalid YouTube queue index:',
             index
         );
-
         return;
     }
 
@@ -941,20 +933,150 @@ function playYouTubeQueueTrack(
     );
 
     console.log(
-        '[MusicPlayer] YouTube queue index:',
-        youtubeQueueCurrentIndex
+        '[MusicPlayer] Deezer track index:',
+        youtubeCurrentIndex
     );
 
-    audioPlayer.pause();
+    const artistName =
+        result.artists
+            ?.map(
+                artist =>
+                    artist.name
+            )
+            .join(', ') ??
+        '';
 
-    activePlaybackSource =
-        'youtube';
+    const artistId =
+        result.artists?.[0]?.id ??
+        null;
 
-    youtubePlayer.load(
-        track.videoId
+    console.log(
+        '[MusicPlayer] Deezer artist:',
+        {
+            id: artistId,
+            name: artistName,
+        }
     );
 
-    youtubePlayer.play();
+    const trackName =
+        result.name;
+
+    if (
+        !artistName ||
+        !trackName
+    ) {
+        console.log(
+            '[MusicPlayer] Cannot resolve queue track: missing artist or title.'
+        );
+        return;
+    }
+
+    console.log(
+        '[MusicPlayer] Resolving queue track:',
+        {
+            id: track.id,
+            artist: artistName,
+            title: trackName,
+        }
+    );
+
+    try {
+
+        const params =
+            new URLSearchParams();
+
+        params.set(
+            'id',
+            String(track.id)
+        );
+
+        params.set(
+            'artist',
+            artistName
+        );
+
+        params.set(
+            'title',
+            trackName
+        );
+
+        const response =
+            await fetch(
+                `/api/v2/music/resolve?${params.toString()}`
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Music resolve failed: ${response.status}`
+            );
+        }
+
+        const data =
+            await response.json();
+
+        if (!data.success) {
+
+            throw new Error(
+                data.error ??
+                'Music resolve failed.'
+            );
+        }
+
+        const resolvedTracks =
+            data.results ?? [];
+
+        console.log(
+            '[MusicPlayer] Resolved queue tracks:',
+            resolvedTracks
+        );
+
+        if (
+            resolvedTracks.length === 0
+        ) {
+
+            console.log(
+                '[MusicPlayer] No YouTube video was found for queue track.'
+            );
+
+            return;
+        }
+
+        const videoId =
+            resolvedTracks[0]?.id;
+
+        if (!videoId) {
+
+            console.log(
+                '[MusicPlayer] Resolved queue result does not contain a video ID.'
+            );
+
+            return;
+        }
+
+        console.log(
+            '[MusicPlayer] Using YouTube video for queue track:',
+            videoId
+        );
+
+        audioPlayer.pause();
+
+        activePlaybackSource =
+            'youtube';
+
+        youtubePlayer.load(
+            videoId
+        );
+
+        youtubePlayer.play();
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Queue track resolve failed:',
+            error
+        );
+    }
 }
 
 function playNextYouTubeQueueTrack(): void {
@@ -1247,14 +1369,17 @@ item.addEventListener(
             youtubeCurrentIndex
         );
 
-        const artistName =
-            result.artists
-                ?.map(
-                    artist =>
-                        artist.name
-                )
-                .join(', ') ??
-            '';
+        const artistId =
+            result.artists?.[0]?.id ??
+            null;
+
+        console.log(
+            '[MusicPlayer] Deezer artist:',
+            {
+                id: artistId,
+                name: artistName,
+            }
+        );
 
         const trackName =
             result.name;
