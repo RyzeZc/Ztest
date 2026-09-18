@@ -437,8 +437,8 @@ function initializeMusicPlayer(): void {
 
     let youtubeQueueCurrentIndex = -1;
     let youtubeCurrentIndex = -1;
-
     let youtubeRepeat = false;
+    let currentYouTubeVideoId: string | null = null;
 
 
     async function loadYouTubePlaylist(
@@ -1058,6 +1058,9 @@ const trackName =
             '[MusicPlayer] Using YouTube video for queue track:',
             videoId
         );
+
+        currentYouTubeVideoId =
+            videoId;
 
         audioPlayer.pause();
 
@@ -2311,9 +2314,23 @@ youtubePlayer.subscribe(
                 '[MusicPlayer] Repeat enabled. Replaying current YouTube track.'
             );
 
-            playYouTubeQueueTrack(
-                youtubeQueueCurrentIndex
-            );
+            if (
+                currentYouTubeVideoId
+            ) {
+
+                youtubePlayer.seekTo(
+                    0
+                );
+
+                youtubePlayer.play();
+
+            } else {
+
+                console.log(
+                    '[MusicPlayer] Cannot repeat: current YouTube video ID is missing.'
+                );
+
+            }
 
             return;
         }
