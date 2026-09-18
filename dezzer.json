@@ -1,0 +1,251 @@
+{
+  "loader": "trackPage",
+  "track": {
+    "id": 2619,
+    "name": "Poema sobrecogido",
+    "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+    "number": 4,
+    "duration": 344186,
+    "plays": 67,
+    "popularity": 0,
+    "owner_id": null,
+    "created_at": "2025-04-02T14:32:37.000000Z",
+    "model_type": "track",
+    "artists": [
+      {
+        "id": 1048268821,
+        "name": "Extremoduro",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      }
+    ],
+    "description": null,
+    "album": {
+      "id": 2952,
+      "name": "Para todos los públicos",
+      "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+      "release_date": "2013-11-08T00:00:00.000000Z",
+      "model_type": "album",
+      "plays": 1446,
+      "views": 102,
+      "owner_id": null,
+      "created_at": null,
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "tracks": [
+        {
+          "id": 2616,
+          "name": "Locura transitoria",
+          "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+          "number": 1,
+          "duration": 494773,
+          "plays": 559,
+          "popularity": 59,
+          "owner_id": null,
+          "created_at": "2025-04-02T14:32:37.000000Z",
+          "model_type": "track",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 2617,
+          "name": "Entre interiores",
+          "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+          "number": 2,
+          "duration": 246986,
+          "plays": 331,
+          "popularity": 53,
+          "owner_id": null,
+          "created_at": "2025-04-02T14:32:37.000000Z",
+          "model_type": "track",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 2618,
+          "name": "¡Qué borde era mi valle!",
+          "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+          "number": 3,
+          "duration": 234167,
+          "plays": 77,
+          "popularity": 46,
+          "owner_id": null,
+          "created_at": "2025-04-02T14:32:37.000000Z",
+          "model_type": "track",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 2619,
+          "name": "Poema sobrecogido",
+          "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+          "number": 4,
+          "duration": 344186,
+          "plays": 67,
+          "popularity": 41,
+          "owner_id": null,
+          "created_at": "2025-04-02T14:32:37.000000Z",
+          "model_type": "track",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 2620,
+          "name": "Manué IV",
+          "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+          "number": 5,
+          "duration": 30453,
+          "plays": 53,
+          "popularity": 32,
+          "owner_id": null,
+          "created_at": "2025-04-02T14:32:37.000000Z",
+          "model_type": "track",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 2621,
+          "name": "Mamá",
+          "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+          "number": 6,
+          "duration": 369906,
+          "plays": 68,
+          "popularity": 42,
+          "owner_id": null,
+          "created_at": "2025-04-02T14:32:37.000000Z",
+          "model_type": "track",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 2622,
+          "name": "Mi voluntad",
+          "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+          "number": 7,
+          "duration": 200733,
+          "plays": 65,
+          "popularity": 45,
+          "owner_id": null,
+          "created_at": "2025-04-02T14:32:37.000000Z",
+          "model_type": "track",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 2623,
+          "name": "Pequeño rocanrol endémico",
+          "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+          "number": 8,
+          "duration": 308080,
+          "plays": 83,
+          "popularity": 48,
+          "owner_id": null,
+          "created_at": "2025-04-02T14:32:37.000000Z",
+          "model_type": "track",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 2624,
+          "name": "El camino de las utopías",
+          "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+          "number": 9,
+          "duration": 450546,
+          "plays": 143,
+          "popularity": 51,
+          "owner_id": null,
+          "created_at": "2025-04-02T14:32:37.000000Z",
+          "model_type": "track",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        }
+      ]
+    },
+    "tags": [],
+    "genres": [],
+    "likes_count": 0,
+    "reposts_count": 0
+  }
+}
