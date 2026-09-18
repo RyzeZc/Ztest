@@ -1,0 +1,1352 @@
+{
+  "artist": {
+    "id": 1048268821,
+    "name": "Extremoduro",
+    "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+    "verified": false,
+    "disabled": false,
+    "model_type": "artist",
+    "spotify_id": "3bgsNtcf5d5h9jbQbohfBK",
+    "deezer_id": 4163,
+    "created_at": "2026-09-18T05:16:34.000000Z",
+    "updated_at": "2026-09-18T05:16:34.000000Z",
+    "views": 1863,
+    "plays": 23853,
+    "genres": [
+      {
+        "id": 3,
+        "name": "pop",
+        "display_name": "Pop",
+        "image": "https://api.deezer.com/genre/132/image",
+        "model_type": "genre"
+      },
+      {
+        "id": 81,
+        "name": "rock",
+        "display_name": "Rock",
+        "image": "https://api.deezer.com/genre/152/image",
+        "model_type": "genre"
+      },
+      {
+        "id": 559,
+        "name": "vaihtoehtoinen",
+        "display_name": "Vaihtoehtoinen",
+        "image": "https://api.deezer.com/genre/85/image",
+        "model_type": "genre"
+      }
+    ],
+    "similar": [
+      {
+        "id": 4857,
+        "name": "Marea",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/eae7f8533321a24d4944f85c16fb5c23/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040746,
+        "name": "La Fuga",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/c9c8092884bcfb9c82bc4e0c54ee80fa/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040747,
+        "name": "Platero y tú",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/c3de09f6f8ec7feb7d6928f124bc4d49/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 4564,
+        "name": "Robe",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/4df7c6402d3e9955883801dc94c98d40/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 1529,
+        "name": "Fito y Fitipaldis",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/804ba02574fc2e68fbe42ed591fbbb0b/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040749,
+        "name": "Los Suaves",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/53052c8793d9e4d0e46cda85e67d705f/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040685,
+        "name": "Extrechinato y tú",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/1482e339f4867800b2969fd9247ffa03/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040750,
+        "name": "El Drogas",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/cd1aa1a554f1fcbdffd0e74020993a61/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040751,
+        "name": "La Raíz",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/3036c264e4db7ecd916aa019cd2f8f67/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 271495,
+        "name": "Benito Kamelas",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/6e5a9772df145017af526ef9e48a1674/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525002067,
+        "name": "Rulo y la contrabanda",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/a03c1bd4150e98ca50bedb00fe7a0da8/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040752,
+        "name": "Barricada",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/3425aca60f9ec214ded62cdc30bc9ae7/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040753,
+        "name": "Rosendo",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/5cc26a3d0064bd3cf07de11afaf50350/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040754,
+        "name": "Linaje",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/c4153a1e291a65a65ac87c9de958cb18/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 168560,
+        "name": "Sinkope",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/c2b802e40ce9f790e76f8eb0332661aa/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525016716,
+        "name": "Porretas",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/7d0bdb6242de8b4fe9f26a97f9503dfe/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 147771,
+        "name": "Los Zigarros",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/f663df887c85767216ca19561759250b/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040755,
+        "name": "Reincidentes",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/57fcacfeb19a24e24179490a4c24a4ec/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040756,
+        "name": "Poncho K",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/e9ca075c26f783040fd7c0ddefa6b05b/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040757,
+        "name": "Arco",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/c6ca39d13f40ef1712e1d9f834b1f1cd/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525147428,
+        "name": "Albertucho",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/448e82bd74f35c29779f08839888282c/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      },
+      {
+        "id": 2525040824,
+        "name": "Pereza",
+        "image_small": "https://cdn-images.dzcdn.net/images/artist/289632c03b82821cea726fdd7face5c7/500x500-000000-80-0-0.jpg",
+        "verified": false,
+        "disabled": false,
+        "model_type": "artist"
+      }
+    ],
+    "profile": {
+      "city": null,
+      "country": null,
+      "description": "En Soundbliz puedes escuchar todo el catálogo de Extremoduro, que incluye 38 álbumes. Su música se engloba en Pop, Rock y Vaihtoehtoinen. Algunas de las canciones más populares de Extremoduro en la plataforma son La vereda de la puerta de atrás, Si te vas... y Stand By. Los oyentes de Extremoduro en Soundbliz también suelen escuchar a Sundara Karma, Noïd y Annika Bennett."
+    },
+    "profile_images": [],
+    "links": [],
+    "likes_count": 23
+  },
+  "loader": "artistPage",
+  "top_tracks": [
+    {
+      "id": 388529334,
+      "name": "La vereda de la puerta de atrás",
+      "image": "https://i.scdn.co/image/ab67616d00001e026bc660a783e17b98e8af1f30",
+      "number": 2,
+      "duration": 243320,
+      "plays": 1896,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": null,
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2805,
+        "name": "Yo, Minoría Absoluta",
+        "image": "https://i.scdn.co/image/ab67616d00001e026bc660a783e17b98e8af1f30",
+        "release_date": "1970-01-01T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 8557,
+        "views": 250,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2443,
+      "name": "Si te vas...",
+      "image": "https://i.scdn.co/image/ab67616d00001e024db5099df3d763840e1634a9",
+      "number": 4,
+      "duration": 516666,
+      "plays": 2252,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-15T19:35:08.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2804,
+        "name": "Material defectuoso",
+        "image": "https://i.scdn.co/image/ab67616d00001e024db5099df3d763840e1634a9",
+        "release_date": "2011-05-24T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 4433,
+        "views": 203,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2456,
+      "name": "Stand By",
+      "image": "https://i.scdn.co/image/ab67616d00001e026bc660a783e17b98e8af1f30",
+      "number": 4,
+      "duration": 207986,
+      "plays": 1914,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-12T16:37:47.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2805,
+        "name": "Yo, Minoría Absoluta",
+        "image": "https://i.scdn.co/image/ab67616d00001e026bc660a783e17b98e8af1f30",
+        "release_date": "1970-01-01T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 8557,
+        "views": 250,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2519,
+      "name": "Salir",
+      "image": "https://i.scdn.co/image/ab67616d00001e02a2e1065cadd1723e20ca6453",
+      "number": 1,
+      "duration": 318986,
+      "plays": 1454,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-17T11:47:56.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2813,
+        "name": "Canciones Prohibidas",
+        "image": "https://i.scdn.co/image/ab67616d00001e02a2e1065cadd1723e20ca6453",
+        "release_date": "1998-06-08T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 2750,
+        "views": 102,
+        "owner_id": null,
+        "created_at": "2026-07-26T16:51:54.000000Z",
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2520,
+      "name": "Dulce introducción al caos",
+      "image": "https://i.scdn.co/image/ab67616d00001e02f015facadafea5614a6b20c2",
+      "number": 1,
+      "duration": 462013,
+      "plays": 1383,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-12T08:51:47.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2810,
+        "name": "La ley innata",
+        "image": "https://i.scdn.co/image/ab67616d00001e02f015facadafea5614a6b20c2",
+        "release_date": "2008-09-09T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 4288,
+        "views": 293,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2516,
+      "name": "Golfa",
+      "image": "https://i.scdn.co/image/ab67616d00001e02a2e1065cadd1723e20ca6453",
+      "number": 4,
+      "duration": 359546,
+      "plays": 777,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-17T11:47:56.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2813,
+        "name": "Canciones Prohibidas",
+        "image": "https://i.scdn.co/image/ab67616d00001e02a2e1065cadd1723e20ca6453",
+        "release_date": "1998-06-08T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 2750,
+        "views": 102,
+        "owner_id": null,
+        "created_at": "2026-07-26T16:51:54.000000Z",
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2524,
+      "name": "Puta",
+      "image": "https://i.scdn.co/image/ab67616d00001e026bc660a783e17b98e8af1f30",
+      "number": 8,
+      "duration": 322880,
+      "plays": 1101,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-12T16:37:47.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2805,
+        "name": "Yo, Minoría Absoluta",
+        "image": "https://i.scdn.co/image/ab67616d00001e026bc660a783e17b98e8af1f30",
+        "release_date": "1970-01-01T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 8557,
+        "views": 250,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2522,
+      "name": "Jesucristo García",
+      "image": "https://i.scdn.co/image/ab67616d00001e029c8e10eba0904524f161f872",
+      "number": 7,
+      "duration": 290448,
+      "plays": 1068,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-11T01:46:32.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2816,
+        "name": "Rock Transgresivo",
+        "image": "https://i.scdn.co/image/ab67616d00001e029c8e10eba0904524f161f872",
+        "release_date": "1970-01-01T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 2688,
+        "views": 100,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2725,
+      "name": "Ama, ama, ama y ensancha el alma - Versión 2004",
+      "image": "https://i.scdn.co/image/ab67616d00001e02c6211467bd57163e90ff747f",
+      "number": 13,
+      "duration": 167840,
+      "plays": 602,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-30T07:23:42.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2953,
+        "name": "Deltoya",
+        "image": "https://i.scdn.co/image/ab67616d00001e02c6211467bd57163e90ff747f",
+        "release_date": "1970-01-01T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 1538,
+        "views": 106,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2633,
+      "name": "Cuarto movimiento: la realidad",
+      "image": "https://i.scdn.co/image/ab67616d00001e02f015facadafea5614a6b20c2",
+      "number": 5,
+      "duration": 349306,
+      "plays": 872,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-12T08:51:47.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2810,
+        "name": "La ley innata",
+        "image": "https://i.scdn.co/image/ab67616d00001e02f015facadafea5614a6b20c2",
+        "release_date": "2008-09-09T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 4288,
+        "views": 293,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2711,
+      "name": "Bribriblibli - Versión 2004",
+      "image": "https://i.scdn.co/image/ab67616d00001e026641356b8f1d3186ca7c1e5b",
+      "number": 15,
+      "duration": 199960,
+      "plays": 365,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-12T09:53:30.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 3039,
+        "name": "Dónde Están Mis Amigos",
+        "image": "https://i.scdn.co/image/ab67616d00001e026641356b8f1d3186ca7c1e5b",
+        "release_date": "1970-01-01T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 1009,
+        "views": 84,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2686,
+      "name": "Sucede",
+      "image": "https://i.scdn.co/image/ab67616d00001e02bfa23af0d8c52c3f4c21ae2d",
+      "number": 3,
+      "duration": 187333,
+      "plays": 599,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-13T15:05:43.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2807,
+        "name": "Agila",
+        "image": "https://i.scdn.co/image/ab67616d00001e02bfa23af0d8c52c3f4c21ae2d",
+        "release_date": "1970-01-01T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 4087,
+        "views": 196,
+        "owner_id": null,
+        "created_at": "2026-07-26T16:51:54.000000Z",
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2684,
+      "name": "Buscando una luna",
+      "image": "https://i.scdn.co/image/ab67616d00001e02bfa23af0d8c52c3f4c21ae2d",
+      "number": 1,
+      "duration": 251733,
+      "plays": 577,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-13T15:05:43.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2807,
+        "name": "Agila",
+        "image": "https://i.scdn.co/image/ab67616d00001e02bfa23af0d8c52c3f4c21ae2d",
+        "release_date": "1970-01-01T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 4087,
+        "views": 196,
+        "owner_id": null,
+        "created_at": "2026-07-26T16:51:54.000000Z",
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2626,
+      "name": "Mi espíritu imperecedero",
+      "image": "https://i.scdn.co/image/ab67616d00001e024db5099df3d763840e1634a9",
+      "number": 2,
+      "duration": 342786,
+      "plays": 699,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-15T19:35:08.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2804,
+        "name": "Material defectuoso",
+        "image": "https://i.scdn.co/image/ab67616d00001e024db5099df3d763840e1634a9",
+        "release_date": "2011-05-24T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 4433,
+        "views": 203,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2616,
+      "name": "Locura transitoria",
+      "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+      "number": 1,
+      "duration": 494773,
+      "plays": 559,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-04-02T14:32:37.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2952,
+        "name": "Para todos los públicos",
+        "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+        "release_date": "2013-11-08T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 1446,
+        "views": 102,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2655,
+      "name": "A fuego",
+      "image": "https://i.scdn.co/image/ab67616d00001e026bc660a783e17b98e8af1f30",
+      "number": 1,
+      "duration": 323226,
+      "plays": 813,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-12T16:37:47.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2805,
+        "name": "Yo, Minoría Absoluta",
+        "image": "https://i.scdn.co/image/ab67616d00001e026bc660a783e17b98e8af1f30",
+        "release_date": "1970-01-01T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 8557,
+        "views": 250,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2656,
+      "name": "Hoy te la meto hasta las orejas",
+      "image": "https://i.scdn.co/image/ab67616d00001e026bc660a783e17b98e8af1f30",
+      "number": 3,
+      "duration": 222093,
+      "plays": 626,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-12T16:37:47.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2805,
+        "name": "Yo, Minoría Absoluta",
+        "image": "https://i.scdn.co/image/ab67616d00001e026bc660a783e17b98e8af1f30",
+        "release_date": "1970-01-01T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 8557,
+        "views": 250,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2631,
+      "name": "Segundo movimiento: lo de fuera",
+      "image": "https://i.scdn.co/image/ab67616d00001e02f015facadafea5614a6b20c2",
+      "number": 3,
+      "duration": 703226,
+      "plays": 649,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-12T08:51:47.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2810,
+        "name": "La ley innata",
+        "image": "https://i.scdn.co/image/ab67616d00001e02f015facadafea5614a6b20c2",
+        "release_date": "2008-09-09T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 4288,
+        "views": 293,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2518,
+      "name": "Decidí - Versión 2004",
+      "image": "https://i.scdn.co/image/ab67616d00001e029c8e10eba0904524f161f872",
+      "number": 14,
+      "duration": 153066,
+      "plays": 318,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-11T01:46:32.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2816,
+        "name": "Rock Transgresivo",
+        "image": "https://i.scdn.co/image/ab67616d00001e029c8e10eba0904524f161f872",
+        "release_date": "1970-01-01T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 2688,
+        "views": 100,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    },
+    {
+      "id": 2632,
+      "name": "Tercer movimiento: lo de dentro",
+      "image": "https://i.scdn.co/image/ab67616d00001e02f015facadafea5614a6b20c2",
+      "number": 4,
+      "duration": 456960,
+      "plays": 492,
+      "popularity": 0,
+      "owner_id": null,
+      "created_at": "2025-03-12T08:51:47.000000Z",
+      "model_type": "track",
+      "artists": [
+        {
+          "id": 1048268821,
+          "name": "Extremoduro",
+          "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+          "verified": false,
+          "disabled": false,
+          "model_type": "artist"
+        }
+      ],
+      "album": {
+        "id": 2810,
+        "name": "La ley innata",
+        "image": "https://i.scdn.co/image/ab67616d00001e02f015facadafea5614a6b20c2",
+        "release_date": "2008-09-09T00:00:00.000000Z",
+        "model_type": "album",
+        "plays": 4288,
+        "views": 293,
+        "owner_id": null,
+        "created_at": null,
+        "artists": [
+          {
+            "id": 1048268821,
+            "name": "Extremoduro",
+            "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+            "verified": false,
+            "disabled": false,
+            "model_type": "artist"
+          }
+        ]
+      }
+    }
+  ],
+  "grouped_albums": {
+    "album": {
+      "data": [
+        {
+          "id": 1557358996,
+          "name": "Canciones 1989-2013",
+          "image": "https://cdn-images.dzcdn.net/images/cover/052e2841e323b6f67da282b5bd26776f/500x500-000000-80-0-0.jpg",
+          "release_date": "2021-12-10T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 58,
+          "views": 12,
+          "owner_id": null,
+          "created_at": "2026-07-07T18:58:44.000000Z",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 3036,
+          "name": "Canciones 1989-2013",
+          "image": "https://i.scdn.co/image/ab67616d00001e020c181ad7973614d699da8d5c",
+          "release_date": "2021-12-10T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 2255,
+          "views": 99,
+          "owner_id": null,
+          "created_at": null,
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 772697049,
+          "name": "Experiencias de un Batracio (En Directo)",
+          "image": "https://i.scdn.co/image/ab67616d00001e021e00307e718f3a47140c02ad",
+          "release_date": "2015-03-23T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 28,
+          "views": 11,
+          "owner_id": null,
+          "created_at": null,
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 3040,
+          "name": "Experiencias de un Batracio (En Directo)",
+          "image": "https://i.scdn.co/image/ab67616d00001e02a589ddc684424a6ffd2d2284",
+          "release_date": "2015-03-23T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 3,
+          "views": 9,
+          "owner_id": null,
+          "created_at": null,
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 1557358994,
+          "name": "Para todos los públicos",
+          "image": "https://cdn-images.dzcdn.net/images/cover/248441bc91ae5c66a76a45eedfa11ba2/500x500-000000-80-0-0.jpg",
+          "release_date": "2013-11-08T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 46,
+          "views": 6,
+          "owner_id": null,
+          "created_at": "2026-07-07T18:58:44.000000Z",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 2952,
+          "name": "Para todos los públicos",
+          "image": "https://i.scdn.co/image/ab67616d00001e02821ade3ac1a19d176e6167be",
+          "release_date": "2013-11-08T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 1446,
+          "views": 102,
+          "owner_id": null,
+          "created_at": null,
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 3041,
+          "name": "¡Qué borde era mi valle!",
+          "image": "https://i.scdn.co/image/ab67616d00001e02f5c470d2b0d65883277a0f93",
+          "release_date": "2013-10-22T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 8,
+          "views": 18,
+          "owner_id": null,
+          "created_at": null,
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 1557358993,
+          "name": "Material defectuoso",
+          "image": "https://cdn-images.dzcdn.net/images/cover/f06d5be767d2fe8afd75bf689fcd26b7/500x500-000000-80-0-0.jpg",
+          "release_date": "2011-05-24T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 76,
+          "views": 10,
+          "owner_id": null,
+          "created_at": "2026-07-07T18:58:44.000000Z",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 2804,
+          "name": "Material defectuoso",
+          "image": "https://i.scdn.co/image/ab67616d00001e024db5099df3d763840e1634a9",
+          "release_date": "2011-05-24T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 4433,
+          "views": 203,
+          "owner_id": null,
+          "created_at": null,
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 2810,
+          "name": "La ley innata",
+          "image": "https://i.scdn.co/image/ab67616d00001e02f015facadafea5614a6b20c2",
+          "release_date": "2008-09-09T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 4288,
+          "views": 293,
+          "owner_id": null,
+          "created_at": null,
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        }
+      ],
+      "hasMore": true
+    },
+    "single": {
+      "data": [
+        {
+          "id": 1557358997,
+          "name": "Experiencias de un Batracio (En Directo)",
+          "image": "https://cdn-images.dzcdn.net/images/cover/a6339f1ed3207044fcb1d6f9e941be42/500x500-000000-80-0-0.jpg",
+          "release_date": "2015-03-23T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 1,
+          "views": 2,
+          "owner_id": null,
+          "created_at": "2026-07-07T18:58:44.000000Z",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        },
+        {
+          "id": 1557359002,
+          "name": "¡Qué borde era mi valle!",
+          "image": "https://cdn-images.dzcdn.net/images/cover/42cd1ac1acdfd1451488df7d61f577ed/500x500-000000-80-0-0.jpg",
+          "release_date": "2013-10-22T00:00:00.000000Z",
+          "model_type": "album",
+          "plays": 0,
+          "views": 2,
+          "owner_id": null,
+          "created_at": "2026-07-07T18:58:44.000000Z",
+          "artists": [
+            {
+              "id": 1048268821,
+              "name": "Extremoduro",
+              "image_small": "https://cdn-images.dzcdn.net/images/artist/fac337de59e1a5ae1100c53f2685a53f/500x500-000000-80-0-0.jpg",
+              "verified": false,
+              "disabled": false,
+              "model_type": "artist"
+            }
+          ]
+        }
+      ],
+      "hasMore": false
+    }
+  }
+}
