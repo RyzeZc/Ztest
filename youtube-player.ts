@@ -4,6 +4,7 @@ export type YouTubePlaybackStatus =
     | 'playing'
     | 'buffering'
     | 'paused'
+    | 'ended'
     | 'error';
 
 export interface YouTubePlayerState {
@@ -19,6 +20,12 @@ interface YouTubePlayerInstance {
     playVideo(): void;
     pauseVideo(): void;
     stopVideo(): void;
+    getCurrentTime(): number;
+    getDuration(): number;
+    seekTo(
+        seconds: number,
+        allowSeekAhead?: boolean
+    ): void;
     setVolume(volume: number): void;
     mute(): void;
     unMute(): void;
@@ -316,7 +323,7 @@ export class YouTubePlayer {
                                     case window.YT.PlayerState.ENDED:
 
                                         this.state.status =
-                                            'paused';
+                                            'ended';
 
                                         break;
 
@@ -417,6 +424,57 @@ export class YouTubePlayer {
         this.notify();
     }
 
+    getCurrentTime(): number {
+
+        if (!this.player) {
+            return 0;
+        }
+
+        return this.player.getCurrentTime();
+    }
+
+    getDuration(): number {
+
+        if (!this.player) {
+            return 0;
+        }
+
+        return this.player.getDuration();
+    }
+
+    seekTo(
+        seconds: number
+    ): void {
+
+        if (!this.player) {
+            return;
+        }
+
+        const duration =
+            this.player.getDuration();
+
+        if (
+            !Number.isFinite(seconds) ||
+            !Number.isFinite(duration) ||
+            duration <= 0
+        ) {
+            return;
+        }
+
+        const safeSeconds =
+            Math.min(
+                duration,
+                Math.max(
+                    0,
+                    seconds
+                )
+            );
+
+        this.player.seekTo(
+            safeSeconds,
+            true
+        );
+    }
 
     setVolume(
         volume: number
