@@ -1091,6 +1091,45 @@ const trackName =
     }
 }
 
+function getNextShuffleIndex(): number | null {
+
+    if (
+        youtubeQueue.length <= 1
+    ) {
+        return null;
+    }
+
+    const availableIndexes =
+        youtubeQueue
+            .map(
+                (_, index) =>
+                    index
+            )
+            .filter(
+                index =>
+                    index !==
+                    youtubeQueueCurrentIndex
+            );
+
+    if (
+        availableIndexes.length === 0
+    ) {
+        return null;
+    }
+
+    const randomPosition =
+        Math.floor(
+            Math.random() *
+            availableIndexes.length
+        );
+
+    return (
+        availableIndexes[
+            randomPosition
+        ] ?? null
+    );
+}
+
 function playNextYouTubeQueueTrack(): void {
 
     if (
@@ -1114,32 +1153,55 @@ function playNextYouTubeQueueTrack(): void {
         return;
     }
 
-    const nextIndex =
-        youtubeQueueCurrentIndex + 1;
+    let nextIndex:
+        number | null = null;
 
     if (
-        nextIndex >= youtubeQueue.length
+        youtubeShuffle
     ) {
 
+        nextIndex =
+            getNextShuffleIndex();
+
+        if (
+            nextIndex === null
+        ) {
+            console.log(
+                '[MusicPlayer] Shuffle could not select another track.'
+            );
+
+            return;
+        }
+
         console.log(
-            '[MusicPlayer] YouTube queue reached the end.'
+            '[MusicPlayer] Shuffle selected next track:',
+            nextIndex
         );
 
-        /*
-         * Repeat no significa repetir toda
-         * la cola.
-         *
-         * La repetición de la canción actual
-         * se controla cuando YouTube informa
-         * que la reproducción terminó.
-         */
-        return;
-    }
+    } else {
 
-    console.log(
-        '[MusicPlayer] Playing next YouTube queue track:',
-        nextIndex
-    );
+        const sequentialIndex =
+            youtubeQueueCurrentIndex + 1;
+
+        if (
+            sequentialIndex >=
+            youtubeQueue.length
+        ) {
+            console.log(
+                '[MusicPlayer] YouTube queue reached the end.'
+            );
+
+            return;
+        }
+
+        nextIndex =
+            sequentialIndex;
+
+        console.log(
+            '[MusicPlayer] Playing next YouTube queue track:',
+            nextIndex
+        );
+    }
 
     playYouTubeQueueTrack(
         nextIndex
@@ -1172,24 +1234,50 @@ function playPreviousYouTubeQueueTrack(): void {
     const currentTime =
         youtubePlayer.getCurrentTime();
 
-    /*
-     * Si la canción ya lleva más de 3 segundos,
-     * Previous simplemente vuelve al inicio
-     * de la canción actual.
-     */
-    if (
-        currentTime > 3
-    ) {
-
+    if (currentTime > 3) {
         console.log(
             '[MusicPlayer] Restarting current YouTube track.'
         );
 
-        youtubePlayer.seekTo(
-            0
+        youtubePlayer.seekTo(0);
+        youtubePlayer.play();
+
+        return;
+    }
+
+    if (
+        youtubeShuffle &&
+        youtubeShuffleHistory.length > 1
+    ) {
+
+        youtubeShuffleHistory.pop();
+
+        youtubeShuffleHistoryPosition =
+            youtubeShuffleHistory.length - 1;
+
+        const previousIndex =
+            youtubeShuffleHistory[
+                youtubeShuffleHistoryPosition
+            ];
+
+        if (
+            previousIndex === undefined
+        ) {
+            console.log(
+                '[MusicPlayer] Shuffle history has no previous track.'
+            );
+
+            return;
+        }
+
+        console.log(
+            '[MusicPlayer] Shuffle previous track:',
+            previousIndex
         );
 
-        youtubePlayer.play();
+        playYouTubeQueueTrack(
+            previousIndex
+        );
 
         return;
     }
@@ -1197,22 +1285,14 @@ function playPreviousYouTubeQueueTrack(): void {
     const previousIndex =
         youtubeQueueCurrentIndex - 1;
 
-    /*
-     * Si estamos en la primera canción,
-     * no retrocedemos más.
-     */
     if (
         previousIndex < 0
     ) {
-
         console.log(
             '[MusicPlayer] YouTube queue is already at the first track.'
         );
 
-        youtubePlayer.seekTo(
-            0
-        );
-
+        youtubePlayer.seekTo(0);
         youtubePlayer.play();
 
         return;
@@ -1416,6 +1496,22 @@ item.addEventListener(
 
             youtubeQueue =
                 artistTracks;
+
+            console.log(
+    '[MusicPlayer] Selected result ID:',
+    result.id
+);
+
+console.log(
+    '[MusicPlayer] Artist track IDs:',
+    youtubeQueue.map(
+        (track, index) => ({
+            index,
+            id: track.id,
+            name: track.name
+        })
+    )
+);
 
             youtubeQueueCurrentIndex =
                 youtubeQueue.findIndex(
@@ -2287,6 +2383,28 @@ shuffleButton.addEventListener('click', () => {
 
     youtubeShuffle = !youtubeShuffle;
 
+    if (youtubeShuffle) {
+        youtubeShuffleHistory = [];
+
+        if (youtubeQueueCurrentIndex >= 0) {
+            youtubeShuffleHistory.push(
+                youtubeQueueCurrentIndex
+            );
+        }
+
+        youtubeShuffleHistoryPosition =
+            youtubeShuffleHistory.length - 1;
+
+        console.log(
+            '[MusicPlayer] Shuffle history reset:',
+            youtubeShuffleHistory
+        );
+
+    } else {
+        youtubeShuffleHistory = [];
+        youtubeShuffleHistoryPosition = -1;
+    }
+
     shuffleButton.setAttribute(
         'aria-pressed',
         String(youtubeShuffle)
@@ -2302,7 +2420,6 @@ shuffleButton.addEventListener('click', () => {
         youtubeShuffle
     );
 });
-
     audioPlayer.subscribe(
         updateUI
     );
