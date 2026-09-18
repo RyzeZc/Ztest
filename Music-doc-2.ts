@@ -1753,70 +1753,6 @@ function playPreviousYouTubeQueueTrack(): void {
             );
         }
 
-        /* --------------------------------------------------
-        PREVIOUS / NEXT / REPEAT
-        -------------------------------------------------- */
-
-        previousButton.addEventListener(
-            'click',
-            () => {
-
-                if (
-                    activePlaybackSource !==
-                    'youtube'
-                ) {
-                    return;
-                }
-
-                playPreviousYouTubeQueueTrack();
-            }
-        );
-
-        nextButton.addEventListener(
-            'click',
-            () => {
-
-                if (
-                    activePlaybackSource !==
-                    'youtube'
-                ) {
-                    return;
-                }
-
-                playNextYouTubeQueueTrack();
-            }
-        );
-
-        repeatButton.addEventListener(
-            'click',
-            () => {
-
-                if (
-                    activePlaybackSource !==
-                    'youtube'
-                ) {
-                    return;
-                }
-
-                youtubeRepeat =
-                    !youtubeRepeat;
-
-                repeatButton.setAttribute(
-                    'aria-pressed',
-                    String(youtubeRepeat)
-                );
-
-                repeatButton.classList.toggle(
-                    'is-active',
-                    youtubeRepeat
-                );
-
-                console.log(
-                    '[MusicPlayer] YouTube repeat:',
-                    youtubeRepeat
-                );
-            }
-        );
 
         /* MUTE */
 
@@ -1948,6 +1884,72 @@ function playPreviousYouTubeQueueTrack(): void {
                 break;
         }
     }
+
+
+    /* --------------------------------------------------
+   PREVIOUS / NEXT / REPEAT
+-------------------------------------------------- */
+
+previousButton.addEventListener(
+    'click',
+    () => {
+
+        if (
+            activePlaybackSource !==
+            'youtube'
+        ) {
+            return;
+        }
+
+        playPreviousYouTubeQueueTrack();
+    }
+);
+
+nextButton.addEventListener(
+    'click',
+    () => {
+
+        if (
+            activePlaybackSource !==
+            'youtube'
+        ) {
+            return;
+        }
+
+        playNextYouTubeQueueTrack();
+    }
+);
+
+repeatButton.addEventListener(
+    'click',
+    () => {
+
+        if (
+            activePlaybackSource !==
+            'youtube'
+        ) {
+            return;
+        }
+
+        youtubeRepeat =
+            !youtubeRepeat;
+
+        repeatButton.setAttribute(
+            'aria-pressed',
+            String(youtubeRepeat)
+        );
+
+        repeatButton.classList.toggle(
+            'is-active',
+            youtubeRepeat
+        );
+
+        console.log(
+            '[MusicPlayer] YouTube repeat:',
+            youtubeRepeat
+        );
+    }
+);
 
 
     audioPlayer.subscribe(
