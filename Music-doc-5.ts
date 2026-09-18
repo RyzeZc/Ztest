@@ -933,33 +933,33 @@ async function playYouTubeQueueTrack(
     );
 
     console.log(
-        '[MusicPlayer] Deezer track index:',
-        youtubeCurrentIndex
+        '[MusicPlayer] YouTube queue index:',
+        youtubeQueueCurrentIndex
     );
 
-    const artistName =
-        result.artists
-            ?.map(
-                artist =>
-                    artist.name
-            )
-            .join(', ') ??
-        '';
+const artistName =
+    track.artists
+        ?.map(
+            artist =>
+                artist.name
+        )
+        .join(', ') ??
+    '';
 
-    const artistId =
-        result.artists?.[0]?.id ??
-        null;
+const artistId =
+    track.artists?.[0]?.id ??
+    null;
 
-    console.log(
-        '[MusicPlayer] Deezer artist:',
-        {
-            id: artistId,
-            name: artistName,
-        }
-    );
+console.log(
+    '[MusicPlayer] Deezer artist:',
+    {
+        id: artistId,
+        name: artistName,
+    }
+);
 
-    const trackName =
-        result.name;
+const trackName =
+    track.name;
 
     if (
         !artistName ||
