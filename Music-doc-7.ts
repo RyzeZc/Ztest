@@ -1998,21 +1998,29 @@ async function searchYouTube(
                 ? youtubePlayer.getState()
                 : audioPlayer.getState();
         const hasYouTubeQueue =
-                activePlaybackSource ===
-                    'youtube' &&
-                youtubeQueue.length > 0 &&
-                youtubeQueueCurrentIndex >= 0;
+            activePlaybackSource === 'youtube' &&
+            youtubeQueue.length > 0 &&
+            youtubeQueueCurrentIndex >= 0;
 
-            previousButton.disabled =
-                !hasYouTubeQueue;
+        previousButton.disabled = !hasYouTubeQueue;
 
-            nextButton.disabled =
-                !hasYouTubeQueue ||
-                youtubeQueueCurrentIndex >=
-                    youtubeQueue.length - 1;
+        nextButton.disabled =
+            !hasYouTubeQueue ||
+            youtubeQueueCurrentIndex >= youtubeQueue.length - 1;
 
-            repeatButton.disabled =
-                !hasYouTubeQueue;
+        repeatButton.disabled = !hasYouTubeQueue;
+
+        shuffleButton.disabled = !hasYouTubeQueue;
+
+        shuffleButton.setAttribute(
+            'aria-pressed',
+            String(youtubeShuffle)
+        );
+
+        shuffleButton.classList.toggle(
+            'is-active',
+            youtubeShuffle
+        );
 
         updateTrackInfo();
 
