@@ -52,6 +52,8 @@ function initializeMusicPlayer(): void {
             '.music-player-repeat'
         );
 
+    const shuffleButton = player.querySelector('.music-player-shuffle');
+
     const playIcon =
         player.querySelector(
             '.music-player-play-icon'
@@ -177,7 +179,8 @@ function initializeMusicPlayer(): void {
         !(youtubePlayerContainer instanceof HTMLElement) ||
         !(previousButton instanceof HTMLButtonElement) ||
         !(nextButton instanceof HTMLButtonElement) ||
-        !(repeatButton instanceof HTMLButtonElement)
+        !(repeatButton instanceof HTMLButtonElement) ||
+        !(shuffleButton instanceof HTMLButtonElement)
     ) {
         console.error(
             '[MusicPlayer] Required elements not found.'
@@ -437,8 +440,14 @@ function initializeMusicPlayer(): void {
 
     let youtubeQueueCurrentIndex = -1;
     let youtubeCurrentIndex = -1;
+
     let youtubeRepeat = false;
+    let youtubeShuffle = false;
+
     let currentYouTubeVideoId: string | null = null;
+
+    let youtubeShuffleHistory: number[] = [];
+    let youtubeShuffleHistoryPosition = -1;
 
 
     async function loadYouTubePlaylist(
@@ -2265,6 +2274,26 @@ repeatButton.addEventListener(
     }
 );
 
+shuffleButton.addEventListener('click', () => {
+    if (activePlaybackSource !== 'youtube') return;
+
+    youtubeShuffle = !youtubeShuffle;
+
+    shuffleButton.setAttribute(
+        'aria-pressed',
+        String(youtubeShuffle)
+    );
+
+    shuffleButton.classList.toggle(
+        'is-active',
+        youtubeShuffle
+    );
+
+    console.log(
+        '[MusicPlayer] YouTube shuffle:',
+        youtubeShuffle
+    );
+});
 
     audioPlayer.subscribe(
         updateUI
