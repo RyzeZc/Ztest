@@ -974,6 +974,28 @@ async function searchYouTubePlaylistsInternal(
                             youtubeQueueCurrentIndex
                         );
 
+                        const selectedTrack =
+                            youtubeTracks.find(
+                                track =>
+                                    track.videoId ===
+                                    videoId
+                            );
+
+                        if (selectedTrack) {
+
+                            const playlistQuery =
+                                selectedTrack.title;
+
+                            console.log(
+                                '[MusicPlayer] Searching YouTube playlist for selected track:',
+                                playlistQuery
+                            );
+
+                            await searchYouTubePlaylistsInternal(
+                                playlistQuery
+                            );
+                        }
+
                          // Si había una radio reproduciéndose,
                         // la detenemos antes de iniciar YouTube.
                         audioPlayer.pause();
