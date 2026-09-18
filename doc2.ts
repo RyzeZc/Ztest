@@ -576,7 +576,7 @@ function initializeMusicPlayer(): void {
     );
 }
 
-    async function findYouTubePlaylistWithMatchingTrack(
+async function findYouTubePlaylistWithMatchingTrack(
     query: string,
     playlists: Array<{
         playlistId: string;
@@ -605,6 +605,25 @@ function initializeMusicPlayer(): void {
         '[MusicPlayer] Playlist query words:',
         queryWords
     );
+
+    /*
+     * Guardamos los tracks de la primera
+     * playlist para poder usarla como
+     * fallback sin hacer otra petición.
+     */
+    let firstPlaylist:
+        | {
+            playlist: typeof playlists[number];
+            tracks: Array<{
+                videoId: string;
+                title: string;
+                channelTitle: string;
+                description: string;
+                thumbnail: string;
+                publishedAt: string;
+            }>;
+        }
+        | null = null;
 
     for (
         const playlist of playlists
@@ -637,6 +656,20 @@ function initializeMusicPlayer(): void {
 
         const tracks =
             data.results ?? [];
+
+        /*
+         * La primera playlist devuelta
+         * por YouTube queda como fallback.
+         */
+        if (
+            !firstPlaylist
+        ) {
+
+            firstPlaylist = {
+                playlist,
+                tracks,
+            };
+        }
 
         const matchingTrack =
             tracks.find(
@@ -680,15 +713,49 @@ function initializeMusicPlayer(): void {
         }
     }
 
+    /*
+     * No encontramos la canción dentro
+     * de ninguna playlist.
+     *
+     * Usamos como fallback la playlist
+     * más relevante devuelta por YouTube.
+     */
+    if (
+        firstPlaylist
+    ) {
+
+        console.log(
+            '[MusicPlayer] No playlist containing the search terms was found.'
+        );
+
+        console.log(
+            '[MusicPlayer] Using most relevant YouTube playlist as fallback:',
+            firstPlaylist.playlist
+        );
+
+        console.log(
+            '[MusicPlayer] Fallback playlist tracks:',
+            firstPlaylist.tracks
+        );
+
+        return firstPlaylist;
+    }
+
     console.log(
-        '[MusicPlayer] No playlist containing the search terms was found.'
+        '[MusicPlayer] No usable YouTube playlist was found.'
     );
 
     return null;
 }
 
 async function searchYouTubePlaylistsInternal(
-    query: string
+    query: string,
+    selectedTrack: {
+        videoId: string;
+        title: string;
+        channelTitle: string;
+        thumbnail: string;
+    }
 ): Promise<void> {
 
     try {
@@ -775,16 +842,34 @@ async function searchYouTubePlaylistsInternal(
          * La playlist encontrada pasa a ser
          * nuestra cola interna de reproducción.
          */
-        youtubeQueue =
-            tracks;
+        const selectedTrackInQueue =
+            tracks.some(
+                track =>
+                    track.videoId ===
+                    selectedTrack.videoId
+            );
+
+        if (
+            selectedTrackInQueue
+        ) {
+
+            youtubeQueue =
+                tracks;
+
+        } else {
+
+            youtubeQueue = [
+                selectedTrack,
+                ...tracks,
+            ];
+
+        }
 
         youtubeQueueCurrentIndex =
             youtubeQueue.findIndex(
                 track =>
                     track.videoId ===
-                    youtubeTracks[
-                        youtubeCurrentIndex
-                    ]?.videoId
+                    selectedTrack.videoId
             );
 
         console.log(
@@ -852,6 +937,52 @@ function playYouTubeQueueTrack(
     );
 
     youtubePlayer.play();
+}
+
+function playNextYouTubeQueueTrack(): void {
+
+    if (
+        youtubeQueue.length === 0
+    ) {
+        console.log(
+            '[MusicPlayer] YouTube queue is empty.'
+        );
+
+        return;
+    }
+
+    if (
+        youtubeQueueCurrentIndex < 0
+    ) {
+        console.log(
+            '[MusicPlayer] YouTube queue index is invalid:',
+            youtubeQueueCurrentIndex
+        );
+
+        return;
+    }
+
+    const nextIndex =
+        youtubeQueueCurrentIndex + 1;
+
+    if (
+        nextIndex >= youtubeQueue.length
+    ) {
+        console.log(
+            '[MusicPlayer] YouTube queue reached the end.'
+        );
+
+        return;
+    }
+
+    console.log(
+        '[MusicPlayer] Playing next YouTube queue track:',
+        nextIndex
+    );
+
+    playYouTubeQueueTrack(
+        nextIndex
+    );
 }
 
     function showYouTubePanel(): void {
@@ -1031,47 +1162,38 @@ function playYouTubeQueueTrack(
 
                         if (selectedTrack) {
 
-                            const playlistQuery =
-                                selectedTrack.title;
+                        const playlistQuery =
+                            selectedTrack.title;
 
-                            console.log(
-                                '[MusicPlayer] Searching YouTube playlist for selected track:',
-                                playlistQuery
-                            );
+                        console.log(
+                            '[MusicPlayer] Searching YouTube playlist for selected track:',
+                            playlistQuery
+                        );
 
-                            await searchYouTubePlaylistsInternal(
-                                playlistQuery
-                            );
+                        // Reproducimos inmediatamente la canción
+                        // que el usuario acaba de seleccionar.
+                        audioPlayer.pause();
+
+                        activePlaybackSource =
+                            'youtube';
+
+                        youtubePlayer.load(
+                            videoId
+                        );
+
+                        youtubePlayer.play();
+
+                        // La construcción de la cola continúa
+                        // en segundo plano.
+                        void searchYouTubePlaylistsInternal(
+                            playlistQuery,
+                            selectedTrack
+                        );
                         }
 
                         // Si la playlist interna encontró
                         // el video seleccionado, reproducimos
                         // desde la cola.
-                        if (
-                            youtubeQueueCurrentIndex >= 0
-                        ) {
-
-                            playYouTubeQueueTrack(
-                                youtubeQueueCurrentIndex
-                            );
-
-                        } else {
-
-                            // Si no se encontró una playlist
-                            // válida, mantenemos el comportamiento
-                            // actual y reproducimos directamente
-                            // el video seleccionado.
-                            audioPlayer.pause();
-
-                            activePlaybackSource =
-                                'youtube';
-
-                            youtubePlayer.load(
-                                videoId
-                            );
-
-                            youtubePlayer.play();
-                        }
                     }
                 );
 
