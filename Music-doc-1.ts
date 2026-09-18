@@ -36,6 +36,21 @@ function initializeMusicPlayer(): void {
             '.music-player-play'
         );
 
+    const previousButton =
+    player.querySelector(
+        '.music-player-previous'
+    );
+
+    const nextButton =
+        player.querySelector(
+            '.music-player-next'
+        );
+
+    const repeatButton =
+        player.querySelector(
+            '.music-player-repeat'
+        );
+
     const playIcon =
         player.querySelector(
             '.music-player-play-icon'
@@ -147,19 +162,22 @@ function initializeMusicPlayer(): void {
         );
 
     if (
-                !(trackArtist instanceof HTMLElement) ||
-                !(trackTitleWrapper instanceof HTMLElement) ||
-                !(trackTitle instanceof HTMLElement) ||
-                !(stationPanel instanceof HTMLElement) ||
-                !(youtubePanel instanceof HTMLElement) ||
-                !(youtubeButton instanceof HTMLButtonElement) ||
-                !(youtubeBackButton instanceof HTMLButtonElement) ||
-                !(youtubeSearchForm instanceof HTMLFormElement) ||
-                !(youtubeSearchInput instanceof HTMLInputElement) ||
-                !(youtubeResults instanceof HTMLElement) ||
-                !(youtubeLoadMore instanceof HTMLButtonElement) ||
-                !(youtubePlayerContainer instanceof HTMLElement)
-            ) {
+        !(trackArtist instanceof HTMLElement) ||
+        !(trackTitleWrapper instanceof HTMLElement) ||
+        !(trackTitle instanceof HTMLElement) ||
+        !(stationPanel instanceof HTMLElement) ||
+        !(youtubePanel instanceof HTMLElement) ||
+        !(youtubeButton instanceof HTMLButtonElement) ||
+        !(youtubeBackButton instanceof HTMLButtonElement) ||
+        !(youtubeSearchForm instanceof HTMLFormElement) ||
+        !(youtubeSearchInput instanceof HTMLInputElement) ||
+        !(youtubeResults instanceof HTMLElement) ||
+        !(youtubeLoadMore instanceof HTMLButtonElement) ||
+        !(youtubePlayerContainer instanceof HTMLElement) ||
+        !(previousButton instanceof HTMLButtonElement) ||
+        !(nextButton instanceof HTMLButtonElement) ||
+        !(repeatButton instanceof HTMLButtonElement)
+    ) {
         console.error(
             '[MusicPlayer] Required elements not found.'
         );
@@ -430,6 +448,8 @@ function initializeMusicPlayer(): void {
 
     let youtubeQueueCurrentIndex = -1;
     let youtubeCurrentIndex = -1;
+
+    let youtubeRepeat = false;
 
 
     async function loadYouTubePlaylist(
@@ -871,6 +891,8 @@ async function searchYouTubePlaylistsInternal(
                     track.videoId ===
                     selectedTrack.videoId
             );
+            
+            updateUI();
 
         console.log(
             '[MusicPlayer] YouTube queue:',
@@ -968,10 +990,19 @@ function playNextYouTubeQueueTrack(): void {
     if (
         nextIndex >= youtubeQueue.length
     ) {
+
         console.log(
             '[MusicPlayer] YouTube queue reached the end.'
         );
 
+        /*
+         * Repeat no significa repetir toda
+         * la cola.
+         *
+         * La repetición de la canción actual
+         * se controla cuando YouTube informa
+         * que la reproducción terminó.
+         */
         return;
     }
 
@@ -982,6 +1013,88 @@ function playNextYouTubeQueueTrack(): void {
 
     playYouTubeQueueTrack(
         nextIndex
+    );
+}
+
+function playPreviousYouTubeQueueTrack(): void {
+
+    if (
+        youtubeQueue.length === 0
+    ) {
+        console.log(
+            '[MusicPlayer] YouTube queue is empty.'
+        );
+
+        return;
+    }
+
+    if (
+        youtubeQueueCurrentIndex < 0
+    ) {
+        console.log(
+            '[MusicPlayer] YouTube queue index is invalid:',
+            youtubeQueueCurrentIndex
+        );
+
+        return;
+    }
+
+    const currentTime =
+        youtubePlayer.getCurrentTime();
+
+    /*
+     * Si la canción ya lleva más de 3 segundos,
+     * Previous simplemente vuelve al inicio
+     * de la canción actual.
+     */
+    if (
+        currentTime > 3
+    ) {
+
+        console.log(
+            '[MusicPlayer] Restarting current YouTube track.'
+        );
+
+        youtubePlayer.seekTo(
+            0
+        );
+
+        youtubePlayer.play();
+
+        return;
+    }
+
+    const previousIndex =
+        youtubeQueueCurrentIndex - 1;
+
+    /*
+     * Si estamos en la primera canción,
+     * no retrocedemos más.
+     */
+    if (
+        previousIndex < 0
+    ) {
+
+        console.log(
+            '[MusicPlayer] YouTube queue is already at the first track.'
+        );
+
+        youtubePlayer.seekTo(
+            0
+        );
+
+        youtubePlayer.play();
+
+        return;
+    }
+
+    console.log(
+        '[MusicPlayer] Playing previous YouTube queue track:',
+        previousIndex
+    );
+
+    playYouTubeQueueTrack(
+        previousIndex
     );
 }
 
@@ -1561,6 +1674,22 @@ function playNextYouTubeQueueTrack(): void {
             'youtube'
                 ? youtubePlayer.getState()
                 : audioPlayer.getState();
+        const hasYouTubeQueue =
+                activePlaybackSource ===
+                    'youtube' &&
+                youtubeQueue.length > 0 &&
+                youtubeQueueCurrentIndex >= 0;
+
+            previousButton.disabled =
+                !hasYouTubeQueue;
+
+            nextButton.disabled =
+                !hasYouTubeQueue ||
+                youtubeQueueCurrentIndex >=
+                    youtubeQueue.length - 1;
+
+            repeatButton.disabled =
+                !hasYouTubeQueue;
 
         updateTrackInfo();
 
@@ -1624,6 +1753,70 @@ function playNextYouTubeQueueTrack(): void {
             );
         }
 
+        /* --------------------------------------------------
+        PREVIOUS / NEXT / REPEAT
+        -------------------------------------------------- */
+
+        previousButton.addEventListener(
+            'click',
+            () => {
+
+                if (
+                    activePlaybackSource !==
+                    'youtube'
+                ) {
+                    return;
+                }
+
+                playPreviousYouTubeQueueTrack();
+            }
+        );
+
+        nextButton.addEventListener(
+            'click',
+            () => {
+
+                if (
+                    activePlaybackSource !==
+                    'youtube'
+                ) {
+                    return;
+                }
+
+                playNextYouTubeQueueTrack();
+            }
+        );
+
+        repeatButton.addEventListener(
+            'click',
+            () => {
+
+                if (
+                    activePlaybackSource !==
+                    'youtube'
+                ) {
+                    return;
+                }
+
+                youtubeRepeat =
+                    !youtubeRepeat;
+
+                repeatButton.setAttribute(
+                    'aria-pressed',
+                    String(youtubeRepeat)
+                );
+
+                repeatButton.classList.toggle(
+                    'is-active',
+                    youtubeRepeat
+                );
+
+                console.log(
+                    '[MusicPlayer] YouTube repeat:',
+                    youtubeRepeat
+                );
+            }
+        );
 
         /* MUTE */
 
@@ -1765,7 +1958,65 @@ function playNextYouTubeQueueTrack(): void {
         updateUI
     );
 
+youtubePlayer.subscribe(
+    state => {
 
+        if (
+            state.status !==
+            'ended'
+        ) {
+            return;
+        }
+
+        console.log(
+            '[MusicPlayer] YouTube track ended.'
+        );
+
+        if (
+            youtubeQueueCurrentIndex < 0 ||
+            youtubeQueueCurrentIndex >=
+                youtubeQueue.length
+        ) {
+
+            console.log(
+                '[MusicPlayer] Cannot handle ended track: invalid YouTube queue index.',
+                youtubeQueueCurrentIndex
+            );
+
+            return;
+        }
+
+        /*
+         * Repeat repite únicamente
+         * la canción actual.
+         */
+        if (
+            youtubeRepeat
+        ) {
+
+            console.log(
+                '[MusicPlayer] Repeat enabled. Replaying current YouTube track.'
+            );
+
+            playYouTubeQueueTrack(
+                youtubeQueueCurrentIndex
+            );
+
+            return;
+        }
+
+        /*
+         * Repeat apagado:
+         * avanzamos a la siguiente canción.
+         */
+        console.log(
+            '[MusicPlayer] Repeat disabled. Playing next YouTube track.'
+        );
+
+        playNextYouTubeQueueTrack();
+    }
+);
+    
 /* --------------------------------------------------
    PLAY / PAUSE
 -------------------------------------------------- */
