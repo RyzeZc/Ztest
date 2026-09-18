@@ -1044,18 +1044,34 @@ function playYouTubeQueueTrack(
                             );
                         }
 
-                         // Si había una radio reproduciéndose,
-                        // la detenemos antes de iniciar YouTube.
-                        audioPlayer.pause();
+                        // Si la playlist interna encontró
+                        // el video seleccionado, reproducimos
+                        // desde la cola.
+                        if (
+                            youtubeQueueCurrentIndex >= 0
+                        ) {
 
-                        activePlaybackSource =
-                            'youtube';
+                            playYouTubeQueueTrack(
+                                youtubeQueueCurrentIndex
+                            );
 
-                        youtubePlayer.load(
-                            videoId
-                        );
+                        } else {
 
-                        youtubePlayer.play();
+                            // Si no se encontró una playlist
+                            // válida, mantenemos el comportamiento
+                            // actual y reproducimos directamente
+                            // el video seleccionado.
+                            audioPlayer.pause();
+
+                            activePlaybackSource =
+                                'youtube';
+
+                            youtubePlayer.load(
+                                videoId
+                            );
+
+                            youtubePlayer.play();
+                        }
                     }
                 );
 
