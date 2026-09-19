@@ -159,11 +159,16 @@ function initializeMusicPlayer(): void {
             '.music-player-track-title-wrapper'
         );
 
+    const trackArtistWrapper =
+        player.querySelector(
+            '.music-player-track-artist-wrapper'
+        );
+
     const trackTitle =
         player.querySelector(
             '.music-player-track-title'
         );
-    
+        
     const progressSeek =
     player.querySelector(
         '.music-player-seek'
@@ -197,6 +202,7 @@ function initializeMusicPlayer(): void {
     if (
         !(trackArtist instanceof HTMLElement) ||
         !(trackTitleWrapper instanceof HTMLElement) ||
+        !(trackArtistWrapper instanceof HTMLElement) ||
         !(trackTitle instanceof HTMLElement) ||
         !(stationPanel instanceof HTMLElement) ||
         !(youtubePanel instanceof HTMLElement) ||
@@ -1611,36 +1617,26 @@ async function searchYouTube(
        INFORMACIÓN DEL TRACK
     -------------------------------------------------- */
 
-    function updateTrackInfo(): void {
+function updateTrackInfo(): void {
 
-        const state =
-            audioPlayer.getState();
+    const state =
+        activePlaybackSource === 'youtube'
+            ? youtubePlayer.getState()
+            : audioPlayer.getState();
 
-        const source =
-            state.source;
+    const source =
+        audioPlayer.getState().source;
 
-        if (!source) {
+    if (
+        activePlaybackSource === 'youtube'
+    ) {
 
-            player.classList.remove(
-                'is-radio',
-                'is-track'
-            );
+        const track =
+            youtubeQueue[
+                youtubeQueueCurrentIndex
+            ];
 
-            return;
-        }
-
-        if (
-            source.type === 'radio'
-        ) {
-
-            player.classList.add(
-                'is-radio'
-            );
-
-            player.classList.remove(
-                'is-track'
-            );
-
+        if (!track) {
             return;
         }
 
@@ -1652,12 +1648,73 @@ async function searchYouTube(
             'is-radio'
         );
 
+        trackTitle.textContent =
+            track.title;
+
         trackArtist.textContent =
-            source.artist ??
+            track.artist ??
             'ARTISTA DESCONOCIDO';
+
+        if (track.thumbnail) {
+
+            artworkImage.src =
+                track.thumbnail;
+
+            artworkImage.alt =
+                `${track.title} - portada`;
+
+        } else {
+
+            artworkImage.removeAttribute(
+                'src'
+            );
+
+            artworkImage.alt = '';
+        }
+
+        requestAnimationFrame(
+            updateTrackMarquee
+        );
+
+        return;
+    }
+
+    if (!source) {
+
+        player.classList.remove(
+            'is-radio',
+            'is-track'
+        );
+
+        artworkImage.removeAttribute(
+            'src'
+        );
+
+        artworkImage.alt = '';
+
+        trackTitle.textContent = '';
+        trackArtist.textContent = '';
+
+        return;
+    }
+
+    if (
+        source.type === 'radio'
+    ) {
+
+        player.classList.add(
+            'is-radio'
+        );
+
+        player.classList.remove(
+            'is-track'
+        );
 
         trackTitle.textContent =
             source.name;
+
+        trackArtist.textContent =
+            'RADIO';
 
         if (source.artwork) {
 
@@ -1679,62 +1736,129 @@ async function searchYouTube(
         requestAnimationFrame(
             updateTrackMarquee
         );
+
+        return;
     }
 
+    player.classList.add(
+        'is-track'
+    );
 
-    function updateTrackMarquee(): void {
+    player.classList.remove(
+        'is-radio'
+    );
 
-        trackTitle.classList.remove(
-            'is-marquee'
+    trackArtist.textContent =
+        source.artist ??
+        'ARTISTA DESCONOCIDO';
+
+    trackTitle.textContent =
+        source.name;
+
+    if (source.artwork) {
+
+        artworkImage.src =
+            source.artwork;
+
+        artworkImage.alt =
+            `${source.name} - portada`;
+
+    } else {
+
+        artworkImage.removeAttribute(
+            'src'
         );
 
-        trackTitle.style.removeProperty(
-            '--music-player-title-overflow'
-        );
+        artworkImage.alt = '';
+    }
 
-        trackTitle.style.removeProperty(
-            '--music-player-marquee-duration'
-        );
+    requestAnimationFrame(
+        updateTrackMarquee
+    );
+}
 
-        const overflow =
-            trackTitle.scrollWidth -
-            trackTitleWrapper.clientWidth;
 
-        if (
-            overflow <= 1
-        ) {
-            return;
+function updateTrackMarquee(): void {
+
+    const marqueeElements = [
+        {
+            element: trackTitle,
+            wrapper: trackTitleWrapper,
+            overflowVariable:
+                '--music-player-title-overflow',
+            durationVariable:
+                '--music-player-title-marquee-duration'
+        },
+        {
+            element: trackArtist,
+            wrapper: trackArtistWrapper,
+            overflowVariable:
+                '--music-player-artist-overflow',
+            durationVariable:
+                '--music-player-artist-marquee-duration'
         }
+    ];
 
-        const distance =
-            Math.ceil(
-                overflow
+    marqueeElements.forEach(
+        ({
+            element,
+            wrapper,
+            overflowVariable,
+            durationVariable
+        }) => {
+
+            element.classList.remove(
+                'is-marquee'
             );
 
-        const duration =
-            Math.max(
-                5,
-                Math.min(
-                    14,
-                    distance / 12
-                )
+            element.style.removeProperty(
+                overflowVariable
             );
 
-        trackTitle.style.setProperty(
-            '--music-player-title-overflow',
-            `${distance}px`
-        );
+            element.style.removeProperty(
+                durationVariable
+            );
 
-        trackTitle.style.setProperty(
-            '--music-player-marquee-duration',
-            `${duration}s`
-        );
+            const overflow =
+                element.scrollWidth -
+                wrapper.clientWidth;
 
-        trackTitle.classList.add(
-            'is-marquee'
-        );
-    }
+            if (
+                overflow <= 1
+            ) {
+                return;
+            }
 
+            const distance =
+                Math.ceil(
+                    overflow
+                );
+
+            const duration =
+                Math.max(
+                    5,
+                    Math.min(
+                        14,
+                        distance / 12
+                    )
+                );
+
+            element.style.setProperty(
+                overflowVariable,
+                `${distance}px`
+            );
+
+            element.style.setProperty(
+                durationVariable,
+                `${duration}s`
+            );
+
+            element.classList.add(
+                'is-marquee'
+            );
+        }
+    );
+}
 
     /* --------------------------------------------------
        UI
