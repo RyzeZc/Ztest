@@ -74,6 +74,11 @@ function initializeMusicPlayer(): void {
             '.music-player-volume-slider'
         );
 
+    const volumeProgress =
+    player.querySelector(
+        '.music-player-volume-progress'
+    );
+
     const statusText =
         player.querySelector(
             '.music-player-status-text'
@@ -164,6 +169,11 @@ function initializeMusicPlayer(): void {
         '.music-player-seek'
     );
 
+    const progressSeekProgress =
+    player.querySelector(
+        '.music-player-seek-progress'
+    );
+
     const progressCurrent =
         player.querySelector(
             '.music-player-time-current'
@@ -193,7 +203,9 @@ function initializeMusicPlayer(): void {
         !(shuffleButton instanceof HTMLButtonElement) ||
         !(progressSeek instanceof HTMLInputElement) ||
         !(progressCurrent instanceof HTMLElement) ||
-        !(progressTotal instanceof HTMLElement)
+        !(progressTotal instanceof HTMLElement) ||
+        !(progressSeekProgress instanceof HTMLElement) ||
+        !(volumeProgress instanceof HTMLElement)
     ) {
         console.error(
             '[MusicPlayer] Required elements not found.'
@@ -474,7 +486,11 @@ function initializeMusicPlayer(): void {
     ReturnType<typeof setInterval> | null =
     null;
 
+    let youtubeIsSeeking = false;
 
+    let youtubeSeekTargetTime:
+    number | null = null;
+    
 function formatTime(
     seconds: number
 ): string {
@@ -504,6 +520,12 @@ function formatTime(
 
 function updateYouTubeProgress(): void {
 
+    if (
+        youtubeIsSeeking ||
+        youtubeSeekTargetTime !== null
+    ) {
+        return;
+    }
     const currentTime =
         youtubePlayer.getCurrentTime();
 
@@ -537,6 +559,14 @@ function updateYouTubeProgress(): void {
         String(
             (currentTime / duration) * 100
         );
+
+    progressSeek.style.setProperty(
+    '--music-player-seek-progress',
+    `${(currentTime / duration) * 100}%`
+    );
+
+    progressSeekProgress.style.width =
+    `${(currentTime / duration) * 100}%`;
 }
 
 function startYouTubeProgress(): void {
@@ -1221,8 +1251,6 @@ item.addEventListener(
 
             youtubePlayer.play();
 
-            startYouTubeProgress();
-
             console.log(
                 '[MusicPlayer] YouTube playback started:',
                 videoId
@@ -1858,6 +1886,9 @@ async function searchYouTube(
             String(
                 state.volume
             );
+            
+        volumeProgress.style.width =
+        `${state.volume * 100}%`;
 
 
         /* ESTADO */
@@ -2094,6 +2125,207 @@ youtubePlayer.subscribe(
     }
 );
     
+
+/* --------------------------------------------------
+   SEEK
+-------------------------------------------------- */
+
+progressSeek.addEventListener(
+    'pointerdown',
+    () => {
+
+        if (
+            activePlaybackSource !==
+            'youtube'
+        ) {
+            return;
+        }
+
+        youtubeIsSeeking =
+            true;
+
+        stopYouTubeProgress();
+    }
+);
+
+progressSeek.addEventListener(
+    'input',
+    () => {
+
+        if (
+            activePlaybackSource !==
+            'youtube'
+        ) {
+            return;
+        }
+
+        const duration =
+            youtubePlayer.getDuration();
+
+        if (
+            !Number.isFinite(duration) ||
+            duration <= 0
+        ) {
+            return;
+        }
+
+        const percentage =
+            Number(
+                progressSeek.value
+            );
+
+        if (
+            !Number.isFinite(percentage)
+        ) {
+            return;
+        }
+
+        const previewTime =
+            duration *
+            (percentage / 100);
+
+        progressCurrent.textContent =
+            formatTime(
+                previewTime
+            );
+        progressSeekProgress.style.width =
+            `${percentage}%`;
+    }
+);
+
+progressSeek.addEventListener(
+    'change',
+    () => {
+
+        if (
+            activePlaybackSource !==
+            'youtube'
+        ) {
+            youtubeIsSeeking =
+                false;
+
+            return;
+        }
+
+        const duration =
+            youtubePlayer.getDuration();
+
+        if (
+            !Number.isFinite(duration) ||
+            duration <= 0
+        ) {
+            youtubeIsSeeking =
+                false;
+
+            return;
+        }
+
+        const percentage =
+            Number(
+                progressSeek.value
+            );
+
+        if (
+            !Number.isFinite(percentage)
+        ) {
+            youtubeIsSeeking =
+                false;
+
+            return;
+        }
+
+        const targetTime =
+            duration *
+            (percentage / 100);
+
+        youtubeSeekTargetTime =
+            targetTime;
+
+        progressCurrent.textContent =
+            formatTime(
+                targetTime
+            );
+
+        progressSeek.value =
+            String(
+                (targetTime / duration) *
+                100
+            );
+        
+        progressSeekProgress.style.width =
+        `${(targetTime / duration) * 100}%`;
+
+        youtubePlayer.seekTo(
+            targetTime
+        );
+
+        const seekStartTime =
+            performance.now();
+
+        const waitForSeek =
+            () => {
+
+                if (
+                    youtubeSeekTargetTime ===
+                    null
+                ) {
+                    return;
+                }
+
+                const currentTime =
+                    youtubePlayer
+                        .getCurrentTime();
+
+                const elapsed =
+                    performance.now() -
+                    seekStartTime;
+
+                const reachedTarget =
+                    Number.isFinite(
+                        currentTime
+                    ) &&
+                    Math.abs(
+                        currentTime -
+                        targetTime
+                    ) < 0.35;
+
+                if (
+                    reachedTarget ||
+                    elapsed >= 1000
+                ) {
+                    youtubeSeekTargetTime =
+                        null;
+
+                    youtubeIsSeeking =
+                        false;
+
+                    updateYouTubeProgress();
+
+                    const state =
+                        youtubePlayer
+                            .getState();
+
+                    if (
+                        state.status ===
+                        'playing'
+                    ) {
+                        startYouTubeProgress();
+                    }
+
+                    return;
+                }
+
+                requestAnimationFrame(
+                    waitForSeek
+                );
+            };
+
+        requestAnimationFrame(
+            waitForSeek
+        );
+    }
+);
+
 /* --------------------------------------------------
    PLAY / PAUSE
 -------------------------------------------------- */
