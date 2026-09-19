@@ -1644,13 +1644,65 @@ console.log(
 
             youtubePlayer.play();
 
-        } catch (error) {
-
-            console.error(
-                '[MusicPlayer] Music resolve failed:',
-                error
+            console.log(
+                '[MusicPlayer] YouTube playback started:',
+                videoId
             );
-        }
+
+            try {
+
+                const upNextResponse =
+                    await fetch(
+                        `/api/v2/music/up-next?videoId=${encodeURIComponent(
+                            videoId
+                        )}`
+                    );
+
+                if (!upNextResponse.ok) {
+
+                    throw new Error(
+                        `Up Next request failed: ${upNextResponse.status}`
+                    );
+
+                }
+
+                const upNextData =
+                    await upNextResponse.json();
+
+                if (
+                    !upNextData.success ||
+                    !Array.isArray(
+                        upNextData.results
+                    )
+                ) {
+
+                    throw new Error(
+                        'Invalid Up Next response'
+                    );
+
+                }
+
+                youtubeQueue =
+                    upNextData.results;
+
+                console.log(
+                    '[MusicPlayer] YouTube Up Next queue loaded:',
+                    youtubeQueue
+                );
+
+                console.log(
+                    '[MusicPlayer] YouTube Up Next queue length:',
+                    youtubeQueue.length
+                );
+
+            } catch (error) {
+
+                console.error(
+                    '[MusicPlayer] Failed to load YouTube Up Next:',
+                    error
+                );
+
+            }
     }
 );
 
