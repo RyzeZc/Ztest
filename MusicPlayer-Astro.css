@@ -3,63 +3,23 @@
    ========================================================= */
 
 .music-player {
-    position: fixed;
-
-    right: 220px;
-    bottom: 20px;
-
-    z-index: 1000;
-
+    /* Quitamos left, transform y position fixed */
+    width: 850px;
+    height: 100%; /* Ocupa el alto del padre */
+    
     display: flex;
     align-items: center;
-
-    width: 580px;
-    height: 76px;
-
     box-sizing: border-box;
-
     padding: 0 10px;
-
-    background:
-        linear-gradient(
-            180deg,
-            #171717 0%,
-            #0d0d0d 50%,
-            #080808 100%
-        );
-
-    border: 1px solid #303030;
-
     color: #fff;
 
-    box-shadow:
-        0 12px 32px rgba(0, 0, 0, 0.48),
-        inset 0 1px 0 rgba(255, 255, 255, 0.055);
-
+    /* MAGIA: margenes automáticos a los lados lo centran, pero respetan a los vecinos */
+    margin-inline: auto; 
     
+    /* Evita que el reproductor se rompa o se achique menos de lo debido */
+    min-width: 0; 
 }
 
-
-/* Línea superior */
-
-.music-player::before {
-    content: '';
-
-    position: absolute;
-
-    top: 0;
-    left: 0;
-
-    width: 100%;
-    height: 2px;
-
-    background: #393939;
-}
-
-
-.music-player.is-playing::before {
-    background: #d97832;
-}
 
 
 /* =========================================================
@@ -262,25 +222,56 @@
    CONTROLES
    ========================================================= */
 
+.music-player-controls-area {
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+
+    flex: 1 1 auto;
+
+    min-width: 0;
+
+    height: 80px;
+
+    margin: 0 18px;
+}
+
+/* --------------------------------------------------
+   CONTROLES PRINCIPALES
+-------------------------------------------------- */
+
 .music-player-controls {
     display: flex;
     align-items: center;
-    gap: 3px;
-    margin: 0 7px;
+    justify-content: center;
+
+    gap: 5px;
+
+    height: 44px;
+
+    flex-shrink: 0;
 }
 
 .music-player-button {
     position: relative;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     width: 34px;
     height: 34px;
+
     padding: 0;
+
     border: 0;
     background: transparent;
+
     color: #858585;
+
     cursor: pointer;
+
     transition:
         color 0.15s ease,
         background-color 0.15s ease,
@@ -323,13 +314,17 @@
     transform: none;
 }
 
-/* CONTROLES SECUNDARIOS */
+/* --------------------------------------------------
+   CONTROLES SECUNDARIOS
+-------------------------------------------------- */
 
 .music-player-control-icon {
     width: 16px;
     height: 16px;
+
     fill: none;
     stroke: currentColor;
+
     stroke-width: 1.8;
     stroke-linecap: round;
     stroke-linejoin: round;
@@ -343,14 +338,18 @@
     stroke: none;
 }
 
-
-/* PLAY / PAUSE */
+/* --------------------------------------------------
+   PLAY / PAUSE
+-------------------------------------------------- */
 
 .music-player-play {
     width: 46px;
     height: 46px;
+
     flex-shrink: 0;
+
     border-radius: 50%;
+
     color: #111;
     background: #d97832;
 }
@@ -367,16 +366,20 @@
 
 .music-player-play-ring {
     position: absolute;
+
     inset: 0;
+
     box-sizing: border-box;
+
     border: 2px solid transparent;
     border-radius: 50%;
+
     pointer-events: none;
+
     opacity: 0;
 }
 
 .music-player.is-loading .music-player-play-ring {
-
     opacity: 1;
 
     border-color:
@@ -392,15 +395,132 @@
 
 .music-player-play-icon {
     position: relative;
+
     z-index: 2;
+
     width: 28px;
     height: 28px;
+
     fill: currentColor;
-    transform: translateX(1px);
+
+    transform:
+        translateX(1px);
 }
 
-.music-player.is-playing .music-player-play-icon {
-    transform: translateX(0);
+.music-player.is-playing
+.music-player-play-icon {
+    transform:
+        translateX(0);
+}
+
+
+/* =========================================================
+   PROGRESO
+   ========================================================= */
+
+.music-player-progress {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    min-width: 0;
+
+    gap: 9px;
+
+    /*margin-top: 7px;*/
+
+    padding: 0;
+
+    box-sizing: border-box;
+}
+
+.music-player-time-current,
+.music-player-time-total {
+    flex-shrink: 0;
+
+    min-width: 28px;
+
+    color: #666;
+
+    font-size: 12px;
+    line-height: 1;
+
+    font-weight: 700;
+
+    font-variant-numeric:
+        tabular-nums;
+
+    text-align: center;
+}
+
+.music-player-seek {
+    flex: 1 1 auto;
+
+    min-width: 0;
+
+    width: 100%;
+
+    height: 4px;
+
+    margin: 0;
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    border: 0;
+    border-radius: 0;
+
+    background: #3a3a3a;
+
+    cursor: pointer;
+}
+
+/* Chrome / Edge / Safari */
+
+.music-player-seek::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+
+    width: 8px;
+    height: 8px;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #c8c8c8;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        background-color 0.15s ease;
+}
+
+.music-player-seek::-webkit-slider-thumb:hover {
+    background: #d97832;
+
+    transform:
+        scale(1.2);
+}
+
+/* Firefox */
+
+.music-player-seek::-moz-range-thumb {
+    width: 8px;
+    height: 8px;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: #c8c8c8;
+
+    cursor: pointer;
+}
+
+.music-player-seek:focus-visible {
+    outline: 1px solid #d97832;
+
+    outline-offset: 4px;
 }
 
 @keyframes music-player-spin {
