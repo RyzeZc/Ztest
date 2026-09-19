@@ -431,8 +431,16 @@ function initializeMusicPlayer(): void {
         'radio' | 'youtube' =
         'radio';
     
+    interface YouTubeQueueTrack {
+        videoId: string;
+        title: string;
+        artist: string;
+        duration: number | null;
+        thumbnail: string | null;
+    }
+
     let youtubeQueue:
-    DeezerTrack[] = [];
+        YouTubeQueueTrack[] = [];
 
 
     let youtubeTracks:
@@ -911,9 +919,9 @@ async function searchYouTubePlaylistsInternal(
     }
 }
 
-async function playYouTubeQueueTrack(
+function playYouTubeQueueTrack(
     index: number
-): Promise<void> {
+): void {
 
     if (
         index < 0 ||
@@ -923,6 +931,7 @@ async function playYouTubeQueueTrack(
             '[MusicPlayer] Invalid YouTube queue index:',
             index
         );
+
         return;
     }
 
@@ -936,6 +945,9 @@ async function playYouTubeQueueTrack(
     youtubeQueueCurrentIndex =
         index;
 
+    currentYouTubeVideoId =
+        track.videoId;
+
     console.log(
         '[MusicPlayer] Playing YouTube queue track:',
         track
@@ -946,149 +958,16 @@ async function playYouTubeQueueTrack(
         youtubeQueueCurrentIndex
     );
 
-const artistName =
-    track.artists
-        ?.map(
-            artist =>
-                artist.name
-        )
-        .join(', ') ??
-    '';
+    audioPlayer.pause();
 
-const artistId =
-    track.artists?.[0]?.id ??
-    null;
+    activePlaybackSource =
+        'youtube';
 
-console.log(
-    '[MusicPlayer] Deezer artist:',
-    {
-        id: artistId,
-        name: artistName,
-    }
-);
-
-const trackName =
-    track.name;
-
-    if (
-        !artistName ||
-        !trackName
-    ) {
-        console.log(
-            '[MusicPlayer] Cannot resolve queue track: missing artist or title.'
-        );
-        return;
-    }
-
-    console.log(
-        '[MusicPlayer] Resolving queue track:',
-        {
-            id: track.id,
-            artist: artistName,
-            title: trackName,
-        }
+    youtubePlayer.load(
+        track.videoId
     );
 
-    try {
-
-        const params =
-            new URLSearchParams();
-
-        params.set(
-            'id',
-            String(track.id)
-        );
-
-        params.set(
-            'artist',
-            artistName
-        );
-
-        params.set(
-            'title',
-            trackName
-        );
-
-        const response =
-            await fetch(
-                `/api/v2/music/resolve?${params.toString()}`
-            );
-
-        if (!response.ok) {
-
-            throw new Error(
-                `Music resolve failed: ${response.status}`
-            );
-        }
-
-        const data =
-            await response.json();
-
-        if (!data.success) {
-
-            throw new Error(
-                data.error ??
-                'Music resolve failed.'
-            );
-        }
-
-        const resolvedTracks =
-            data.results ?? [];
-
-        console.log(
-            '[MusicPlayer] Resolved queue tracks:',
-            resolvedTracks
-        );
-
-        if (
-            resolvedTracks.length === 0
-        ) {
-
-            console.log(
-                '[MusicPlayer] No YouTube video was found for queue track.'
-            );
-
-            return;
-        }
-
-        const videoId =
-            resolvedTracks[0]?.id;
-
-        if (!videoId) {
-
-            console.log(
-                '[MusicPlayer] Resolved queue result does not contain a video ID.'
-            );
-
-            return;
-        }
-
-        console.log(
-            '[MusicPlayer] Using YouTube video for queue track:',
-            videoId
-        );
-
-        currentYouTubeVideoId =
-            videoId;
-
-        audioPlayer.pause();
-
-        activePlaybackSource =
-            'youtube';
-
-        youtubePlayer.load(
-            videoId
-        );
-
-        youtubePlayer.play();
-
-    } catch (error) {
-
-        console.error(
-            '[MusicPlayer] Queue track resolve failed:',
-            error
-        );
-    }
+    youtubePlayer.play();
 }
 
 function getNextShuffleIndex(): number | null {
@@ -1461,6 +1340,7 @@ item.addEventListener(
             youtubeCurrentIndex
         );
 
+
         const artistName =
             result.artists
                 ?.map(
@@ -1469,69 +1349,6 @@ item.addEventListener(
                 )
                 .join(', ') ??
             '';
-
-        const artistId =
-            result.artists?.[0]?.id ??
-            null;
-
-        console.log(
-            '[MusicPlayer] Deezer artist:',
-            {
-                id: artistId,
-                name: artistName,
-            }
-        );
-
-        if (artistId) {
-
-            const artistTracks =
-                await loadDeezerArtistTracks(
-                    artistId
-                );
-
-            console.log(
-                '[MusicPlayer] Artist tracks received:',
-                artistTracks
-            );
-
-            youtubeQueue =
-                artistTracks;
-
-            console.log(
-    '[MusicPlayer] Selected result ID:',
-    result.id
-);
-
-console.log(
-    '[MusicPlayer] Artist track IDs:',
-    youtubeQueue.map(
-        (track, index) => ({
-            index,
-            id: track.id,
-            name: track.name
-        })
-    )
-);
-
-            youtubeQueueCurrentIndex =
-                youtubeQueue.findIndex(
-                    track =>
-                        track.id ===
-                        result.id
-                );
-
-            console.log(
-                '[MusicPlayer] YouTube queue loaded:',
-                youtubeQueue
-            );
-
-            console.log(
-                '[MusicPlayer] YouTube queue current index:',
-                youtubeQueueCurrentIndex
-            );
-
-        }
-
 
         const trackName =
             result.name;
@@ -1682,20 +1499,40 @@ console.log(
 
                 }
 
-                youtubeQueue =
-                    upNextData.results;
+                    youtubeQueue =
+                        upNextData.results;
 
-                console.log(
-                    '[MusicPlayer] YouTube Up Next queue loaded:',
-                    youtubeQueue
-                );
+                    youtubeQueueCurrentIndex =
+                        youtubeQueue.findIndex(
+                            track =>
+                                track.videoId ===
+                                videoId
+                        );
 
-                console.log(
-                    '[MusicPlayer] YouTube Up Next queue length:',
-                    youtubeQueue.length
-                );
+                    if (
+                        youtubeQueueCurrentIndex < 0 &&
+                        youtubeQueue.length > 0
+                    ) {
+                        youtubeQueueCurrentIndex =
+                            0;
+                    }
 
-            } catch (error) {
+                    console.log(
+                        '[MusicPlayer] YouTube Up Next queue loaded:',
+                        youtubeQueue
+                    );
+
+                    console.log(
+                        '[MusicPlayer] YouTube Up Next queue length:',
+                        youtubeQueue.length
+                    );
+
+                    console.log(
+                        '[MusicPlayer] YouTube queue current index:',
+                        youtubeQueueCurrentIndex
+                    );
+
+                } catch (error) {
 
                 console.error(
                     '[MusicPlayer] Failed to load YouTube Up Next:',
@@ -1703,6 +1540,15 @@ console.log(
                 );
 
             }
+
+        } catch (error) {
+
+            console.error(
+                '[MusicPlayer] Music resolve failed:',
+                error
+            );
+
+        }
     }
 );
 
@@ -1712,89 +1558,6 @@ console.log(
             }
         );
     }
-
-
-async function loadDeezerArtistTracks(
-    artistId: number
-): Promise<DeezerTrack[]> {
-
-    if (
-        !Number.isInteger(artistId) ||
-        artistId <= 0
-    ) {
-        console.log(
-            '[MusicPlayer] Invalid Deezer artist ID:',
-            artistId
-        );
-
-        return [];
-    }
-
-    console.log(
-        '[MusicPlayer] Loading Deezer artist tracks:',
-        artistId
-    );
-
-    try {
-
-        const params =
-            new URLSearchParams();
-
-        params.set(
-            'id',
-            String(artistId)
-        );
-
-        const response =
-            await fetch(
-                `/api/v2/music/artist-tracks?${params.toString()}`
-            );
-
-        if (!response.ok) {
-
-            throw new Error(
-                `Artist tracks request failed: ${response.status}`
-            );
-        }
-
-        const data =
-            await response.json();
-
-        if (!data.success) {
-
-            throw new Error(
-                data.error ??
-                'Artist tracks request failed.'
-            );
-        }
-
-        const tracks:
-            DeezerTrack[] =
-            data.pagination?.data ??
-            [];
-
-        console.log(
-            '[MusicPlayer] Deezer artist tracks loaded:',
-            tracks
-        );
-
-        console.log(
-            '[MusicPlayer] Deezer artist tracks count:',
-            tracks.length
-        );
-
-        return tracks;
-
-    } catch (error) {
-
-        console.error(
-            '[MusicPlayer] Failed to load Deezer artist tracks:',
-            error
-        );
-
-        return [];
-    }
-}
 
 async function searchYouTube(
     query: string,
