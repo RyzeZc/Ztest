@@ -1886,9 +1886,11 @@ async function searchYouTube(
             String(
                 state.volume
             );
-            
-        volumeProgress.style.width =
-        `${state.volume * 100}%`;
+
+        volumeProgress.style.setProperty(
+            '--music-player-volume-progress',
+            `${state.volume * 100}%`
+        );
 
 
         /* ESTADO */
