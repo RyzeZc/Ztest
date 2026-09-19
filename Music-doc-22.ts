@@ -396,6 +396,19 @@ function initializeMusicPlayer(): void {
             return;
         }
 
+        activePlaybackSource =
+            'radio';
+
+        stopYouTubeProgress();
+
+        youtubeIsSeeking =
+            false;
+
+        youtubeSeekTargetTime =
+            null;
+
+        youtubePlayer.pause();
+
         currentStationId =
             station.id;
 
@@ -1735,9 +1748,28 @@ async function searchYouTube(
                 ? youtubePlayer.getState()
                 : audioPlayer.getState();
 
-const isYouTube =
-    activePlaybackSource ===
-    'youtube';
+        const isYouTube =
+            activePlaybackSource ===
+            'youtube';
+
+        progressSeek.disabled =
+            !isYouTube;
+
+        if (!isYouTube) {
+
+            progressCurrent.textContent =
+                '--';
+
+            progressTotal.textContent =
+                '--';
+
+            progressSeek.value =
+                '100';
+
+            progressSeekProgress.style.width =
+                '100%';
+
+        }
 
 videoToggle.hidden =
     !isYouTube;
