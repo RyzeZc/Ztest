@@ -292,6 +292,14 @@
     background: transparent;
 }
 
+.music-player-button.is-active {
+    color: #d97832;
+}
+
+.music-player-button.is-active:hover {
+    color: #e48a48;
+}
+
 .music-player-mute:active {
     transform: none;
 }
@@ -335,18 +343,6 @@
     stroke: none;
 }
 
-/* STOP */
-
-.music-player-stop {
-    width: 30px;
-    height: 30px;
-}
-
-.music-player-stop-icon {
-    width: 14px;
-    height: 14px;
-    fill: currentColor;
-}
 
 /* PLAY / PAUSE */
 
