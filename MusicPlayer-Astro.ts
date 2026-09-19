@@ -261,29 +261,6 @@ import './MusicPlayer.css';
 
     </button>
 
-    <!-- STOP -->
-
-    <button
-      class="music-player-button music-player-stop"
-      type="button"
-      aria-label="Detener"
-    >
-
-      <svg
-        class="music-player-stop-icon"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <rect
-          x="7"
-          y="7"
-          width="10"
-          height="10"
-        />
-      </svg>
-
-    </button>
-
     <!-- PLAY / PAUSE -->
 
     <button
