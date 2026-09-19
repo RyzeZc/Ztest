@@ -669,6 +669,10 @@
    SLIDER
    ========================================================= */
 
+/* =========================================================
+   SLIDER DE VOLUMEN
+   ========================================================= */
+
 .music-player-volume-slider-wrapper {
     position: relative;
 
@@ -686,7 +690,7 @@
 
     background: #3a3a3a;
 
-    overflow: hidden;
+    overflow: visible;
 }
 
 .music-player-volume-progress {
@@ -695,11 +699,7 @@
     top: 0;
     left: 0;
 
-    width: var(
-        --music-player-volume-progress,
-        100%
-    );
-
+    width: 0;
     max-width: 100%;
 
     height: 100%;
@@ -714,7 +714,8 @@
 .music-player-volume-slider {
     position: absolute;
 
-    inset: 0;
+    top: 0;
+    left: 0;
 
     z-index: 2;
 
@@ -734,7 +735,9 @@
 }
 
 
-/* Chrome / Edge / Safari */
+/* =========================================================
+   POINTER — CHROME / EDGE / SAFARI
+   ========================================================= */
 
 .music-player-volume-slider::-webkit-slider-thumb {
     appearance: none;
@@ -765,10 +768,14 @@
 
 .music-player-volume-slider:hover::-webkit-slider-thumb {
     background: #d97832;
+
     transform: scale(1.15);
 }
 
-/* Firefox */
+
+/* =========================================================
+   POINTER — FIREFOX
+   ========================================================= */
 
 .music-player-volume-slider::-moz-range-thumb {
     width: 9px;
@@ -782,6 +789,11 @@
     opacity: 0;
 
     cursor: pointer;
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        background-color 0.15s ease;
 }
 
 .music-player-volume-slider:hover::-moz-range-thumb,
@@ -791,6 +803,127 @@
 
 .music-player-volume-slider:hover::-moz-range-thumb {
     background: #d97832;
+
+    transform: scale(1.15);
+}
+
+
+/* 
+YOUTUBE VIDEO 
+*/
+
+.music-player-video-toggle {
+    flex-shrink: 0;
+
+    width: 30px;
+    height: 30px;
+
+    margin-left: 2px;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transform:
+        translateY(3px)
+        scale(0.92);
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.18s ease,
+        transform 0.18s ease,
+        visibility 0s linear 0.18s;
+}
+
+.music-player-video-toggle.is-visible {
+    opacity: 1;
+    visibility: visible;
+
+    transform:
+        translateY(0)
+        scale(1);
+
+    pointer-events: auto;
+
+    transition:
+        opacity 0.18s ease,
+        transform 0.18s ease,
+        visibility 0s linear 0s;
+}
+.music-player-video-toggle-icon {
+    width: 17px;
+    height: 17px;
+
+    fill: none;
+    stroke: currentColor;
+
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* =========================================================
+   PANEL DE VIDEO
+   ========================================================= */
+
+.music-player-video-panel {
+    position: absolute;
+
+    left: 0;
+    bottom: calc(100% + 10px);
+
+    width: 298px;
+
+    padding: 8px;
+
+    box-sizing: border-box;
+
+    background:
+        linear-gradient(
+            180deg,
+            #171717 0%,
+            #0b0b0b 100%
+        );
+
+    border: 1px solid #303030;
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.55);
+
+    z-index: 100;
+}
+
+.music-player-video-panel[hidden] {
+    display: none;
+}
+
+.music-player-video-frame {
+    width: 280px;
+    height: 200px;
+
+    background: #000;
+
+    overflow: hidden;
+}
+
+.music-player-youtube-player {
+    width: 280px;
+    height: 200px;
+}
+
+/* =========================================================
+   ZONA DERECHA
+   ========================================================= */
+
+.music-player-right-zone {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    flex: 0 0 auto;
+
+    min-width: 0;
 }
 
 /* =========================================================
@@ -1450,12 +1583,20 @@
 }
 
 .music-player-youtube-player {
-    position: absolute;
-    width: 1px;
-    height: 1px;
+    position: relative;
+
+    width: 280px;
+    height: 200px;
+
+    display: block;
+
     overflow: hidden;
-    opacity: 0;
-    pointer-events: none;
+
+    opacity: 1;
+
+    pointer-events: auto;
+
+    background: #000;
 }
 
 /* =========================================================
