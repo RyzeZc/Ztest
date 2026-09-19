@@ -672,14 +672,21 @@
 .music-player-volume-slider-wrapper {
     position: relative;
 
+    flex: 0 0 55px;
+
     width: 55px;
+    min-width: 55px;
+    max-width: 55px;
+
     height: 4px;
 
-    flex-shrink: 0;
+    box-sizing: border-box;
 
     border-radius: .25rem;
 
     background: #3a3a3a;
+
+    overflow: hidden;
 }
 
 .music-player-volume-progress {
@@ -688,7 +695,13 @@
     top: 0;
     left: 0;
 
-    width: 100%;
+    width: var(
+        --music-player-volume-progress,
+        100%
+    );
+
+    max-width: 100%;
+
     height: 100%;
 
     border-radius: .25rem;
