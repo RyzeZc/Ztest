@@ -27,51 +27,50 @@ import './MusicPlayer.css';
     />
   </div>
 
-  <button
-    class="music-player-station-selector"
-    type="button"
-    aria-haspopup="listbox"
-    aria-expanded="false"
-  >
-
-    <span class="music-player-label">
-      RADIO
-    </span>
-
-    <span class="music-player-station">
-      Z Rock & Pop
-    </span>
-
-    <svg
-      class="music-player-station-arrow"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <path
-        d="M7 9L12 14L17 9"
-      />
-    </svg>
-
-  </button>
-
-  <div
-    class="music-player-track-info"
-    aria-hidden="true"
-  >
-
-    <div class="music-player-track-artist">
-      ARTISTA
-    </div>
+  <div class="music-player-track-info">
 
     <div class="music-player-track-title-wrapper">
-
       <div class="music-player-track-title">
         Nombre de la canción
       </div>
+    </div>
 
+    <div class="music-player-track-artist-wrapper">
+      <div class="music-player-track-artist">
+        ARTISTA
+      </div>
     </div>
 
   </div>
+
+<button
+  class="music-player-station-selector"
+  type="button"
+  aria-haspopup="listbox"
+  aria-expanded="false"
+  aria-label="Abrir estaciones"
+>
+  <svg
+    class="music-player-station-menu-icon"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <path d="M4 7H20" />
+    <path d="M4 12H20" />
+    <path d="M4 17H20" />
+  </svg>
+
+  <!-- Se mantienen porque MusicPlayer.ts los utiliza -->
+  <span class="music-player-label">
+    RADIO
+  </span>
+
+  <span class="music-player-station">
+    Z Rock & Pop
+  </span>
+
+</button>
+
 
   <div class="music-player-station-menu">
 
