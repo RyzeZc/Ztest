@@ -571,6 +571,44 @@ function playNextYouTubeQueueTrack(): void {
         return;
     }
 
+    /*
+     * Shuffle:
+     *
+     * Si estamos navegando hacia atrás
+     * dentro del historial, primero avanzamos
+     * dentro de ese historial.
+     */
+    if (
+        youtubeShuffle &&
+        youtubeShuffleHistoryPosition <
+            youtubeShuffleHistory.length - 1
+    ) {
+
+        youtubeShuffleHistoryPosition += 1;
+
+        const historyIndex =
+            youtubeShuffleHistory[
+                youtubeShuffleHistoryPosition
+            ];
+
+        if (
+            historyIndex === undefined
+        ) {
+            return;
+        }
+
+        console.log(
+            '[MusicPlayer] Shuffle next from history:',
+            historyIndex
+        );
+
+        playYouTubeQueueTrack(
+            historyIndex
+        );
+
+        return;
+    }
+
     let nextIndex:
         number | null = null;
 
@@ -591,9 +629,35 @@ function playNextYouTubeQueueTrack(): void {
             return;
         }
 
+        /*
+         * Eliminamos cualquier tramo
+         * posterior del historial.
+         *
+         * Esto ocurre si hicimos Previous
+         * y luego Next genera una nueva
+         * continuación.
+         */
+        youtubeShuffleHistory =
+            youtubeShuffleHistory.slice(
+                0,
+                youtubeShuffleHistoryPosition + 1
+            );
+
+        youtubeShuffleHistory.push(
+            nextIndex
+        );
+
+        youtubeShuffleHistoryPosition =
+            youtubeShuffleHistory.length - 1;
+
         console.log(
             '[MusicPlayer] Shuffle selected next track:',
             nextIndex
+        );
+
+        console.log(
+            '[MusicPlayer] Shuffle history:',
+            youtubeShuffleHistory
         );
 
     } else {
@@ -652,7 +716,9 @@ function playPreviousYouTubeQueueTrack(): void {
     const currentTime =
         youtubePlayer.getCurrentTime();
 
-    if (currentTime > 3) {
+    if (
+        currentTime > 3
+    ) {
         console.log(
             '[MusicPlayer] Restarting current YouTube track.'
         );
@@ -663,15 +729,22 @@ function playPreviousYouTubeQueueTrack(): void {
         return;
     }
 
+    /*
+     * Shuffle:
+     *
+     * El historial representa el camino
+     * real recorrido:
+     *
+     * [6, 4, 6, 12]
+     *           ↑
+     *        posición 3
+     */
     if (
         youtubeShuffle &&
-        youtubeShuffleHistory.length > 1
+        youtubeShuffleHistoryPosition > 0
     ) {
 
-        youtubeShuffleHistory.pop();
-
-        youtubeShuffleHistoryPosition =
-            youtubeShuffleHistory.length - 1;
+        youtubeShuffleHistoryPosition -= 1;
 
         const previousIndex =
             youtubeShuffleHistory[
@@ -693,6 +766,16 @@ function playPreviousYouTubeQueueTrack(): void {
             previousIndex
         );
 
+        console.log(
+            '[MusicPlayer] Shuffle history position:',
+            youtubeShuffleHistoryPosition
+        );
+
+        console.log(
+            '[MusicPlayer] Shuffle history:',
+            youtubeShuffleHistory
+        );
+
         playYouTubeQueueTrack(
             previousIndex
         );
@@ -700,6 +783,28 @@ function playPreviousYouTubeQueueTrack(): void {
         return;
     }
 
+    /*
+     * Shuffle activado pero no existe
+     * un elemento anterior en el historial.
+     */
+    if (
+        youtubeShuffle
+    ) {
+
+        console.log(
+            '[MusicPlayer] Shuffle history has no previous track.'
+        );
+
+        youtubePlayer.seekTo(0);
+        youtubePlayer.play();
+
+        return;
+    }
+
+    /*
+     * Shuffle desactivado:
+     * comportamiento secuencial normal.
+     */
     const previousIndex =
         youtubeQueueCurrentIndex - 1;
 
