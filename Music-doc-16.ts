@@ -158,7 +158,22 @@ function initializeMusicPlayer(): void {
         player.querySelector(
             '.music-player-track-title'
         );
+    
+    const progressSeek =
+    player.querySelector(
+        '.music-player-seek'
+    );
 
+    const progressCurrent =
+        player.querySelector(
+            '.music-player-time-current'
+        );
+
+    const progressTotal =
+        player.querySelector(
+            '.music-player-time-total'
+        );
+        
     if (
         !(trackArtist instanceof HTMLElement) ||
         !(trackTitleWrapper instanceof HTMLElement) ||
@@ -175,7 +190,10 @@ function initializeMusicPlayer(): void {
         !(previousButton instanceof HTMLButtonElement) ||
         !(nextButton instanceof HTMLButtonElement) ||
         !(repeatButton instanceof HTMLButtonElement) ||
-        !(shuffleButton instanceof HTMLButtonElement)
+        !(shuffleButton instanceof HTMLButtonElement) ||
+        !(progressSeek instanceof HTMLInputElement) ||
+        !(progressCurrent instanceof HTMLElement) ||
+        !(progressTotal instanceof HTMLElement)
     ) {
         console.error(
             '[MusicPlayer] Required elements not found.'
@@ -452,6 +470,109 @@ function initializeMusicPlayer(): void {
     let youtubeShuffleHistory: number[] = [];
     let youtubeShuffleHistoryPosition = -1;
 
+    let youtubeProgressInterval:
+    ReturnType<typeof setInterval> | null =
+    null;
+
+
+function formatTime(
+    seconds: number
+): string {
+
+    if (
+        !Number.isFinite(seconds) ||
+        seconds < 0
+    ) {
+        return '0:00';
+    }
+
+    const totalSeconds =
+        Math.floor(seconds);
+
+    const minutes =
+        Math.floor(
+            totalSeconds / 60
+        );
+
+    const remainingSeconds =
+        totalSeconds % 60;
+
+    return `${minutes}:${remainingSeconds
+        .toString()
+        .padStart(2, '0')}`;
+}
+
+function updateYouTubeProgress(): void {
+
+    const currentTime =
+        youtubePlayer.getCurrentTime();
+
+    const duration =
+        youtubePlayer.getDuration();
+
+    if (
+        !Number.isFinite(currentTime) ||
+        !Number.isFinite(duration) ||
+        duration <= 0
+    ) {
+        progressCurrent.textContent =
+            '0:00';
+
+        progressTotal.textContent =
+            '0:00';
+
+        progressSeek.value =
+            '0';
+
+        return;
+    }
+
+    progressCurrent.textContent =
+        formatTime(currentTime);
+
+    progressTotal.textContent =
+        formatTime(duration);
+
+    progressSeek.value =
+        String(
+            (currentTime / duration) * 100
+        );
+}
+
+function startYouTubeProgress(): void {
+
+    if (
+        youtubeProgressInterval !== null
+    ) {
+        return;
+    }
+
+    updateYouTubeProgress();
+
+    youtubeProgressInterval =
+        setInterval(
+            () => {
+                updateYouTubeProgress();
+            },
+            250
+        );
+}
+
+function stopYouTubeProgress(): void {
+
+    if (
+        youtubeProgressInterval === null
+    ) {
+        return;
+    }
+
+    clearInterval(
+        youtubeProgressInterval
+    );
+
+    youtubeProgressInterval =
+        null;
+}
 
 function playYouTubeQueueTrack(
     index: number
@@ -502,6 +623,8 @@ function playYouTubeQueueTrack(
     );
 
     youtubePlayer.play();
+
+    startYouTubeProgress();
 }
 
 function getNextShuffleIndex(): number | null {
