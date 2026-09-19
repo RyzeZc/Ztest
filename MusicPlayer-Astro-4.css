@@ -32,32 +32,130 @@
     display: flex;
     align-items: center;
 
-    width: 205px;
-    height: 52px;
+    width: 225px;
+    height: 58px;
 
     flex-shrink: 0;
 }
-
 /* --------------------------------------------------
    PORTADA
 -------------------------------------------------- */
 
 .music-player-track-artwork {
     position: relative;
-    width: 44px;
-    height: 44px;
+
+    width: 52px;
+    height: 52px;
+
     flex-shrink: 0;
+
     overflow: hidden;
-    background: #151515;
+
+    background: #171717;
+}
+
+.music-player-track-artwork-skeleton {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 2;
+
+    background:
+        linear-gradient(
+            90deg,
+            #171717 0%,
+            #292929 50%,
+            #171717 100%
+        );
+
+    background-size: 200% 100%;
+
+    animation:
+        music-player-skeleton-shimmer
+        1.35s ease-in-out infinite;
 }
 
 .music-player-track-artwork-image {
     display: block;
+
     width: 100%;
     height: 100%;
+
     object-fit: cover;
+
+    opacity: 0;
+
+    transition: opacity 0.18s ease;
 }
 
+.music-player-track-title-skeleton,
+.music-player-track-artist-skeleton {
+    position: relative;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            90deg,
+            #171717 0%,
+            #292929 50%,
+            #171717 100%
+        );
+
+    background-size: 200% 100%;
+
+    animation:
+        music-player-skeleton-shimmer
+        1.35s ease-in-out infinite;
+}
+
+.music-player-track-title-skeleton {
+    width: 115px;
+    height: 13px;
+
+    border-radius: 2px;
+}
+
+.music-player-track-artist-skeleton {
+    width: 72px;
+    height: 8px;
+
+    margin-top: 7px;
+
+    border-radius: 2px;
+}
+
+@keyframes music-player-skeleton-shimmer {
+
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+
+}
+
+.music-player:not(.is-track-info-loading)
+.music-player-track-artwork-skeleton,
+
+.music-player:not(.is-track-info-loading)
+.music-player-track-title-skeleton,
+
+.music-player:not(.is-track-info-loading)
+.music-player-track-artist-skeleton {
+    display: none;
+}
+
+.music-player.is-track-info-loading
+.music-player-track-title,
+
+.music-player.is-track-info-loading
+.music-player-track-artist {
+    visibility: hidden;
+}
 
 /* --------------------------------------------------
    INFORMACIÓN DEL TRACK
@@ -68,9 +166,9 @@
     flex-direction: column;
     justify-content: center;
     min-width: 0;
-    width: 112px;
-    height: 44px;
-    margin-left: 8px;
+    width: 135px;
+    height: 64px;
+    margin-left: 10px;
     overflow: hidden;
 }
 
@@ -79,7 +177,7 @@
     margin-bottom: 4px;
     overflow: hidden;
     color: #777;
-    font-size: 8px;
+    font-size: 10px;
     line-height: 1;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -99,7 +197,7 @@
     display: inline-block;
     min-width: 100%;
     color: #d2d2d2;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.1;
     font-weight: 700;
     white-space: nowrap;
@@ -147,26 +245,6 @@
                 calc(-1 * var(--music-player-title-overflow))
             );
     }
-}
-
-
-/* --------------------------------------------------
-   ESTADO RADIO
--------------------------------------------------- */
-
-.music-player.is-radio
-.music-player-track-artwork {
-    display: none;
-}
-
-.music-player.is-radio
-.music-player-track-info {
-    display: none;
-}
-
-.music-player.is-radio
-.music-player-station-selector {
-    display: flex;
 }
 
 
@@ -1004,10 +1082,12 @@ YOUTUBE VIDEO
     justify-content: center;
 
     width: 30px;
-    height: 44px;
+    height: 64px;
 
     flex-shrink: 0;
 
+    margin-right: 6px;
+    
     padding: 0;
 
     border: 0;
