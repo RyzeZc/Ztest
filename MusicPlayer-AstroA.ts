@@ -7,10 +7,6 @@ import './MusicPlayer.css';
   transition:persist="new-retro-music-player"
 >
 
-  <div
-    class="music-player-youtube-player"
-    aria-hidden="true"
-  ></div>
 
   <audio
     class="music-player-audio"
@@ -215,6 +211,8 @@ import './MusicPlayer.css';
 
   <!-- CONTROLES PRINCIPALES -->
 
+<div class="music-player-controls-area">
+
   <div class="music-player-controls">
 
     <!-- ALEATORIA -->
@@ -328,8 +326,38 @@ import './MusicPlayer.css';
 
   </div>
 
-  <!-- VOLUMEN -->
+  <div class="music-player-progress">
 
+    <span class="music-player-time-current">
+      0:00
+    </span>
+
+    <div class="music-player-seek-wrapper">
+
+        <div class="music-player-seek-progress"></div>
+
+        <input
+            class="music-player-seek"
+            type="range"
+            min="0"
+            max="100"
+            step="0.1"
+            value="0"
+            aria-label="Progreso de la canción"
+        />
+
+    </div>
+
+    <span class="music-player-time-total">
+      0:00
+    </span>
+
+  </div>
+
+</div>
+
+  <!-- VOLUMEN -->
+<div class="music-player-right-zone">
   <div class="music-player-volume">
 
     <button
@@ -363,6 +391,10 @@ import './MusicPlayer.css';
 
     </button>
 
+  <div class="music-player-volume-slider-wrapper">
+
+    <div class="music-player-volume-progress"></div>
+
     <input
       class="music-player-volume-slider"
       type="range"
@@ -375,6 +407,33 @@ import './MusicPlayer.css';
 
   </div>
 
+</div>
+
+  <!-- VIDEO TOGGLE -->
+    <button
+        class="music-player-button music-player-video-toggle"
+        type="button"
+        aria-label="Mostrar video de YouTube"
+        aria-pressed="false"
+    >
+    <svg
+      class="music-player-video-toggle-icon"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <rect
+        x="3"
+        y="6"
+        width="13"
+        height="12"
+        rx="2"
+      />
+      <path
+        d="M16 10L21 7.5V16.5L16 14"
+      />
+    </svg>
+  </button>
+
   <!-- ESTADO -->
 
   <div class="music-player-status">
@@ -386,6 +445,23 @@ import './MusicPlayer.css';
     </span>
 
   </div>
+
+    <!-- PANEL DE VIDEO -->
+  <div
+    class="music-player-video-panel"
+    hidden
+    aria-hidden="true"
+  >
+    <div class="music-player-video-frame">
+
+      <div
+        class="music-player-youtube-player"
+        aria-hidden="true"
+      ></div>
+
+    </div>
+  </div>
+</div>
 
 </div>
 
