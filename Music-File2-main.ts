@@ -22,6 +22,10 @@ function initializeMusicPlayer(): void {
 
     player.dataset.initialized = 'true';
 
+    player.classList.add(
+        'is-track-info-loading'
+    );
+
     const youtubePlayerContainer =
     player.querySelector(
         '.music-player-youtube-player'
@@ -1625,13 +1629,54 @@ if (initialStation) {
     /* --------------------------------------------------
        INFORMACIÓN DEL TRACK
     -------------------------------------------------- */
+function showTrackArtwork(
+    artworkUrl: string,
+    altText: string
+): void {
+
+    artworkImage.style.opacity =
+        '0';
+
+    player.classList.add(
+        'is-track-info-loading'
+    );
+
+    artworkImage.onload = () => {
+
+        artworkImage.style.opacity =
+            '1';
+
+        player.classList.remove(
+            'is-track-info-loading'
+        );
+
+        artworkImage.onload =
+            null;
+    };
+
+    artworkImage.onerror = () => {
+
+        artworkImage.removeAttribute(
+            'src'
+        );
+
+        artworkImage.style.opacity =
+            '0';
+
+        artworkImage.onload =
+            null;
+    };
+
+    artworkImage.src =
+        artworkUrl;
+
+    artworkImage.alt =
+        altText;
+}
+
 
 function updateTrackInfo(): void {
 
-    const state =
-        activePlaybackSource === 'youtube'
-            ? youtubePlayer.getState()
-            : audioPlayer.getState();
 
     const source =
         audioPlayer.getState().source;
@@ -1666,8 +1711,25 @@ function updateTrackInfo(): void {
 
         if (track.thumbnail) {
 
-            artworkImage.src =
-                track.thumbnail;
+            if (track.thumbnail) {
+
+        showTrackArtwork(
+                track.thumbnail,
+                `${track.title} - portada`
+            );
+
+        } else {
+
+            artworkImage.removeAttribute(
+                'src'
+            );
+
+            artworkImage.alt = '';
+
+            player.classList.add(
+                'is-track-info-loading'
+            );
+        }
 
             artworkImage.alt =
                 `${track.title} - portada`;
@@ -1683,6 +1745,10 @@ function updateTrackInfo(): void {
 
         requestAnimationFrame(
             updateTrackMarquee
+        );
+
+        player.classList.remove(
+            'is-loading-info'
         );
 
         return;
@@ -1746,6 +1812,10 @@ function updateTrackInfo(): void {
             updateTrackMarquee
         );
 
+        player.classList.remove(
+            'is-loading-info'
+        );
+
         return;
     }
 
@@ -1766,11 +1836,10 @@ function updateTrackInfo(): void {
 
     if (source.artwork) {
 
-        artworkImage.src =
-            source.artwork;
-
-        artworkImage.alt =
-            `${source.name} - portada`;
+        showTrackArtwork(
+            source.artwork,
+            `${source.name} - portada`
+        );
 
     } else {
 
@@ -1779,6 +1848,10 @@ function updateTrackInfo(): void {
         );
 
         artworkImage.alt = '';
+
+        player.classList.add(
+            'is-track-info-loading'
+        );
     }
 
     requestAnimationFrame(
