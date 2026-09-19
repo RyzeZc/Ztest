@@ -388,71 +388,74 @@ function initializeMusicPlayer(): void {
     }
 
 
-    function selectStation(
-        stationId: string
-    ): void {
+function selectStation(
+    stationId: string
+): void {
 
-        const station =
-            audioStations.find(
-                item =>
-                    item.id === stationId
-            );
-
-        if (!station) {
-            return;
-        }
-
-        activePlaybackSource =
-            'radio';
-
-        stopYouTubeProgress();
-
-        youtubeIsSeeking =
-            false;
-
-        youtubeSeekTargetTime =
-            null;
-
-        youtubePlayer.pause();
-
-        currentStationId =
-            station.id;
-
-        stationName.textContent =
-            station.name;
-
-        if (
-            activePlaybackSource ===
-            'youtube'
-        ) {
-            youtubePlayer.pause();
-
-            stopYouTubeProgress();
-
-            youtubeIsSeeking =
-                false;
-
-            youtubeSeekTargetTime =
-                null;
-
-            currentYouTubeVideoId =
-                null;
-        }
-
-        activePlaybackSource =
-            'radio';
-
-        audioPlayer.setSource(
-            station
+    const station =
+        audioStations.find(
+            item =>
+                item.id === stationId
         );
 
-        updateUI();
-
-        updateStationMenu();
-
-        closeStationMenu();
+    if (!station) {
+        return;
     }
 
+    activePlaybackSource =
+        'radio';
+
+    stopYouTubeProgress();
+
+    youtubeIsSeeking =
+        false;
+
+    youtubeSeekTargetTime =
+        null;
+
+    youtubePlayer.pause();
+
+    currentStationId =
+        station.id;
+
+    stationName.textContent =
+        station.name;
+
+    /*
+     * Actualizamos inmediatamente
+     * la información visual de la radio.
+     *
+     * No esperamos a que el stream
+     * termine de cargar.
+     */
+    audioPlayer.setSource(
+        station
+    );
+
+    updateTrackInfo();
+
+    updateUI();
+
+    updateStationMenu();
+
+    closeStationMenu();
+
+    /*
+     * Una radio seleccionada debe
+     * comenzar a reproducirse
+     * automáticamente.
+     */
+    audioPlayer
+        .play()
+        .catch(
+            error => {
+                console.error(
+                    '[MusicPlayer] Unable to start radio:',
+                    error
+                );
+            }
+        );
+}
 
     stationSelector.addEventListener(
         'click',
@@ -1594,23 +1597,29 @@ async function searchYouTube(
         }
     );
 
-    const initialStation =
-        audioStations[0];
+const initialStation =
+    audioStations[0];
 
-    if (initialStation) {
+if (initialStation) {
 
-        currentStationId =
-            initialStation.id;
+    currentStationId =
+        initialStation.id;
 
-        stationName.textContent =
-            initialStation.name;
+    stationName.textContent =
+        initialStation.name;
 
-        audioPlayer.setSource(
-            initialStation
-        );
+    audioPlayer.setSource(
+        initialStation
+    );
 
-        updateStationMenu();
-    }
+    /*
+     * Mostrar inmediatamente:
+     * cover + nombre + RADIO.
+     */
+    updateTrackInfo();
+
+    updateStationMenu();
+}
 
 
     /* --------------------------------------------------
