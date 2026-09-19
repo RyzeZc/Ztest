@@ -623,8 +623,6 @@ function playYouTubeQueueTrack(
     );
 
     youtubePlayer.play();
-
-    startYouTubeProgress();
 }
 
 function getNextShuffleIndex(): number | null {
@@ -1222,6 +1220,8 @@ item.addEventListener(
             );
 
             youtubePlayer.play();
+
+            startYouTubeProgress();
 
             console.log(
                 '[MusicPlayer] YouTube playback started:',
@@ -2005,6 +2005,21 @@ shuffleButton.addEventListener('click', () => {
     youtubePlayer.subscribe(
         updateUI
     );
+
+    youtubePlayer.subscribe(
+    state => {
+
+        if (
+            state.status ===
+            'playing'
+        ) {
+            startYouTubeProgress();
+            return;
+        }
+
+        stopYouTubeProgress();
+    }
+);
 
 youtubePlayer.subscribe(
     state => {
