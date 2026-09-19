@@ -17,32 +17,6 @@ import './MusicPlayer.css';
 
 <!-- INFORMACIÓN -->
 
-<div class="music-player-info">
-
-  <div class="music-player-track-artwork">
-    <img
-      class="music-player-track-artwork-image"
-      src=""
-      alt=""
-    />
-  </div>
-
-  <div class="music-player-track-info">
-
-    <div class="music-player-track-title-wrapper">
-      <div class="music-player-track-title">
-        Nombre de la canción
-      </div>
-    </div>
-
-    <div class="music-player-track-artist-wrapper">
-      <div class="music-player-track-artist">
-        ARTISTA
-      </div>
-    </div>
-
-  </div>
-
 <button
   class="music-player-station-selector"
   type="button"
@@ -70,6 +44,50 @@ import './MusicPlayer.css';
   </span>
 
 </button>
+
+<div class="music-player-info">
+
+<div class="music-player-track-artwork">
+
+  <div
+    class="music-player-track-artwork-skeleton"
+    aria-hidden="true"
+  ></div>
+
+  <img
+    class="music-player-track-artwork-image"
+    src=""
+    alt=""
+    aria-hidden="true"
+  />
+
+</div>
+
+<div class="music-player-track-info">
+
+  <div class="music-player-track-title-wrapper">
+
+    <div
+      class="music-player-track-title-skeleton"
+      aria-hidden="true"
+    ></div>
+
+    <div class="music-player-track-title"></div>
+
+  </div>
+
+  <div class="music-player-track-artist-wrapper">
+
+    <div
+      class="music-player-track-artist-skeleton"
+      aria-hidden="true"
+    ></div>
+
+    <div class="music-player-track-artist"></div>
+
+  </div>
+
+</div>
 
 
   <div class="music-player-station-menu">
