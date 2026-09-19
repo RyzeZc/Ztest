@@ -28,10 +28,13 @@
 
 .music-player-info {
     position: relative;
+
     display: flex;
     align-items: center;
-    width: 165px;
+
+    width: 205px;
     height: 52px;
+
     flex-shrink: 0;
 }
 
@@ -168,55 +171,21 @@
 
 
 /* --------------------------------------------------
-   ESTADO TRACK
+   INFORMACIÓN — RADIO Y TRACK
 -------------------------------------------------- */
 
-.music-player.is-track
-.music-player-station-selector {
-    display: none;
-}
-
-.music-player.is-track
 .music-player-track-artwork {
     display: block;
 }
 
-.music-player.is-track
 .music-player-track-info {
     display: flex;
 }
 
-
-.music-player-label {
-    margin-bottom: 5px;
-
-    font-size: 8px;
-    line-height: 1;
-
-    font-weight: 800;
-
-    letter-spacing: 0.2em;
-
-    color: #777;
+.music-player-station-selector {
+    display: flex;
+    flex-shrink: 0;
 }
-
-
-.music-player-station {
-    max-width: 150px;
-
-    overflow: hidden;
-
-    font-size: 13px;
-    line-height: 1.2;
-
-    font-weight: 700;
-
-    white-space: nowrap;
-    text-overflow: ellipsis;
-
-    color: #e4e4e4;
-}
-
 
 /* =========================================================
    CONTROLES
@@ -1031,25 +1000,56 @@ YOUTUBE VIDEO
     position: relative;
 
     display: flex;
-    flex-direction: column;
+    align-items: center;
     justify-content: center;
 
-    width: 165px;
-    height: 42px;
+    width: 30px;
+    height: 44px;
 
-    padding: 0 25px 0 7px;
+    flex-shrink: 0;
+
+    padding: 0;
 
     border: 0;
-
     background: transparent;
 
-    color: inherit;
-
-    text-align: left;
+    color: #777;
 
     cursor: pointer;
 }
 
+.music-player-station-menu-icon {
+    width: 17px;
+    height: 17px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+
+    transition:
+        color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.music-player-station-selector:hover
+.music-player-station-menu-icon {
+    color: #d97832;
+}
+
+.music-player-station-selector[aria-expanded="true"]
+.music-player-station-menu-icon {
+    color: #d97832;
+}
+
+.music-player-station-selector
+.music-player-label,
+.music-player-station-selector
+.music-player-station,
+.music-player-station-selector
+.music-player-station-arrow {
+    display: none;
+}
 
 .music-player-station-selector:hover
 .music-player-label {
