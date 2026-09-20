@@ -490,8 +490,6 @@ function selectStation(
 
     updateUI();
 
-    updateStationMenu();
-
     closeStationMenu();
 
     /*
@@ -551,8 +549,6 @@ function selectStation(
     );
 
 
-    updateStationMenu();
-
         /* --------------------------------------------------
        YOUTUBE SEARCH
     -------------------------------------------------- */
@@ -581,6 +577,9 @@ function selectStation(
 
     let youtubeTracks:
     DeezerTrack[] = [];
+
+    let youtubeSelectedTrackId:
+    number | null = null;
 
     let youtubeQueueCurrentIndex = -1;
     let youtubeCurrentIndex = -1;
@@ -1219,7 +1218,6 @@ function renderQueuePanel(): void {
 
     queueList.innerHTML = '';
 
-
     queueCount.textContent =
         `${youtubeQueue.length} TRACKS`;
 
@@ -1264,6 +1262,31 @@ function renderQueuePanel(): void {
             }
 
 
+            /* --------------------------------------------
+               COLUMNA #
+            -------------------------------------------- */
+
+            const number =
+                document.createElement(
+                    'span'
+                );
+
+            number.className =
+                'music-player-queue-index';
+
+            number.textContent =
+                index ===
+                youtubeQueueCurrentIndex
+                    ? '▶'
+                    : String(
+                        index + 1
+                    );
+
+
+            /* --------------------------------------------
+               COLUMNA COVER
+            -------------------------------------------- */
+
             const thumbnail =
                 document.createElement(
                     'img'
@@ -1279,6 +1302,10 @@ function renderQueuePanel(): void {
             thumbnail.alt =
                 `${track.title} - portada`;
 
+
+            /* --------------------------------------------
+               COLUMNA TÍTULO / ARTISTA
+            -------------------------------------------- */
 
             const info =
                 document.createElement(
@@ -1323,22 +1350,29 @@ function renderQueuePanel(): void {
             );
 
 
-            const number =
+            /* --------------------------------------------
+               COLUMNA DURACIÓN
+            -------------------------------------------- */
+
+            const duration =
                 document.createElement(
                     'span'
                 );
 
-            number.className =
-                'music-player-queue-index';
+            duration.className =
+                'music-player-list-column-duration';
 
-            number.textContent =
-                index ===
-                youtubeQueueCurrentIndex
-                    ? '▶'
-                    : String(
-                        index + 1
-                    );
+            duration.textContent =
+                track.duration !== null
+                    ? formatTime(
+                        track.duration
+                    )
+                    : '--:--';
 
+
+            /* --------------------------------------------
+               FILA
+            -------------------------------------------- */
 
             item.appendChild(
                 number
@@ -1350,6 +1384,10 @@ function renderQueuePanel(): void {
 
             item.appendChild(
                 info
+            );
+
+            item.appendChild(
+                duration
             );
 
 
@@ -1454,354 +1492,258 @@ homeNavItems.forEach(
     }
 
 
-    function appendYouTubeResults(
+    function updateSelectedYouTubeResult(): void {
+
+    const resultItems =
+        youtubeResults.querySelectorAll(
+            '.music-player-youtube-result'
+        );
+
+    resultItems.forEach(
+        item => {
+
+            const trackId =
+                Number(
+                    (item as HTMLElement)
+                        .dataset
+                        .trackId
+                );
+
+            item.classList.toggle(
+                'is-selected',
+                trackId ===
+                youtubeSelectedTrackId
+            );
+        }
+    );
+}
+
+function appendYouTubeResults(
     results: DeezerTrack[]
-    ): void {
+): void {
 
-        results.forEach(
-            result => {
+    results.forEach(
+        result => {
 
-                const item =
-                    document.createElement(
-                        'button'
-                    );
-
-                item.type =
-                    'button';
-
-                item.className =
-                    'music-player-youtube-result';
-
-                item.dataset.trackId =
-                    String(result.id);
-
-                const thumbnail =
-                    document.createElement(
-                        'img'
-                    );
-
-                thumbnail.className =
-                    'music-player-youtube-result-thumbnail';
-
-                thumbnail.src =
-                    result.image;
-
-                thumbnail.alt =
-                    `${result.name} - portada`;
-
-                const info =
-                    document.createElement(
-                        'span'
-                    );
-
-                info.className =
-                    'music-player-youtube-result-info';
-
-                const title =
-                    document.createElement(
-                        'span'
-                    );
-
-                title.className =
-                    'music-player-youtube-result-title';
-
-                title.textContent =
-                    result.name;
-
-                const channel =
-                    document.createElement(
-                        'span'
-                    );
-
-                channel.className =
-                    'music-player-youtube-result-channel';
-
-                channel.textContent =
-                    result.artists
-                        ?.map(
-                            artist =>
-                                artist.name
-                        )
-                        .join(', ') ??
-                    'ARTISTA DESCONOCIDO';
-
-                info.appendChild(
-                    title
+            const item =
+                document.createElement(
+                    'button'
                 );
 
-                info.appendChild(
-                    channel
-                );
+            item.type =
+                'button';
 
-                item.appendChild(
-                    thumbnail
-                );
+            item.className =
+                'music-player-youtube-result';
 
-                item.appendChild(
-                    info
-                );
+            item.dataset.trackId =
+                String(result.id);
 
-item.addEventListener(
-    'click',
-    async () => {
-
-        const trackId =
-            item.dataset.trackId;
-
-        if (!trackId) {
-            return;
-        }
-
-        console.log(
-            '[MusicPlayer] Deezer track selected:',
-            result
-        );
-
-        youtubeCurrentIndex =
-            youtubeTracks.findIndex(
-                track =>
-                    track.id ===
-                    Number(trackId)
-            );
-
-        console.log(
-            '[MusicPlayer] Deezer track index:',
-            youtubeCurrentIndex
-        );
-
-
-        const artistName =
-            result.artists
-                ?.map(
-                    artist =>
-                        artist.name
-                )
-                .join(', ') ??
-            '';
-
-        const trackName =
-            result.name;
-
-        if (!artistName || !trackName) {
-
-            console.log(
-                '[MusicPlayer] Cannot resolve track: missing artist or title.'
-            );
-
-            return;
-        }
-
-        console.log(
-            '[MusicPlayer] Resolving Deezer track:',
-            {
-                id: result.id,
-                artist: artistName,
-                title: trackName,
-            }
-        );
-
-        try {
-
-            const params =
-                new URLSearchParams();
-
-            params.set(
-                'id',
-                String(result.id)
-            );
-
-            params.set(
-                'artist',
-                artistName
-            );
-
-            params.set(
-                'title',
-                trackName
-            );
-
-            const response =
-                await fetch(
-                    `/api/v2/music/resolve?${params.toString()}`
-                );
-
-            if (!response.ok) {
-
-                throw new Error(
-                    `Music resolve failed: ${response.status}`
-                );
-            }
-
-            const data =
-                await response.json();
-
-            if (!data.success) {
-
-                throw new Error(
-                    data.error ??
-                    'Music resolve failed.'
-                );
-            }
-
-            const resolvedTracks =
-                data.results ?? [];
-
-            console.log(
-                '[MusicPlayer] Resolved YouTube tracks:',
-                resolvedTracks
-            );
 
             if (
-                resolvedTracks.length === 0
+                result.id ===
+                youtubeSelectedTrackId
             ) {
 
-                console.log(
-                    '[MusicPlayer] No YouTube video was found for this track.'
+                item.classList.add(
+                    'is-selected'
                 );
-
-                return;
             }
 
-            const videoId =
-                resolvedTracks[0]?.id;
 
-            if (!videoId) {
+            /*
+             * --------------------------------------------------
+             * COLUMNA #
+             * --------------------------------------------------
+             */
 
-                console.log(
-                    '[MusicPlayer] Resolved result does not contain a video ID.'
+            const number =
+                document.createElement(
+                    'span'
                 );
 
-                return;
-            }
+            number.className =
+                'music-player-list-column-index';
 
-            currentYouTubeVideoId =
-                videoId;
+            number.textContent =
+                String(
+                    youtubeTracks.indexOf(
+                        result
+                    ) + 1
+                );
 
-            console.log(
-                '[MusicPlayer] Using YouTube video:',
-                videoId
-            );
 
-            audioPlayer.pause();
+            /*
+             * --------------------------------------------------
+             * COLUMNA TÍTULO
+             * --------------------------------------------------
+             */
 
-            activePlaybackSource =
-                'youtube';
+            const info =
+                document.createElement(
+                    'span'
+                );
 
-            youtubePlayer.load(
-                videoId
-            );
+            info.className =
+                'music-player-youtube-result-info';
 
-            youtubePlayer.play();
 
-            console.log(
-                '[MusicPlayer] YouTube playback started:',
-                videoId
-            );
+            const title =
+                document.createElement(
+                    'span'
+                );
 
-            try {
+            title.className =
+                'music-player-youtube-result-title';
 
-                const upNextResponse =
-                    await fetch(
-                        `/api/v2/music/up-next?videoId=${encodeURIComponent(
-                            videoId
-                        )}`
-                    );
+            title.textContent =
+                result.name;
 
-                if (!upNextResponse.ok) {
 
-                    throw new Error(
-                        `Up Next request failed: ${upNextResponse.status}`
-                    );
+            const artist =
+                document.createElement(
+                    'span'
+                );
 
-                }
+            artist.className =
+                'music-player-youtube-result-channel';
 
-                const upNextData =
-                    await upNextResponse.json();
-
-                if (
-                    !upNextData.success ||
-                    !Array.isArray(
-                        upNextData.results
+            artist.textContent =
+                result.artists
+                    ?.map(
+                        currentArtist =>
+                            currentArtist.name
                     )
-                ) {
+                    .join(', ') ??
+                'ARTISTA DESCONOCIDO';
 
-                    throw new Error(
-                        'Invalid Up Next response'
-                    );
 
-                }
-
-                    youtubeQueue =
-                        upNextData.results;
-
-                    youtubeQueueCurrentIndex =
-                        youtubeQueue.findIndex(
-                            track =>
-                                track.videoId ===
-                                videoId
-                        );
-
-                    if (
-                        youtubeQueueCurrentIndex < 0 &&
-                        youtubeQueue.length > 0
-                    ) {
-                        youtubeQueueCurrentIndex =
-                            0;
-                    }
-
-                    console.log(
-                        '[MusicPlayer] YouTube Up Next queue loaded:',
-                        youtubeQueue
-                    );
-
-                    console.log(
-                        '[MusicPlayer] YouTube Up Next queue length:',
-                        youtubeQueue.length
-                    );
-
-                    console.log(
-                        '[MusicPlayer] YouTube queue current index:',
-                        youtubeQueueCurrentIndex
-                    );
-
-                    renderQueuePanel();
-
-                    if (
-                        youtubeQueue.length > 0
-                    ) {
-                        activatePanelTab(
-                            'queue'
-                        );
-                    }
-
-                    updateUI();
-
-                } catch (error) {
-
-                console.error(
-                    '[MusicPlayer] Failed to load YouTube Up Next:',
-                    error
-                );
-
-            }
-
-        } catch (error) {
-
-            console.error(
-                '[MusicPlayer] Music resolve failed:',
-                error
+            info.appendChild(
+                title
             );
 
-        }
-    }
-);
+            info.appendChild(
+                artist
+            );
 
-                youtubeResults.appendChild(
-                    item
+
+            /*
+             * --------------------------------------------------
+             * COLUMNA DURACIÓN
+             * --------------------------------------------------
+             */
+
+            const duration =
+                document.createElement(
+                    'span'
                 );
-            }
-        );
-    }
+
+            duration.className =
+                'music-player-list-column-duration';
+
+            duration.textContent =
+                formatTime(
+                    (result.duration ?? 0) /
+                    1000
+                );
+
+
+            item.appendChild(
+                number
+            );
+
+            item.appendChild(
+                info
+            );
+
+            item.appendChild(
+                duration
+            );
+
+
+            /*
+             * --------------------------------------------------
+             * SELECCIÓN
+             * --------------------------------------------------
+             */
+
+            item.addEventListener(
+                'click',
+                async () => {
+
+                    const trackId =
+                        item.dataset.trackId;
+
+                    if (!trackId) {
+                        return;
+                    }
+
+                    youtubeSelectedTrackId =
+                        Number(trackId);
+
+                    updateSelectedYouTubeResult();
+
+                    console.log(
+                        '[MusicPlayer] Deezer track selected:',
+                        result
+                    );
+
+                    youtubeCurrentIndex =
+                        youtubeTracks.findIndex(
+                            track =>
+                                track.id ===
+                                Number(trackId)
+                        );
+
+                    console.log(
+                        '[MusicPlayer] Deezer track index:',
+                        youtubeCurrentIndex
+                    );
+
+                    /*
+                     * La lógica de resolución
+                     * que ya tienes continúa
+                     * exactamente aquí.
+                     */
+
+                    const artistName =
+                        result.artists
+                            ?.map(
+                                currentArtist =>
+                                    currentArtist.name
+                            )
+                            .join(', ') ??
+                        '';
+
+                    const trackName =
+                        result.name;
+
+                    if (
+                        !artistName ||
+                        !trackName
+                    ) {
+                        console.log(
+                            '[MusicPlayer] Cannot resolve track: missing artist or title.'
+                        );
+
+                        return;
+                    }
+
+                    await resolveAndPlayTrack(
+                        result,
+                        artistName,
+                        trackName
+                    );
+                }
+            );
+
+
+            youtubeResults.appendChild(
+                item
+            );
+        }
+    );
+}
 
 async function searchYouTube(
     query: string,
@@ -1825,6 +1767,9 @@ async function searchYouTube(
 
         youtubeCurrentIndex =
             -1;
+
+        youtubeSelectedTrackId =
+        null;
 
         youtubeResults.innerHTML =
             '';
@@ -1937,15 +1882,6 @@ async function searchYouTube(
         () => {
 
             showYouTubePanel();
-        }
-    );
-
-
-    youtubeBackButton.addEventListener(
-        'click',
-        () => {
-
-            showStationsPanel();
         }
     );
 
