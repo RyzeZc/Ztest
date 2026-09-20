@@ -2004,122 +2004,6 @@ YOUTUBE VIDEO
 }
 
 
-.music-player-youtube-result {
-    display: flex;
-
-    align-items: center;
-
-    width: 100%;
-
-    min-height: 64px;
-
-    padding:
-        7px 10px;
-
-    box-sizing: border-box;
-
-    border: 0;
-
-    border-top:
-        1px solid #202020;
-
-    border-radius: 3px;
-
-    background:
-        transparent;
-
-    color: inherit;
-
-    font-family: inherit;
-
-    text-align: left;
-
-    cursor: pointer;
-
-    transition:
-        background-color 0.12s ease;
-}
-
-
-.music-player-youtube-result:hover {
-    background:
-        #181818;
-}
-
-
-.music-player-youtube-result-thumbnail {
-    display: block;
-
-    width: 72px;
-    height: 42px;
-
-    flex-shrink: 0;
-
-    object-fit: cover;
-
-    border-radius: 3px;
-
-    background:
-        #151515;
-}
-
-
-.music-player-youtube-result-info {
-    display: flex;
-
-    flex-direction: column;
-
-    min-width: 0;
-
-    margin-left: 11px;
-}
-
-
-.music-player-youtube-result-title {
-    overflow: hidden;
-
-    color:
-        #c4c4c4;
-
-    font-size: 10px;
-
-    line-height: 1.25;
-
-    font-weight: 700;
-
-    white-space: nowrap;
-
-    text-overflow: ellipsis;
-}
-
-
-.music-player-youtube-result:hover
-.music-player-youtube-result-title {
-    color:
-        #e48a48;
-}
-
-
-.music-player-youtube-result-channel {
-    margin-top: 4px;
-
-    overflow: hidden;
-
-    color:
-        #5d5d5d;
-
-    font-size: 9px;
-
-    line-height: 1;
-
-    font-weight: 700;
-
-    white-space: nowrap;
-
-    text-overflow: ellipsis;
-}
-
-
 .music-player-youtube-loading,
 .music-player-youtube-error {
     padding:
@@ -2248,43 +2132,6 @@ YOUTUBE VIDEO
 }
 
 
-.music-player-queue-item {
-    display: flex;
-
-    align-items: center;
-
-    width: 100%;
-    min-height: 62px;
-
-    padding:
-        7px 9px;
-
-    box-sizing: border-box;
-
-    border: 0;
-
-    border-top:
-        1px solid #202020;
-
-    border-radius: 3px;
-
-    background:
-        transparent;
-
-    color:
-        inherit;
-
-    font-family: inherit;
-
-    text-align: left;
-
-    cursor: pointer;
-
-    transition:
-        background-color 0.12s ease;
-}
-
-
 .music-player-queue-item:hover {
     background:
         #181818;
@@ -2302,112 +2149,16 @@ YOUTUBE VIDEO
 }
 
 
-.music-player-queue-index {
-    width: 24px;
-
-    flex-shrink: 0;
-
-    color:
-        #555;
-
-    font-size:
-        8px;
-
-    font-weight:
-        800;
-
-    text-align:
-        center;
-}
-
-
-.music-player-queue-item.is-current
-.music-player-queue-index {
+.music-player-queue-item.is-current {
     color:
         #d97832;
 }
 
 
-.music-player-queue-thumbnail {
-    width: 64px;
-    height: 40px;
-
-    flex-shrink: 0;
-
-    object-fit: cover;
-
-    border-radius: 3px;
-
-    background:
-        #151515;
-}
-
-
-.music-player-queue-info {
-    display: flex;
-
-    flex-direction: column;
-
-    min-width: 0;
-
-    margin-left: 11px;
-}
-
-
-.music-player-queue-track-title {
-    overflow: hidden;
-
-    color:
-        #c4c4c4;
-
-    font-size:
-        10px;
-
-    line-height:
-        1.25;
-
-    font-weight:
-        700;
-
-    white-space:
-        nowrap;
-
-    text-overflow:
-        ellipsis;
-}
-
-
-.music-player-queue-item.is-current
-.music-player-queue-track-title {
+.music-player-queue-item.is-current {
     color:
         #e48a48;
 }
-
-
-.music-player-queue-track-artist {
-    margin-top: 4px;
-
-    overflow: hidden;
-
-    color:
-        #5d5d5d;
-
-    font-size:
-        9px;
-
-    line-height:
-        1;
-
-    font-weight:
-        700;
-
-    white-space:
-        nowrap;
-
-    text-overflow:
-        ellipsis;
-}
-
 
 .music-player-queue-empty {
     display: flex;
@@ -2434,6 +2185,296 @@ YOUTUBE VIDEO
         center;
 }
 
+
+/* =========================================================
+   TABLA MUSICAL
+   ========================================================= */
+
+.music-player-list-header,
+.music-player-youtube-result,
+.music-player-queue-item {
+    display: grid;
+
+    grid-template-columns:
+        38px
+        minmax(0, 1fr)
+        70px;
+
+    column-gap: 10px;
+
+    align-items: center;
+
+    box-sizing: border-box;
+}
+
+
+/* ---------------------------------------------------------
+   CABECERA
+--------------------------------------------------------- */
+
+.music-player-list-header {
+    flex-shrink: 0;
+
+    min-height: 30px;
+
+    margin:
+        0 24px;
+
+    padding:
+        0 10px;
+
+    border-bottom:
+        1px solid #242424;
+
+    color: #4d4d4d;
+
+    font-size: 8px;
+
+    font-weight: 800;
+
+    letter-spacing:
+        0.12em;
+
+    text-transform:
+        uppercase;
+}
+
+
+.music-player-list-column-index {
+    min-width: 0;
+
+    text-align:
+        center;
+}
+
+
+.music-player-list-column-title {
+    min-width: 0;
+
+    overflow: hidden;
+
+    text-overflow:
+        ellipsis;
+
+    white-space:
+        nowrap;
+}
+
+
+.music-player-list-column-duration {
+    min-width: 0;
+
+    text-align:
+        right;
+
+    font-variant-numeric:
+        tabular-nums;
+}
+
+
+/* ---------------------------------------------------------
+   RESULTADO / FILA
+--------------------------------------------------------- */
+
+.music-player-youtube-result,
+.music-player-queue-item {
+    width: calc(100% - 48px);
+
+    min-height: 54px;
+
+    margin:
+        0 24px;
+
+    padding:
+        7px 10px;
+
+    border: 0;
+
+    border-bottom:
+        1px solid #202020;
+
+    border-radius: 4px;
+
+    background:
+        transparent;
+
+    color:
+        inherit;
+
+    font-family:
+        inherit;
+
+    text-align:
+        left;
+
+    cursor:
+        pointer;
+
+    transition:
+        background-color 0.12s ease,
+        color 0.12s ease;
+}
+
+
+/* ---------------------------------------------------------
+   HOVER
+--------------------------------------------------------- */
+
+.music-player-youtube-result:hover,
+.music-player-queue-item:hover {
+    background:
+        #181818;
+}
+
+
+/* ---------------------------------------------------------
+   SELECCIONADO — RESULTADO
+--------------------------------------------------------- */
+
+.music-player-youtube-result.is-selected {
+    background:
+        rgba(
+            217,
+            120,
+            50,
+            0.09
+        );
+}
+
+
+.music-player-youtube-result.is-selected
+.music-player-list-column-index,
+.music-player-youtube-result.is-selected
+.music-player-youtube-result-title {
+    color:
+        #e48a48;
+}
+
+
+/* ---------------------------------------------------------
+   TRACK ACTUAL — A CONTINUACIÓN
+--------------------------------------------------------- */
+
+.music-player-queue-item.is-current {
+    background:
+        rgba(
+            217,
+            120,
+            50,
+            0.07
+        );
+}
+
+
+.music-player-queue-item.is-current
+.music-player-queue-index,
+.music-player-queue-item.is-current
+.music-player-queue-track-title {
+    color:
+        #e48a48;
+}
+
+
+/* ---------------------------------------------------------
+   INFORMACIÓN
+--------------------------------------------------------- */
+
+.music-player-youtube-result-info,
+.music-player-queue-info {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    min-width:
+        0;
+}
+
+
+.music-player-youtube-result-title,
+.music-player-queue-track-title {
+    min-width:
+        0;
+
+    overflow:
+        hidden;
+
+    color:
+        #c4c4c4;
+
+    font-size:
+        10px;
+
+    line-height:
+        1.3;
+
+    font-weight:
+        700;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+.music-player-youtube-result-channel,
+.music-player-queue-track-artist {
+    min-width:
+        0;
+
+    margin-top:
+        4px;
+
+    overflow:
+        hidden;
+
+    color:
+        #5d5d5d;
+
+    font-size:
+        8px;
+
+    line-height:
+        1;
+
+    font-weight:
+        700;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+.music-player-list-column-duration {
+    color:
+        #666;
+
+    font-size:
+        9px;
+
+    font-weight:
+        700;
+
+    font-variant-numeric:
+        tabular-nums;
+}
+
+
+/* ---------------------------------------------------------
+   ESTADO ACTUAL
+--------------------------------------------------------- */
+
+.music-player-queue-item.is-current
+.music-player-list-column-duration {
+    color:
+        #888;
+}
 
 /* =========================================================
    SELECTOR DE ESTACIONES
