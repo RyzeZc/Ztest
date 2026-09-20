@@ -353,80 +353,149 @@ const homeSections =
     }
 
 
-    function updateStationMenu(): void {
+function updateStationMenu(): void {
 
-        const stationOptions =
-            stationPanel.querySelector(
-                '.music-player-station-options'
+    const stationOptions =
+        stationPanel.querySelector(
+            '.music-player-station-options'
+        );
+
+    if (
+        !(stationOptions instanceof HTMLElement)
+    ) {
+        return;
+    }
+
+
+    stationOptions.innerHTML = '';
+
+
+    audioStations.forEach(
+        (
+            station,
+            index
+        ) => {
+
+            const option =
+                document.createElement(
+                    'button'
+                );
+
+            option.type =
+                'button';
+
+            option.className =
+                'music-player-station-option';
+
+            option.setAttribute(
+                'role',
+                'option'
             );
 
-        if (
-            !(stationOptions instanceof HTMLElement)
-        ) {
-            return;
-        }
-
-        stationOptions.innerHTML = '';
-
-        audioStations.forEach(
-            station => {
-
-                const option =
-                    document.createElement(
-                        'button'
-                    );
-
-                option.type =
-                    'button';
-
-                option.className =
-                    'music-player-station-option';
-
-                option.setAttribute(
-                    'role',
-                    'option'
-                );
-
-                option.dataset.stationId =
-                    station.id;
-
-                option.textContent =
-                    station.name;
-
-                const isActive =
-                    station.id ===
-                    currentStationId;
-
-                option.setAttribute(
-                    'aria-selected',
-                    String(isActive)
-                );
-
-                if (isActive) {
-
-                    option.classList.add(
-                        'is-active'
-                    );
-                }
+            option.dataset.stationId =
+                station.id;
 
 
-                option.addEventListener(
-                    'click',
-                    () => {
-
-                        selectStation(
-                            station.id
-                        );
-                    }
-                );
+            const isActive =
+                station.id ===
+                currentStationId;
 
 
-                stationOptions.appendChild(
-                    option
+            option.setAttribute(
+                'aria-selected',
+                String(isActive)
+            );
+
+
+            if (isActive) {
+
+                option.classList.add(
+                    'is-active'
                 );
             }
-        );
-    }
+
+
+            const number =
+                document.createElement(
+                    'span'
+                );
+
+            number.className =
+                'music-player-station-index';
+
+            number.textContent =
+                String(
+                    index + 1
+                );
+
+
+            const artwork =
+                document.createElement(
+                    'img'
+                );
+
+            artwork.className =
+                'music-player-station-artwork';
+
+            if (
+                station.artwork
+            ) {
+
+                artwork.src =
+                    station.artwork;
+
+                artwork.alt =
+                    `${station.name} - portada`;
+
+            } else {
+
+                artwork.alt = '';
+            }
+
+
+            const name =
+                document.createElement(
+                    'span'
+                );
+
+            name.className =
+                'music-player-station-name';
+
+            name.textContent =
+                station.name;
+
+
+            option.appendChild(
+                number
+            );
+
+            option.appendChild(
+                artwork
+            );
+
+            option.appendChild(
+                name
+            );
+
+
+            option.addEventListener(
+                'click',
+                () => {
+
+                    selectStation(
+                        station.id
+                    );
+
+                }
+            );
+
+
+            stationOptions.appendChild(
+                option
+            );
+        }
+    );
+}
 
 
 function selectStation(
@@ -731,6 +800,10 @@ function playYouTubeQueueTrack(
         track.videoId;
 
     renderQueuePanel();
+
+    scrollQueueTrackIntoView(
+        index
+    );
 
     console.log(
         '[MusicPlayer] Playing YouTube queue track:',
@@ -1087,7 +1160,8 @@ type HomeSection =
     | 'trending'
     | 'discover'
     | 'playlist'
-    | 'genres';
+    | 'genres'
+    | 'stations';
 
 
 function activatePanelTab(
@@ -1210,6 +1284,9 @@ function renderQueuePanel(): void {
 
             item.className =
                 'music-player-queue-item';
+
+            item.dataset.queueIndex =
+                String(index);
 
 
             if (
@@ -1354,7 +1431,10 @@ function renderQueuePanel(): void {
 
             item.addEventListener(
                 'click',
-                () => {
+                event => {
+
+                    event.preventDefault();
+                    event.stopPropagation();
 
                     activatePanelTab(
                         'queue'
@@ -1363,6 +1443,25 @@ function renderQueuePanel(): void {
                     playYouTubeQueueTrack(
                         index
                     );
+
+                    /*
+                    * El panel ya estaba abierto porque
+                    * el usuario acaba de interactuar
+                    * con A CONTINUACIÓN.
+                    *
+                    * Lo mantenemos abierto por seguridad
+                    * mientras cambia la reproducción.
+                    */
+                    requestAnimationFrame(
+                        () => {
+
+                            openStationMenu();
+
+                            scrollQueueTrackIntoView(
+                                index
+                            );
+                        }
+                    );
                 }
             );
 
@@ -1370,6 +1469,30 @@ function renderQueuePanel(): void {
             queueList.appendChild(
                 item
             );
+        }
+    );
+}
+
+function scrollQueueTrackIntoView(
+    index: number
+): void {
+
+    requestAnimationFrame(
+        () => {
+
+            const item =
+                queueList.querySelector<HTMLElement>(
+                    `[data-queue-index="${index}"]`
+                );
+
+            if (!item) {
+                return;
+            }
+
+            item.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+            });
         }
     );
 }
@@ -1421,12 +1544,13 @@ homeNavItems.forEach(
                     button.dataset
                         .homeSectionButton;
 
-                if (
-                    section === 'trending' ||
-                    section === 'discover' ||
-                    section === 'playlist' ||
-                    section === 'genres'
-                ) {
+                    if (
+                        section === 'trending' ||
+                        section === 'discover' ||
+                        section === 'playlist' ||
+                        section === 'genres' ||
+                        section === 'stations'
+                    ) {
 
                     activatePanelTab(
                         'home'
