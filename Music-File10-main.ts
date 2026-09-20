@@ -1,7 +1,11 @@
 import { audioPlayer } from '../../lib/audio/audio-player';
 import { audioStations } from '../../lib/audio/audio-stations';
 import { YouTubePlayer } from '../../lib/youtube/youtube-player';
-import type { DeezerTrack } from '../../lib/deezer/deezer-types';
+import type {
+    DeezerAlbum,
+    DeezerGenre,
+    DeezerTrack,
+} from '../../lib/deezer/deezer-types';
 
 function initializeMusicPlayer(): void {
 
@@ -1163,6 +1167,24 @@ type HomeSection =
     | 'genres'
     | 'stations';
 
+type HomeLoadState =
+    | 'idle'
+    | 'loading'
+    | 'loaded'
+    | 'error';
+
+
+const homeLoadState: Record<
+    HomeSection,
+    HomeLoadState
+> = {
+    trending: 'idle',
+    discover: 'idle',
+    playlist: 'idle',
+    genres: 'idle',
+    stations: 'idle',
+};
+
 
 function activatePanelTab(
     tab: MusicPanelTab
@@ -1249,9 +1271,884 @@ function activateHomeSection(
             );
         }
     );
+
+
+    /*
+     * Cargar únicamente la sección
+     * que el usuario está viendo.
+     */
+
+    switch (section) {
+
+        case 'trending':
+            void loadTrending();
+            break;
+
+        case 'discover':
+            void loadDiscover();
+            break;
+
+        case 'genres':
+            void loadGenres();
+            break;
+
+        case 'playlist':
+            break;
+
+        case 'stations':
+            break;
+    }
+}
+
+function getHomeSectionElement(
+    section: HomeSection
+): HTMLElement | null {
+
+    const element =
+        homeSections.find(
+            current =>
+                current.dataset
+                    .homeSection ===
+                section
+        );
+
+    return element ?? null;
+}
+
+async function fetchHomeChannel<T>(
+    endpoint: string
+): Promise<T[]> {
+
+    const response =
+        await fetch(
+            `/api/v2/music/${endpoint}?page=1`
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Home request failed: ${response.status}`
+        );
+    }
+
+
+    const data =
+        await response.json();
+
+
+    if (
+        !data.success
+    ) {
+
+        throw new Error(
+            data.error ??
+            'Home request failed.'
+        );
+    }
+
+
+    const items =
+        data.results
+            ?.channel
+            ?.content
+            ?.data;
+
+
+    if (
+        !Array.isArray(items)
+    ) {
+
+        throw new Error(
+            'Invalid Home API response.'
+        );
+    }
+
+
+    return items as T[];
 }
 
 
+function renderHomeError(
+    section: HomeSection,
+    message: string
+): void {
+
+    const element =
+        getHomeSectionElement(
+            section
+        );
+
+    if (
+        !element
+    ) {
+        return;
+    }
+
+
+    const list =
+        element.querySelector(
+            '.music-player-trending-list'
+        );
+
+
+    if (
+        list instanceof HTMLElement
+    ) {
+
+        list.innerHTML = `
+            <div class="music-player-youtube-error">
+                ${message}
+            </div>
+        `;
+
+        return;
+    }
+
+
+    element.innerHTML = `
+        <div class="music-player-home-placeholder">
+            ${message}
+        </div>
+    `;
+}
+
+async function loadTrending(): Promise<void> {
+
+    if (
+        homeLoadState.trending ===
+        'loading' ||
+        homeLoadState.trending ===
+        'loaded'
+    ) {
+        return;
+    }
+
+
+    const section =
+        getHomeSectionElement(
+            'trending'
+        );
+
+
+    if (
+        !section
+    ) {
+        return;
+    }
+
+
+    const list =
+        section.querySelector(
+            '.music-player-trending-list'
+        );
+
+
+    if (
+        !(list instanceof HTMLElement)
+    ) {
+        return;
+    }
+
+
+    homeLoadState.trending =
+        'loading';
+
+
+    try {
+
+        const tracks =
+            await fetchHomeChannel<DeezerTrack>(
+                'trending'
+            );
+
+
+        renderTrending(
+            tracks
+        );
+
+
+        homeLoadState.trending =
+            'loaded';
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Trending failed:',
+            error
+        );
+
+
+        homeLoadState.trending =
+            'error';
+
+
+        renderHomeError(
+            'trending',
+            'NO SE PUDIERON CARGAR LAS TENDENCIAS'
+        );
+    }
+}
+
+function getDeezerArtistsText(
+    track: DeezerTrack
+): string {
+
+    return (
+        track.artists
+            ?.map(
+                artist =>
+                    artist.name
+            )
+            .filter(
+                Boolean
+            )
+            .join(', ') ||
+        'ARTISTA DESCONOCIDO'
+    );
+}
+
+
+function formatDeezerDuration(
+    duration: number | null
+): string {
+
+    if (
+        duration === null ||
+        !Number.isFinite(
+            duration
+        )
+    ) {
+        return '--:--';
+    }
+
+
+    /*
+     * Deezer normalmente devuelve
+     * duración en milisegundos.
+     */
+
+    const seconds =
+        duration > 10_000
+            ? duration / 1000
+            : duration;
+
+
+    return formatTime(
+        seconds
+    );
+}
+
+
+function renderTrending(
+    tracks: DeezerTrack[]
+): void {
+
+    const section =
+        getHomeSectionElement(
+            'trending'
+        );
+
+
+    const list =
+        section?.querySelector(
+            '.music-player-trending-list'
+        );
+
+
+    if (
+        !(list instanceof HTMLElement)
+    ) {
+        return;
+    }
+
+
+    list.innerHTML = '';
+
+
+    if (
+        tracks.length === 0
+    ) {
+
+        list.innerHTML = `
+            <div class="music-player-queue-empty">
+                NO HAY TENDENCIAS DISPONIBLES
+            </div>
+        `;
+
+        return;
+    }
+
+
+    tracks.forEach(
+        (
+            track,
+            index
+        ) => {
+
+            const item =
+                document.createElement(
+                    'button'
+                );
+
+            item.type =
+                'button';
+
+            item.className =
+                'music-player-trending-item';
+
+            item.dataset.trackId =
+                String(
+                    track.id
+                );
+
+
+            /*
+             * #
+             */
+
+            const number =
+                document.createElement(
+                    'span'
+                );
+
+            number.className =
+                'music-player-list-column-index';
+
+            number.textContent =
+                String(
+                    index + 1
+                );
+
+
+            /*
+             * COVER
+             */
+
+            const thumbnail =
+                document.createElement(
+                    'img'
+                );
+
+            thumbnail.className =
+                'music-player-trending-thumbnail';
+
+            thumbnail.src =
+                track.image;
+
+            thumbnail.alt =
+                `${track.name} - portada`;
+
+
+            /*
+             * TÍTULO / ARTISTA
+             */
+
+            const info =
+                document.createElement(
+                    'span'
+                );
+
+            info.className =
+                'music-player-trending-info';
+
+
+            const title =
+                document.createElement(
+                    'span'
+                );
+
+            title.className =
+                'music-player-trending-title';
+
+            title.textContent =
+                track.name;
+
+
+            const artist =
+                document.createElement(
+                    'span'
+                );
+
+            artist.className =
+                'music-player-trending-artist';
+
+            artist.textContent =
+                getDeezerArtistsText(
+                    track
+                );
+
+
+            info.appendChild(
+                title
+            );
+
+            info.appendChild(
+                artist
+            );
+
+
+            /*
+             * DURACIÓN
+             */
+
+            const duration =
+                document.createElement(
+                    'span'
+                );
+
+            duration.className =
+                'music-player-list-column-duration';
+
+            duration.textContent =
+                formatDeezerDuration(
+                    track.duration
+                );
+
+
+            /*
+             * FILA
+             */
+
+            item.appendChild(
+                number
+            );
+
+            item.appendChild(
+                thumbnail
+            );
+
+            item.appendChild(
+                info
+            );
+
+            item.appendChild(
+                duration
+            );
+
+
+            /*
+             * Por ahora el click se conecta
+             * en el siguiente paso al mismo
+             * flujo de resolución de búsqueda.
+             */
+
+            list.appendChild(
+                item
+            );
+        }
+    );
+}
+
+async function loadDiscover(): Promise<void> {
+
+    if (
+        homeLoadState.discover ===
+        'loading' ||
+        homeLoadState.discover ===
+        'loaded'
+    ) {
+        return;
+    }
+
+
+    const section =
+        getHomeSectionElement(
+            'discover'
+        );
+
+
+    if (
+        !section
+    ) {
+        return;
+    }
+
+
+    homeLoadState.discover =
+        'loading';
+
+
+    section.innerHTML = `
+        <div class="music-player-home-loading">
+            CARGANDO NUEVOS LANZAMIENTOS...
+        </div>
+    `;
+
+
+    try {
+
+        const albums =
+            await fetchHomeChannel<DeezerAlbum>(
+                'discover'
+            );
+
+
+        renderDiscover(
+            section,
+            albums
+        );
+
+
+        homeLoadState.discover =
+            'loaded';
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Discover failed:',
+            error
+        );
+
+
+        homeLoadState.discover =
+            'error';
+
+
+        section.innerHTML = `
+            <div class="music-player-home-placeholder">
+                NO SE PUDIERON CARGAR LOS LANZAMIENTOS
+            </div>
+        `;
+    }
+}
+
+function formatReleaseDate(
+    date: string
+): string {
+
+    const parsed =
+        new Date(date);
+
+
+    if (
+        Number.isNaN(
+            parsed.getTime()
+        )
+    ) {
+        return '';
+    }
+
+
+    return parsed.toLocaleDateString(
+        'es-PE',
+        {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+        }
+    );
+}
+
+
+function getAlbumArtistsText(
+    album: DeezerAlbum
+): string {
+
+    return (
+        album.artists
+            ?.map(
+                artist =>
+                    artist.name
+            )
+            .filter(
+                Boolean
+            )
+            .join(', ') ||
+        'ARTISTA DESCONOCIDO'
+    );
+}
+
+
+function renderDiscover(
+    section: HTMLElement,
+    albums: DeezerAlbum[]
+): void {
+
+    if (
+        albums.length === 0
+    ) {
+
+        section.innerHTML = `
+            <div class="music-player-home-placeholder">
+                NO HAY NUEVOS LANZAMIENTOS
+            </div>
+        `;
+
+        return;
+    }
+
+
+    section.innerHTML = `
+        <div class="music-player-discover-grid"></div>
+    `;
+
+
+    const grid =
+        section.querySelector(
+            '.music-player-discover-grid'
+        );
+
+
+    if (
+        !(grid instanceof HTMLElement)
+    ) {
+        return;
+    }
+
+
+    albums.forEach(
+        album => {
+
+            const card =
+                document.createElement(
+                    'article'
+                );
+
+            card.className =
+                'music-player-discover-card';
+
+
+            const image =
+                document.createElement(
+                    'img'
+                );
+
+            image.src =
+                album.image;
+
+            image.alt =
+                `${album.name} - portada`;
+
+
+            const title =
+                document.createElement(
+                    'div'
+                );
+
+            title.className =
+                'music-player-discover-title';
+
+            title.textContent =
+                album.name;
+
+
+            const artist =
+                document.createElement(
+                    'div'
+                );
+
+            artist.className =
+                'music-player-discover-artist';
+
+            artist.textContent =
+                getAlbumArtistsText(
+                    album
+                );
+
+
+            const date =
+                document.createElement(
+                    'div'
+                );
+
+            date.className =
+                'music-player-discover-date';
+
+            date.textContent =
+                formatReleaseDate(
+                    album.release_date
+                );
+
+
+            card.appendChild(
+                image
+            );
+
+            card.appendChild(
+                title
+            );
+
+            card.appendChild(
+                artist
+            );
+
+            card.appendChild(
+                date
+            );
+
+
+            grid.appendChild(
+                card
+            );
+        }
+    );
+}
+
+async function loadGenres(): Promise<void> {
+
+    if (
+        homeLoadState.genres ===
+        'loading' ||
+        homeLoadState.genres ===
+        'loaded'
+    ) {
+        return;
+    }
+
+
+    const section =
+        getHomeSectionElement(
+            'genres'
+        );
+
+
+    if (
+        !section
+    ) {
+        return;
+    }
+
+
+    homeLoadState.genres =
+        'loading';
+
+
+    section.innerHTML = `
+        <div class="music-player-home-loading">
+            CARGANDO GÉNEROS...
+        </div>
+    `;
+
+
+    try {
+
+        const genres =
+            await fetchHomeChannel<DeezerGenre>(
+                'genres'
+            );
+
+
+        renderGenres(
+            section,
+            genres
+        );
+
+
+        homeLoadState.genres =
+            'loaded';
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Genres failed:',
+            error
+        );
+
+
+        homeLoadState.genres =
+            'error';
+
+
+        section.innerHTML = `
+            <div class="music-player-home-placeholder">
+                NO SE PUDIERON CARGAR LOS GÉNEROS
+            </div>
+        `;
+    }
+}
+
+function renderGenres(
+    section: HTMLElement,
+    genres: DeezerGenre[]
+): void {
+
+    if (
+        genres.length === 0
+    ) {
+
+        section.innerHTML = `
+            <div class="music-player-home-placeholder">
+                NO HAY GÉNEROS DISPONIBLES
+            </div>
+        `;
+
+        return;
+    }
+
+
+    section.innerHTML = `
+        <div class="music-player-genres-grid"></div>
+    `;
+
+
+    const grid =
+        section.querySelector(
+            '.music-player-genres-grid'
+        );
+
+
+    if (
+        !(grid instanceof HTMLElement)
+    ) {
+        return;
+    }
+
+
+    genres.forEach(
+        genre => {
+
+            const card =
+                document.createElement(
+                    'button'
+                );
+
+            card.type =
+                'button';
+
+            card.className =
+                'music-player-genre-card';
+
+
+            const image =
+                document.createElement(
+                    'img'
+                );
+
+            image.src =
+                genre.image;
+
+            image.alt =
+                genre.display_name;
+
+
+            const name =
+                document.createElement(
+                    'span'
+                );
+
+            name.className =
+                'music-player-genre-name';
+
+            name.textContent =
+                genre.display_name;
+
+
+            card.appendChild(
+                image
+            );
+
+            card.appendChild(
+                name
+            );
+
+
+            grid.appendChild(
+                card
+            );
+        }
+    );
+}
 
 function renderQueuePanel(): void {
 
