@@ -3,7 +3,7 @@ import './MusicPlayer.css';
 ---
 
 <div
-  class="music-player is-info-loading"
+  class="music-player is-info-loading is-artwork-loading"
   transition:persist="new-retro-music-player"
   aria-busy="true"
 >
