@@ -22,9 +22,12 @@ function initializeMusicPlayer(): void {
 
     player.dataset.initialized = 'true';
 
-    player.classList.add(
-        'is-track-info-loading'
+    let isInitialInfoLoading =
+    player.classList.contains(
+        'is-info-loading'
     );
+
+    let initialArtworkStarted = false;
 
     const youtubePlayerContainer =
     player.querySelector(
@@ -146,11 +149,6 @@ function initializeMusicPlayer(): void {
     const artworkImage =
         player.querySelector(
             '.music-player-track-artwork-image'
-        );
-
-    const trackInfo =
-        player.querySelector(
-            '.music-player-track-info'
         );
 
     const trackArtist =
@@ -1623,66 +1621,169 @@ if (initialStation) {
     updateTrackInfo();
 
     updateStationMenu();
+} else {
+
+    finishInitialInfoLoading();
 }
 
 
     /* --------------------------------------------------
        INFORMACIÓN DEL TRACK
     -------------------------------------------------- */
-function showTrackArtwork(
-    artworkUrl: string,
+function finishInitialInfoLoading(): void {
+
+    if (!isInitialInfoLoading) {
+        return;
+    }
+
+    isInitialInfoLoading =
+        false;
+
+    player.classList.remove(
+        'is-info-loading'
+    );
+
+    player.setAttribute(
+        'aria-busy',
+        'false'
+    );
+
+    artworkImage.onload =
+        null;
+
+    artworkImage.onerror =
+        null;
+}
+
+
+function updateArtwork(
+    artworkUrl: string | null,
     altText: string
 ): void {
 
-    artworkImage.style.opacity =
-        '0';
+    /*
+     * SOLO durante la primera carga
+     * de la interfaz.
+     */
+    if (isInitialInfoLoading) {
 
-    player.classList.add(
-        'is-track-info-loading'
-    );
+        if (
+            !initialArtworkStarted
+        ) {
 
-    artworkImage.onload = () => {
+            initialArtworkStarted =
+                true;
 
-        artworkImage.style.opacity =
-            '1';
+            artworkImage.style.opacity =
+                '0';
 
-        player.classList.remove(
-            'is-track-info-loading'
-        );
+            artworkImage.onload =
+                () => {
 
-        artworkImage.onload =
-            null;
-    };
+                    artworkImage.style.opacity =
+                        '1';
 
-    artworkImage.onerror = () => {
+                    finishInitialInfoLoading();
+                };
+
+            artworkImage.onerror =
+                () => {
+
+                    artworkImage.removeAttribute(
+                        'src'
+                    );
+
+                    artworkImage.style.opacity =
+                        '0';
+
+                    finishInitialInfoLoading();
+                };
+        }
+
+        artworkImage.alt =
+            altText;
+
+        if (!artworkUrl) {
+
+            artworkImage.removeAttribute(
+                'src'
+            );
+
+            finishInitialInfoLoading();
+
+            return;
+        }
+
+        artworkImage.src =
+            artworkUrl;
+
+        /*
+         * Si el navegador ya tenía
+         * la imagen en caché.
+         */
+        if (
+            artworkImage.complete &&
+            artworkImage.naturalWidth > 0
+        ) {
+
+            artworkImage.style.opacity =
+                '1';
+
+            finishInitialInfoLoading();
+        }
+
+        return;
+    }
+
+
+    /*
+     * A partir de aquí ya no existe
+     * ningún skeleton.
+     */
+
+    artworkImage.onload =
+        null;
+
+    artworkImage.onerror =
+        null;
+
+    if (!artworkUrl) {
 
         artworkImage.removeAttribute(
             'src'
         );
 
+        artworkImage.alt = '';
+
         artworkImage.style.opacity =
             '0';
 
-        artworkImage.onload =
-            null;
-    };
+        return;
+    }
 
     artworkImage.src =
         artworkUrl;
 
     artworkImage.alt =
         altText;
+
+    artworkImage.style.opacity =
+        '1';
 }
 
-
 function updateTrackInfo(): void {
-
 
     const source =
         audioPlayer.getState().source;
 
+
+    /* --------------------------------------------------
+       YOUTUBE
+    -------------------------------------------------- */
+
     if (
-        activePlaybackSource === 'youtube'
+        activePlaybackSource ===
+        'youtube'
     ) {
 
         const track =
@@ -1709,50 +1810,22 @@ function updateTrackInfo(): void {
             track.artist ??
             'ARTISTA DESCONOCIDO';
 
-        if (track.thumbnail) {
-
-            if (track.thumbnail) {
-
-        showTrackArtwork(
-                track.thumbnail,
-                `${track.title} - portada`
-            );
-
-        } else {
-
-            artworkImage.removeAttribute(
-                'src'
-            );
-
-            artworkImage.alt = '';
-
-            player.classList.add(
-                'is-track-info-loading'
-            );
-        }
-
-            artworkImage.alt =
-                `${track.title} - portada`;
-
-        } else {
-
-            artworkImage.removeAttribute(
-                'src'
-            );
-
-            artworkImage.alt = '';
-        }
+        updateArtwork(
+            track.thumbnail,
+            `${track.title} - portada`
+        );
 
         requestAnimationFrame(
             updateTrackMarquee
         );
 
-        player.classList.remove(
-            'is-loading-info'
-        );
-
         return;
     }
+
+
+    /* --------------------------------------------------
+       SIN FUENTE
+    -------------------------------------------------- */
 
     if (!source) {
 
@@ -1767,14 +1840,32 @@ function updateTrackInfo(): void {
 
         artworkImage.alt = '';
 
-        trackTitle.textContent = '';
-        trackArtist.textContent = '';
+        artworkImage.style.opacity =
+            '0';
+
+        trackTitle.textContent =
+            '';
+
+        trackArtist.textContent =
+            '';
+
+        if (
+            isInitialInfoLoading
+        ) {
+            finishInitialInfoLoading();
+        }
 
         return;
     }
 
+
+    /* --------------------------------------------------
+       RADIO
+    -------------------------------------------------- */
+
     if (
-        source.type === 'radio'
+        source.type ===
+        'radio'
     ) {
 
         player.classList.add(
@@ -1791,33 +1882,22 @@ function updateTrackInfo(): void {
         trackArtist.textContent =
             'RADIO';
 
-        if (source.artwork) {
-
-            artworkImage.src =
-                source.artwork;
-
-            artworkImage.alt =
-                `${source.name} - portada`;
-
-        } else {
-
-            artworkImage.removeAttribute(
-                'src'
-            );
-
-            artworkImage.alt = '';
-        }
+        updateArtwork(
+            source.artwork ?? null,
+            `${source.name} - portada`
+        );
 
         requestAnimationFrame(
             updateTrackMarquee
         );
 
-        player.classList.remove(
-            'is-loading-info'
-        );
-
         return;
     }
+
+
+    /* --------------------------------------------------
+       TRACK NORMAL
+    -------------------------------------------------- */
 
     player.classList.add(
         'is-track'
@@ -1834,25 +1914,10 @@ function updateTrackInfo(): void {
     trackTitle.textContent =
         source.name;
 
-    if (source.artwork) {
-
-        showTrackArtwork(
-            source.artwork,
-            `${source.name} - portada`
-        );
-
-    } else {
-
-        artworkImage.removeAttribute(
-            'src'
-        );
-
-        artworkImage.alt = '';
-
-        player.classList.add(
-            'is-track-info-loading'
-        );
-    }
+    updateArtwork(
+        source.artwork ?? null,
+        `${source.name} - portada`
+    );
 
     requestAnimationFrame(
         updateTrackMarquee
