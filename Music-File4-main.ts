@@ -27,6 +27,11 @@ function initializeMusicPlayer(): void {
         'is-info-loading'
     );
 
+    let isInitialArtworkLoading =
+        player.classList.contains(
+            'is-artwork-loading'
+        );
+
     let initialArtworkStarted = false;
 
     const youtubePlayerContainer =
@@ -1294,6 +1299,9 @@ item.addEventListener(
                 return;
             }
 
+            currentYouTubeVideoId =
+                videoId;
+
             console.log(
                 '[MusicPlayer] Using YouTube video:',
                 videoId
@@ -1642,6 +1650,21 @@ function finishInitialInfoLoading(): void {
     player.classList.remove(
         'is-info-loading'
     );
+}
+
+
+function finishInitialArtworkLoading(): void {
+
+    if (!isInitialArtworkLoading) {
+        return;
+    }
+
+    isInitialArtworkLoading =
+        false;
+
+    player.classList.remove(
+        'is-artwork-loading'
+    );
 
     player.setAttribute(
         'aria-busy',
@@ -1662,10 +1685,12 @@ function updateArtwork(
 ): void {
 
     /*
-     * SOLO durante la primera carga
-     * de la interfaz.
+     * --------------------------------------------------
+     * PRIMERA CARGA
+     * --------------------------------------------------
      */
-    if (isInitialInfoLoading) {
+
+    if (isInitialArtworkLoading) {
 
         if (
             !initialArtworkStarted
@@ -1683,7 +1708,7 @@ function updateArtwork(
                     artworkImage.style.opacity =
                         '1';
 
-                    finishInitialInfoLoading();
+                    finishInitialArtworkLoading();
                 };
 
             artworkImage.onerror =
@@ -1696,7 +1721,7 @@ function updateArtwork(
                     artworkImage.style.opacity =
                         '0';
 
-                    finishInitialInfoLoading();
+                    finishInitialArtworkLoading();
                 };
         }
 
@@ -1709,7 +1734,7 @@ function updateArtwork(
                 'src'
             );
 
-            finishInitialInfoLoading();
+            finishInitialArtworkLoading();
 
             return;
         }
@@ -1717,10 +1742,6 @@ function updateArtwork(
         artworkImage.src =
             artworkUrl;
 
-        /*
-         * Si el navegador ya tenía
-         * la imagen en caché.
-         */
         if (
             artworkImage.complete &&
             artworkImage.naturalWidth > 0
@@ -1729,7 +1750,7 @@ function updateArtwork(
             artworkImage.style.opacity =
                 '1';
 
-            finishInitialInfoLoading();
+            finishInitialArtworkLoading();
         }
 
         return;
@@ -1737,8 +1758,11 @@ function updateArtwork(
 
 
     /*
-     * A partir de aquí ya no existe
-     * ningún skeleton.
+     * --------------------------------------------------
+     * CAMBIOS POSTERIORES
+     *
+     * Aquí NO existe skeleton.
+     * --------------------------------------------------
      */
 
     artworkImage.onload =
@@ -1886,6 +1910,10 @@ function updateTrackInfo(): void {
             source.artwork ?? null,
             `${source.name} - portada`
         );
+
+        if (isInitialInfoLoading) {
+            finishInitialInfoLoading();
+        }
 
         requestAnimationFrame(
             updateTrackMarquee
@@ -2488,9 +2516,16 @@ youtubePlayer.subscribe(
                 '[MusicPlayer] Repeat enabled. Replaying current YouTube track.'
             );
 
-            if (
-                currentYouTubeVideoId
-            ) {
+            const repeatVideoId =
+                youtubeQueue[
+                    youtubeQueueCurrentIndex
+                ]?.videoId ??
+                currentYouTubeVideoId;
+
+            if (repeatVideoId) {
+
+                currentYouTubeVideoId =
+                    repeatVideoId;
 
                 youtubePlayer.seekTo(
                     0
@@ -2503,7 +2538,6 @@ youtubePlayer.subscribe(
                 console.log(
                     '[MusicPlayer] Cannot repeat: current YouTube video ID is missing.'
                 );
-
             }
 
             return;
