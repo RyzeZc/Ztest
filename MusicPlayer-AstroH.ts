@@ -259,21 +259,113 @@ import './MusicPlayer.css';
 
             <!-- TENDENCIAS -->
 
-            <section
-              class="music-player-home-section is-active"
-              data-home-section="trending"
-            >
+<section
+  class="music-player-home-section is-active"
+  data-home-section="trending"
+>
 
-              <div class="music-player-home-skeleton-grid">
+  <div class="music-player-list-header music-player-trending-list-header">
 
-                <div class="music-player-home-skeleton-card"></div>
-                <div class="music-player-home-skeleton-card"></div>
-                <div class="music-player-home-skeleton-card"></div>
-                <div class="music-player-home-skeleton-card"></div>
+    <span class="music-player-list-column-index">
+      #
+    </span>
 
-              </div>
+    <span
+      class="music-player-list-column-cover"
+      aria-hidden="true"
+    ></span>
 
-            </section>
+    <span class="music-player-list-column-title">
+      TÍTULO
+    </span>
+
+    <span class="music-player-list-column-duration">
+      DURACIÓN
+    </span>
+
+  </div>
+
+
+  <div class="music-player-trending-list">
+
+    <div class="music-player-trending-item">
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-index"></span>
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-cover"></span>
+
+      <span class="music-player-trending-info">
+
+        <span class="music-player-trending-skeleton music-player-trending-skeleton-title"></span>
+
+        <span class="music-player-trending-skeleton music-player-trending-skeleton-artist"></span>
+
+      </span>
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-duration"></span>
+
+    </div>
+
+
+    <div class="music-player-trending-item">
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-index"></span>
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-cover"></span>
+
+      <span class="music-player-trending-info">
+
+        <span class="music-player-trending-skeleton music-player-trending-skeleton-title"></span>
+
+        <span class="music-player-trending-skeleton music-player-trending-skeleton-artist"></span>
+
+      </span>
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-duration"></span>
+
+    </div>
+
+
+    <div class="music-player-trending-item">
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-index"></span>
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-cover"></span>
+
+      <span class="music-player-trending-info">
+
+        <span class="music-player-trending-skeleton music-player-trending-skeleton-title"></span>
+
+        <span class="music-player-trending-skeleton music-player-trending-skeleton-artist"></span>
+
+      </span>
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-duration"></span>
+
+    </div>
+
+
+    <div class="music-player-trending-item">
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-index"></span>
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-cover"></span>
+
+      <span class="music-player-trending-info">
+
+        <span class="music-player-trending-skeleton music-player-trending-skeleton-title"></span>
+
+        <span class="music-player-trending-skeleton music-player-trending-skeleton-artist"></span>
+
+      </span>
+
+      <span class="music-player-trending-skeleton music-player-trending-skeleton-duration"></span>
+
+    </div>
+
+  </div>
+
+</section>
 
 
             <!-- DESCUBRE -->
