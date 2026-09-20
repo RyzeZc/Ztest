@@ -231,7 +231,7 @@ import './MusicPlayer.css';
           role="tab"
           aria-selected="false"
         >
-          COLA
+          A CONTINUACIÓN
         </button>
 
       </nav>
@@ -254,19 +254,6 @@ import './MusicPlayer.css';
           data-panel-view="home"
         >
 
-          <div class="music-player-home-header">
-
-            <div class="music-player-home-eyebrow">
-              HOME
-            </div>
-
-            <h3 class="music-player-home-title">
-              TENDENCIAS
-            </h3>
-
-          </div>
-
-
           <div class="music-player-home-sections">
 
 
@@ -276,10 +263,6 @@ import './MusicPlayer.css';
               class="music-player-home-section is-active"
               data-home-section="trending"
             >
-
-              <div class="music-player-home-section-heading">
-                TENDENCIAS
-              </div>
 
               <div class="music-player-home-skeleton-grid">
 
@@ -401,6 +384,22 @@ import './MusicPlayer.css';
           </form>
 
 
+          <div class="music-player-list-header music-player-results-list-header">
+
+          <span class="music-player-list-column-index">
+            #
+          </span>
+
+          <span class="music-player-list-column-title">
+            TÍTULO
+          </span>
+
+          <span class="music-player-list-column-duration">
+            DURACIÓN
+          </span>
+
+        </div>
+
           <div
             class="music-player-youtube-results"
             aria-live="polite"
@@ -428,20 +427,18 @@ import './MusicPlayer.css';
           data-panel-view="queue"
         >
 
-          <div class="music-player-queue-header">
+          <div class="music-player-list-header music-player-queue-list-header">
 
-            <div>
-              <!--div class="music-player-queue-eyebrow">
-                REPRODUCCIÓN
-              </div-->
+            <span class="music-player-list-column-index">
+              #
+            </span>
 
-              <div class="music-player-queue-title">
-                REPRODUCCIÓN
-              </div>
-            </div>
+            <span class="music-player-list-column-title">
+              TÍTULO
+            </span>
 
-            <span class="music-player-queue-count">
-              0 TRACKS
+            <span class="music-player-list-column-duration">
+              DURACIÓN
             </span>
 
           </div>
