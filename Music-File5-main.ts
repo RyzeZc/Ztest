@@ -111,24 +111,68 @@ function initializeMusicPlayer(): void {
             '.music-player-station-menu'
         );
 
-    const stationPanel =
+const stationPanel =
     player.querySelector(
-        '[data-panel="stations"]'
+        '[data-panel="home"]'
     );
 
-    const youtubePanel =
-        player.querySelector(
-            '[data-panel="youtube"]'
-        );
+const youtubePanel =
+    player.querySelector(
+        '[data-panel="results"]'
+    );
+
+const queuePanel =
+    player.querySelector(
+        '[data-panel="queue"]'
+    );
+
+const queueList =
+    player.querySelector(
+        '.music-player-queue-list'
+    );
+
+const panelTabs =
+    Array.from(
+        player.querySelectorAll<HTMLButtonElement>(
+            '[data-panel-tab]'
+        )
+    );
+
+const panelViews =
+    Array.from(
+        player.querySelectorAll<HTMLElement>(
+            '[data-panel-view]'
+        )
+    );
+
+const homeNavItems =
+    Array.from(
+        player.querySelectorAll<HTMLButtonElement>(
+            '[data-home-section-button]'
+        )
+    );
+
+const homeSections =
+    Array.from(
+        player.querySelectorAll<HTMLElement>(
+            '[data-home-section]'
+        )
+    );
+
+const homeTitle =
+    player.querySelector(
+        '.music-player-home-title'
+    );
+
+const queueCount =
+    player.querySelector(
+        '.music-player-queue-count'
+    );
+
 
     const youtubeButton =
         player.querySelector(
             '.music-player-youtube-button'
-        );
-
-    const youtubeBackButton =
-        player.querySelector(
-            '.music-player-youtube-back'
         );
 
     const youtubeSearchForm =
@@ -214,7 +258,6 @@ function initializeMusicPlayer(): void {
         !(stationPanel instanceof HTMLElement) ||
         !(youtubePanel instanceof HTMLElement) ||
         !(youtubeButton instanceof HTMLButtonElement) ||
-        !(youtubeBackButton instanceof HTMLButtonElement) ||
         !(youtubeSearchForm instanceof HTMLFormElement) ||
         !(youtubeSearchInput instanceof HTMLInputElement) ||
         !(youtubeResults instanceof HTMLElement) ||
@@ -230,7 +273,11 @@ function initializeMusicPlayer(): void {
         !(progressSeekProgress instanceof HTMLElement) ||
         !(volumeProgress instanceof HTMLElement) ||
         !(videoToggle instanceof HTMLButtonElement) ||
-        !(videoPanel instanceof HTMLElement)
+        !(videoPanel instanceof HTMLElement) ||
+        !(queuePanel instanceof HTMLElement) ||
+        !(queueList instanceof HTMLElement) ||
+        !(homeTitle instanceof HTMLElement) ||
+        !(queueCount instanceof HTMLElement)
     ) {
         console.error(
             '[MusicPlayer] Required elements not found.'
@@ -697,6 +744,8 @@ function playYouTubeQueueTrack(
     currentYouTubeVideoId =
         track.videoId;
 
+    renderQueuePanel();
+
     console.log(
         '[MusicPlayer] Playing YouTube queue track:',
         track
@@ -1041,31 +1090,357 @@ function playPreviousYouTubeQueueTrack(): void {
     );
 }
 
-    function showYouTubePanel(): void {
 
-        stationPanel.classList.remove(
-            'is-active'
-        );
+type MusicPanelTab =
+    | 'home'
+    | 'results'
+    | 'queue';
 
-        youtubePanel.classList.add(
-            'is-active'
-        );
 
-        youtubeSearchInput.focus();
+type HomeSection =
+    | 'trending'
+    | 'discover'
+    | 'playlist'
+    | 'genres';
+
+
+function activatePanelTab(
+    tab: MusicPanelTab
+): void {
+
+    panelTabs.forEach(
+        button => {
+
+            const isActive =
+                button.dataset.panelTab ===
+                tab;
+
+            button.classList.toggle(
+                'is-active',
+                isActive
+            );
+
+            button.setAttribute(
+                'aria-selected',
+                String(isActive)
+            );
+        }
+    );
+
+
+    panelViews.forEach(
+        view => {
+
+            const isActive =
+                view.dataset.panelView ===
+                tab;
+
+            view.classList.toggle(
+                'is-active',
+                isActive
+            );
+        }
+    );
+}
+
+
+function activateHomeSection(
+    section: HomeSection
+): void {
+
+    const titles: Record<
+        HomeSection,
+        string
+    > = {
+        trending:
+            'TENDENCIAS',
+
+        discover:
+            'DESCUBRE',
+
+        playlist:
+            'PLAYLIST',
+
+        genres:
+            'GÉNEROS',
+    };
+
+
+    homeNavItems.forEach(
+        button => {
+
+            const isActive =
+                button.dataset
+                    .homeSectionButton ===
+                section;
+
+            button.classList.toggle(
+                'is-active',
+                isActive
+            );
+
+            if (isActive) {
+
+                button.setAttribute(
+                    'aria-current',
+                    'page'
+                );
+
+            } else {
+
+                button.removeAttribute(
+                    'aria-current'
+                );
+            }
+        }
+    );
+
+
+    homeSections.forEach(
+        element => {
+
+            element.classList.toggle(
+                'is-active',
+                element.dataset
+                    .homeSection ===
+                section
+            );
+        }
+    );
+
+
+    homeTitle.textContent =
+        titles[section];
+}
+
+
+
+function renderQueuePanel(): void {
+
+    queueList.innerHTML = '';
+
+
+    queueCount.textContent =
+        `${youtubeQueue.length} TRACKS`;
+
+
+    if (
+        youtubeQueue.length === 0
+    ) {
+
+        queueList.innerHTML = `
+            <div class="music-player-queue-empty">
+                LA COLA SE GENERARÁ AL REPRODUCIR UNA CANCIÓN
+            </div>
+        `;
+
+        return;
     }
 
 
-    function showStationsPanel(): void {
+    youtubeQueue.forEach(
+        (track, index) => {
 
-        youtubePanel.classList.remove(
-            'is-active'
-        );
+            const item =
+                document.createElement(
+                    'button'
+                );
 
-        stationPanel.classList.add(
-            'is-active'
+            item.type =
+                'button';
+
+            item.className =
+                'music-player-queue-item';
+
+
+            if (
+                index ===
+                youtubeQueueCurrentIndex
+            ) {
+
+                item.classList.add(
+                    'is-current'
+                );
+            }
+
+
+            const thumbnail =
+                document.createElement(
+                    'img'
+                );
+
+            thumbnail.className =
+                'music-player-queue-thumbnail';
+
+            thumbnail.src =
+                track.thumbnail ??
+                '';
+
+            thumbnail.alt =
+                `${track.title} - portada`;
+
+
+            const info =
+                document.createElement(
+                    'span'
+                );
+
+            info.className =
+                'music-player-queue-info';
+
+
+            const title =
+                document.createElement(
+                    'span'
+                );
+
+            title.className =
+                'music-player-queue-track-title';
+
+            title.textContent =
+                track.title;
+
+
+            const artist =
+                document.createElement(
+                    'span'
+                );
+
+            artist.className =
+                'music-player-queue-track-artist';
+
+            artist.textContent =
+                track.artist ||
+                'ARTISTA DESCONOCIDO';
+
+
+            info.appendChild(
+                title
+            );
+
+            info.appendChild(
+                artist
+            );
+
+
+            const number =
+                document.createElement(
+                    'span'
+                );
+
+            number.className =
+                'music-player-queue-index';
+
+            number.textContent =
+                index ===
+                youtubeQueueCurrentIndex
+                    ? '▶'
+                    : String(
+                        index + 1
+                    );
+
+
+            item.appendChild(
+                number
+            );
+
+            item.appendChild(
+                thumbnail
+            );
+
+            item.appendChild(
+                info
+            );
+
+
+            item.addEventListener(
+                'click',
+                () => {
+
+                    activatePanelTab(
+                        'queue'
+                    );
+
+                    playYouTubeQueueTrack(
+                        index
+                    );
+                }
+            );
+
+
+            queueList.appendChild(
+                item
+            );
+        }
+    );
+}
+
+function showYouTubePanel(): void {
+
+    activatePanelTab(
+        'results'
+    );
+
+    youtubeSearchInput.focus();
+}
+
+panelTabs.forEach(
+    button => {
+
+        button.addEventListener(
+            'click',
+            () => {
+
+                const tab =
+                    button.dataset
+                        .panelTab;
+
+                if (
+                    tab === 'home' ||
+                    tab === 'results' ||
+                    tab === 'queue'
+                ) {
+
+                    activatePanelTab(
+                        tab
+                    );
+                }
+            }
         );
     }
+);
 
+
+homeNavItems.forEach(
+    button => {
+
+        button.addEventListener(
+            'click',
+            () => {
+
+                const section =
+                    button.dataset
+                        .homeSectionButton;
+
+                if (
+                    section === 'trending' ||
+                    section === 'discover' ||
+                    section === 'playlist' ||
+                    section === 'genres'
+                ) {
+
+                    activatePanelTab(
+                        'home'
+                    );
+
+                    activateHomeSection(
+                        section
+                    );
+                }
+            }
+        );
+    }
+);
 
     function clearYouTubeResults(): void {
 
@@ -1388,6 +1763,17 @@ item.addEventListener(
                         '[MusicPlayer] YouTube queue current index:',
                         youtubeQueueCurrentIndex
                     );
+
+                    renderQueuePanel();
+
+                    if (
+                        youtubeQueue.length > 0
+                    ) {
+                        activatePanelTab(
+                            'queue'
+                        );
+                    }
+
                     updateUI();
 
                 } catch (error) {
@@ -1438,12 +1824,6 @@ async function searchYouTube(
             [];
 
         youtubeCurrentIndex =
-            -1;
-
-        youtubeQueue =
-            [];
-
-        youtubeQueueCurrentIndex =
             -1;
 
         youtubeResults.innerHTML =
@@ -1583,6 +1963,10 @@ async function searchYouTube(
                 return;
             }
 
+            activatePanelTab(
+                'results'
+            );
+
             searchYouTube(
                 query
             );
@@ -1622,13 +2006,20 @@ if (initialStation) {
         initialStation
     );
 
-    /*
-     * Mostrar inmediatamente:
-     * cover + nombre + RADIO.
-     */
     updateTrackInfo();
 
+    activatePanelTab(
+        'home'
+    );
+
+    activateHomeSection(
+        'trending'
+    );
+
+    renderQueuePanel();
+
     updateStationMenu();
+
 } else {
 
     finishInitialInfoLoading();
