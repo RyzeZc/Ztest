@@ -3,8 +3,9 @@ import './MusicPlayer.css';
 ---
 
 <div
-  class="music-player"
+  class="music-player is-info-loading"
   transition:persist="new-retro-music-player"
+  aria-busy="true"
 >
 
 
@@ -12,8 +13,6 @@ import './MusicPlayer.css';
     class="music-player-audio"
     preload="none"
   ></audio>
-
-  <!-- INFORMACIÓN -->
 
 <!-- INFORMACIÓN -->
 
@@ -54,12 +53,11 @@ import './MusicPlayer.css';
     aria-hidden="true"
   ></div>
 
-  <img
-    class="music-player-track-artwork-image"
-    src=""
-    alt=""
-    aria-hidden="true"
-  />
+<img
+  class="music-player-track-artwork-image"
+  alt=""
+  aria-hidden="true"
+/>
 
 </div>
 
