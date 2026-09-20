@@ -88,141 +88,387 @@ import './MusicPlayer.css';
 </div>
 
 
-  <div class="music-player-station-menu">
+</div>
 
-  <!-- PANEL DE ESTACIONES -->
+<div class="music-player-station-menu">
 
-  <div
-    class="music-player-station-panel is-active"
-    data-panel="stations"
-  >
+  <div class="music-player-panel-shell">
 
-    <div class="music-player-menu-heading">
-      ESTACIONES
-    </div>
+    <!-- =================================================
+         SIDEBAR
+    ================================================== -->
 
-    <div
-      class="music-player-station-options"
-      role="listbox"
-      aria-label="Estaciones de radio"
-    >
-    </div>
+    <aside class="music-player-panel-sidebar">
 
-    <button
-      class="music-player-youtube-button"
-      type="button"
-    >
-      <svg
-        class="music-player-youtube-button-icon"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <circle
-          cx="11"
-          cy="11"
-          r="6.5"
-        />
-        <path
-          d="M16 16L21 21"
-        />
-      </svg>
-
-      <span>
-        BUSCAR EN YOUTUBE
-      </span>
-    </button>
-
-  </div>
-
-
-  <!-- PANEL DE YOUTUBE -->
-
-  <div
-    class="music-player-station-panel"
-    data-panel="youtube"
-  >
-
-    <div class="music-player-youtube-header">
+      <!-- BUSCAR -->
 
       <button
-        class="music-player-youtube-back"
+        class="music-player-youtube-button music-player-panel-search"
         type="button"
-        aria-label="Volver a estaciones"
       >
         <svg
+          class="music-player-youtube-button-icon"
           viewBox="0 0 24 24"
           aria-hidden="true"
         >
+          <circle
+            cx="11"
+            cy="11"
+            r="6.5"
+          />
           <path
-            d="M15 5L8 12L15 19"
+            d="M16 16L21 21"
           />
         </svg>
+
+        <span>
+          BUSCAR
+        </span>
       </button>
 
-      <span>
-        BUSCAR EN YOUTUBE
-      </span>
 
-    </div>
+      <!-- NAVEGACIÓN HOME -->
 
-
-    <form
-      class="music-player-youtube-search"
-    >
-
-      <svg
-        class="music-player-youtube-search-icon"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
+      <nav
+        class="music-player-panel-nav"
+        aria-label="Contenido musical"
       >
-        <circle
-          cx="11"
-          cy="11"
-          r="6.5"
-        />
-        <path
-          d="M16 16L21 21"
-        />
-      </svg>
 
-      <input
-        class="music-player-youtube-search-input"
-        type="search"
-        maxlength="100"
-        autocomplete="off"
-        placeholder="Buscar..."
-        aria-label="Buscar en YouTube"
-      />
+        <button
+          class="music-player-panel-nav-item is-active"
+          type="button"
+          data-home-section-button="trending"
+          aria-current="page"
+        >
+          TENDENCIAS
+        </button>
 
-      <button
-        class="music-player-youtube-search-submit"
-        type="submit"
+        <button
+          class="music-player-panel-nav-item"
+          type="button"
+          data-home-section-button="discover"
+        >
+          DESCUBRE
+        </button>
+
+        <button
+          class="music-player-panel-nav-item"
+          type="button"
+          data-home-section-button="playlist"
+        >
+          PLAYLIST
+        </button>
+
+        <button
+          class="music-player-panel-nav-item"
+          type="button"
+          data-home-section-button="genres"
+        >
+          GÉNEROS
+        </button>
+
+      </nav>
+
+
+      <!-- ESTACIONES -->
+
+      <div class="music-player-panel-stations">
+
+        <div class="music-player-panel-section-label">
+          ESTACIONES
+        </div>
+
+        <div
+          class="music-player-station-options"
+          role="listbox"
+          aria-label="Estaciones de radio"
+        >
+        </div>
+
+      </div>
+
+    </aside>
+
+
+    <!-- =================================================
+         ÁREA PRINCIPAL
+    ================================================== -->
+
+    <section class="music-player-panel-main">
+
+      <!-- PESTAÑAS -->
+
+      <nav
+        class="music-player-panel-tabs"
+        role="tablist"
+        aria-label="Panel musical"
       >
-        BUSCAR
-      </button>
 
-    </form>
+        <button
+          class="music-player-panel-tab is-active"
+          type="button"
+          data-panel-tab="home"
+          role="tab"
+          aria-selected="true"
+        >
+          HOME
+        </button>
+
+        <button
+          class="music-player-panel-tab"
+          type="button"
+          data-panel-tab="results"
+          role="tab"
+          aria-selected="false"
+        >
+          RESULTADOS
+        </button>
+
+        <button
+          class="music-player-panel-tab"
+          type="button"
+          data-panel-tab="queue"
+          role="tab"
+          aria-selected="false"
+        >
+          COLA
+        </button>
+
+      </nav>
 
 
-    <div
-      class="music-player-youtube-results"
-      aria-live="polite"
-    >
-    </div>
+      <!-- =================================================
+           VISTAS
+      ================================================== -->
+
+      <div class="music-player-panel-views">
 
 
-    <button
-      class="music-player-youtube-load-more"
-      type="button"
-    >
-      CARGAR MÁS
-    </button>
+        <!-- =================================================
+             HOME
+        ================================================== -->
+
+        <section
+          class="music-player-station-panel music-player-panel-view is-active"
+          data-panel="home"
+          data-panel-view="home"
+        >
+
+          <div class="music-player-home-header">
+
+            <div class="music-player-home-eyebrow">
+              HOME
+            </div>
+
+            <h3 class="music-player-home-title">
+              TENDENCIAS
+            </h3>
+
+          </div>
+
+
+          <div class="music-player-home-sections">
+
+
+            <!-- TENDENCIAS -->
+
+            <section
+              class="music-player-home-section is-active"
+              data-home-section="trending"
+            >
+
+              <div class="music-player-home-section-heading">
+                TENDENCIAS
+              </div>
+
+              <div class="music-player-home-skeleton-grid">
+
+                <div class="music-player-home-skeleton-card"></div>
+                <div class="music-player-home-skeleton-card"></div>
+                <div class="music-player-home-skeleton-card"></div>
+                <div class="music-player-home-skeleton-card"></div>
+
+              </div>
+
+            </section>
+
+
+            <!-- DESCUBRE -->
+
+            <section
+              class="music-player-home-section"
+              data-home-section="discover"
+            >
+
+              <div class="music-player-home-placeholder">
+                DESCUBRE
+              </div>
+
+            </section>
+
+
+            <!-- PLAYLIST -->
+
+            <section
+              class="music-player-home-section"
+              data-home-section="playlist"
+            >
+
+              <div class="music-player-home-placeholder">
+                PLAYLIST
+              </div>
+
+            </section>
+
+
+            <!-- GÉNEROS -->
+
+            <section
+              class="music-player-home-section"
+              data-home-section="genres"
+            >
+
+              <div class="music-player-home-placeholder">
+                GÉNEROS
+              </div>
+
+            </section>
+
+          </div>
+
+        </section>
+
+
+        <!-- =================================================
+             RESULTADOS
+        ================================================== -->
+
+        <section
+          class="music-player-station-panel music-player-panel-view"
+          data-panel="results"
+          data-panel-view="results"
+        >
+
+          <!--div class="music-player-results-header">
+
+            <div class="music-player-results-eyebrow">
+              BUSCAR MÚSICA
+            </div>
+
+            <div class="music-player-results-title">
+              RESULTADOS
+            </div>
+
+          </div-->
+
+
+          <form
+            class="music-player-youtube-search"
+          >
+
+            <svg
+              class="music-player-youtube-search-icon"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <circle
+                cx="11"
+                cy="11"
+                r="6.5"
+              />
+
+              <path
+                d="M16 16L21 21"
+              />
+            </svg>
+
+            <input
+              class="music-player-youtube-search-input"
+              type="search"
+              maxlength="100"
+              autocomplete="off"
+              placeholder="Buscar..."
+              aria-label="Buscar música"
+            />
+
+            <button
+              class="music-player-youtube-search-submit"
+              type="submit"
+            >
+              BUSCAR
+            </button>
+
+          </form>
+
+
+          <div
+            class="music-player-youtube-results"
+            aria-live="polite"
+          >
+          </div>
+
+
+          <button
+            class="music-player-youtube-load-more"
+            type="button"
+          >
+            CARGAR MÁS
+          </button>
+
+        </section>
+
+
+        <!-- =================================================
+             COLA
+        ================================================== -->
+
+        <section
+          class="music-player-station-panel music-player-panel-view"
+          data-panel="queue"
+          data-panel-view="queue"
+        >
+
+          <div class="music-player-queue-header">
+
+            <div>
+              <!--div class="music-player-queue-eyebrow">
+                REPRODUCCIÓN
+              </div-->
+
+              <div class="music-player-queue-title">
+                REPRODUCCIÓN
+              </div>
+            </div>
+
+            <span class="music-player-queue-count">
+              0 TRACKS
+            </span>
+
+          </div>
+
+
+          <div class="music-player-queue-list">
+
+            <div class="music-player-queue-empty">
+              LA COLA SE GENERARÁ AL REPRODUCIR UNA CANCIÓN
+            </div>
+
+          </div>
+
+        </section>
+
+
+      </div>
+
+    </section>
 
   </div>
 
 </div>
 
-</div>
+<!-- CONTROLES PRINCIPALES -->
+
+
 
   <!-- CONTROLES PRINCIPALES -->
 
