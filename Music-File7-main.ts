@@ -159,17 +159,6 @@ const homeSections =
         )
     );
 
-const homeTitle =
-    player.querySelector(
-        '.music-player-home-title'
-    );
-
-const queueCount =
-    player.querySelector(
-        '.music-player-queue-count'
-    );
-
-
     const youtubeButton =
         player.querySelector(
             '.music-player-youtube-button'
@@ -275,9 +264,7 @@ const queueCount =
         !(videoToggle instanceof HTMLButtonElement) ||
         !(videoPanel instanceof HTMLElement) ||
         !(queuePanel instanceof HTMLElement) ||
-        !(queueList instanceof HTMLElement) ||
-        !(homeTitle instanceof HTMLElement) ||
-        !(queueCount instanceof HTMLElement)
+        !(queueList instanceof HTMLElement)
     ) {
         console.error(
             '[MusicPlayer] Required elements not found.'
@@ -1147,24 +1134,6 @@ function activateHomeSection(
     section: HomeSection
 ): void {
 
-    const titles: Record<
-        HomeSection,
-        string
-    > = {
-        trending:
-            'TENDENCIAS',
-
-        discover:
-            'DESCUBRE',
-
-        playlist:
-            'PLAYLIST',
-
-        genres:
-            'GÉNEROS',
-    };
-
-
     homeNavItems.forEach(
         button => {
 
@@ -1206,10 +1175,6 @@ function activateHomeSection(
             );
         }
     );
-
-
-    homeTitle.textContent =
-        titles[section];
 }
 
 
@@ -1217,10 +1182,6 @@ function activateHomeSection(
 function renderQueuePanel(): void {
 
     queueList.innerHTML = '';
-
-    queueCount.textContent =
-        `${youtubeQueue.length} TRACKS`;
-
 
     if (
         youtubeQueue.length === 0
@@ -1573,6 +1534,25 @@ function appendYouTubeResults(
                 );
 
 
+             /* --------------------------------------------
+               COLUMNA COVER
+            -------------------------------------------- */
+
+                const thumbnail =
+                    document.createElement(
+                        'img'
+                    );
+
+                thumbnail.className =
+                    'music-player-youtube-result-thumbnail';
+
+                thumbnail.src =
+                    result.image;
+
+                thumbnail.alt =
+                    `${result.name} - portada`;
+
+
             /*
              * --------------------------------------------------
              * COLUMNA TÍTULO
@@ -1653,6 +1633,10 @@ function appendYouTubeResults(
             );
 
             item.appendChild(
+                thumbnail
+            );
+
+            item.appendChild(
                 info
             );
 
@@ -1722,6 +1706,7 @@ function appendYouTubeResults(
                         !artistName ||
                         !trackName
                     ) {
+
                         console.log(
                             '[MusicPlayer] Cannot resolve track: missing artist or title.'
                         );
@@ -1729,11 +1714,247 @@ function appendYouTubeResults(
                         return;
                     }
 
-                    await resolveAndPlayTrack(
-                        result,
-                        artistName,
-                        trackName
+
+                    console.log(
+                        '[MusicPlayer] Resolving Deezer track:',
+                        {
+                            id: result.id,
+                            artist: artistName,
+                            title: trackName,
+                        }
                     );
+
+
+                    try {
+
+                        const params =
+                            new URLSearchParams();
+
+                        params.set(
+                            'id',
+                            String(result.id)
+                        );
+
+                        params.set(
+                            'artist',
+                            artistName
+                        );
+
+                        params.set(
+                            'title',
+                            trackName
+                        );
+
+
+                        const response =
+                            await fetch(
+                                `/api/v2/music/resolve?${params.toString()}`
+                            );
+
+
+                        if (!response.ok) {
+
+                            throw new Error(
+                                `Music resolve failed: ${response.status}`
+                            );
+                        }
+
+
+                        const data =
+                            await response.json();
+
+
+                        if (!data.success) {
+
+                            throw new Error(
+                                data.error ??
+                                'Music resolve failed.'
+                            );
+                        }
+
+
+                        const resolvedTracks =
+                            data.results ?? [];
+
+
+                        console.log(
+                            '[MusicPlayer] Resolved YouTube tracks:',
+                            resolvedTracks
+                        );
+
+
+                        if (
+                            resolvedTracks.length === 0
+                        ) {
+
+                            console.log(
+                                '[MusicPlayer] No YouTube video was found for this track.'
+                            );
+
+                            return;
+                        }
+
+
+                        const videoId =
+                            resolvedTracks[0]?.id;
+
+
+                        if (!videoId) {
+
+                            console.log(
+                                '[MusicPlayer] Resolved result does not contain a video ID.'
+                            );
+
+                            return;
+                        }
+
+
+                        currentYouTubeVideoId =
+                            videoId;
+
+
+                        console.log(
+                            '[MusicPlayer] Using YouTube video:',
+                            videoId
+                        );
+
+
+                        audioPlayer.pause();
+
+                        activePlaybackSource =
+                            'youtube';
+
+
+                        youtubePlayer.load(
+                            videoId
+                        );
+
+                        youtubePlayer.play();
+
+
+                        console.log(
+                            '[MusicPlayer] YouTube playback started:',
+                            videoId
+                        );
+
+
+                        /*
+                        * --------------------------------------------------
+                        * UP NEXT
+                        * --------------------------------------------------
+                        */
+
+                        try {
+
+                            const upNextResponse =
+                                await fetch(
+                                    `/api/v2/music/up-next?videoId=${encodeURIComponent(
+                                        videoId
+                                    )}`
+                                );
+
+
+                            if (!upNextResponse.ok) {
+
+                                throw new Error(
+                                    `Up Next request failed: ${upNextResponse.status}`
+                                );
+                            }
+
+
+                            const upNextData =
+                                await upNextResponse.json();
+
+
+                            if (
+                                !upNextData.success ||
+                                !Array.isArray(
+                                    upNextData.results
+                                )
+                            ) {
+
+                                throw new Error(
+                                    'Invalid Up Next response'
+                                );
+                            }
+
+
+                            youtubeQueue =
+                                upNextData.results;
+
+
+                            youtubeQueueCurrentIndex =
+                                youtubeQueue.findIndex(
+                                    track =>
+                                        track.videoId ===
+                                        videoId
+                                );
+
+
+                            if (
+                                youtubeQueueCurrentIndex < 0 &&
+                                youtubeQueue.length > 0
+                            ) {
+
+                                youtubeQueueCurrentIndex =
+                                    0;
+                            }
+
+
+                            console.log(
+                                '[MusicPlayer] YouTube Up Next queue loaded:',
+                                youtubeQueue
+                            );
+
+                            console.log(
+                                '[MusicPlayer] YouTube Up Next queue length:',
+                                youtubeQueue.length
+                            );
+
+                            console.log(
+                                '[MusicPlayer] YouTube queue current index:',
+                                youtubeQueueCurrentIndex
+                            );
+
+
+                            renderQueuePanel();
+
+
+                            /*
+                            * Cuando la queue ya existe,
+                            * mostramos A CONTINUACIÓN.
+                            */
+
+                            if (
+                                youtubeQueue.length > 0
+                            ) {
+
+                                activatePanelTab(
+                                    'queue'
+                                );
+                            }
+
+
+                            updateUI();
+
+                        } catch (error) {
+
+                            console.error(
+                                '[MusicPlayer] Failed to load YouTube Up Next:',
+                                error
+                            );
+                        }
+
+
+                    } catch (error) {
+
+                        console.error(
+                            '[MusicPlayer] Music resolve failed:',
+                            error
+                        );
+                    }
+
+
                 }
             );
 
