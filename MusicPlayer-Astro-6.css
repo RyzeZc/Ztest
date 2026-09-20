@@ -252,8 +252,9 @@
 
     text-overflow: ellipsis;
 }
+
 /* --------------------------------------------------
-   ESTADO INICIAL
+   SKELETON — INFORMACIÓN
 -------------------------------------------------- */
 
 .music-player.is-info-loading
@@ -265,14 +266,25 @@
 }
 
 
-.music-player:not(.is-info-loading)
-.music-player-track-artwork-skeleton,
+/* --------------------------------------------------
+   SKELETON — TÍTULO / ARTISTA
+-------------------------------------------------- */
 
 .music-player:not(.is-info-loading)
 .music-player-track-title-skeleton,
 
 .music-player:not(.is-info-loading)
 .music-player-track-artist-skeleton {
+    display: none;
+}
+
+
+/* --------------------------------------------------
+   SKELETON — COVER
+-------------------------------------------------- */
+
+.music-player:not(.is-artwork-loading)
+.music-player-track-artwork-skeleton {
     display: none;
 }
 
