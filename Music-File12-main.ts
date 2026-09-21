@@ -1,11 +1,15 @@
 import { audioPlayer } from '../../lib/audio/audio-player';
 import { audioStations } from '../../lib/audio/audio-stations';
 import { YouTubePlayer } from '../../lib/youtube/youtube-player';
+import {
+    getArtistRadio,
+    resolveTrack,
+} from '../../lib/music/music-service';
+
 import type {
-    DeezerAlbum,
-    DeezerGenre,
-    DeezerTrack,
-} from '../../lib/deezer/deezer-types';
+    MusicRadioTrack,
+    MusicTrack,
+} from '../../lib/music/music-types';
 
 function initializeMusicPlayer(): void {
 
@@ -649,7 +653,47 @@ function selectStation(
 
     let currentYouTubeVideoId: string | null = null;
 
+    /*
+    * --------------------------------------------------
+    * MUSIC RESOLVE CACHE
+    * --------------------------------------------------
+    *
+    * Guarda tanto:
+    *
+    * 1. Resoluciones que ya terminaron.
+    * 2. Resoluciones que todavía están en curso.
+    *
+    * Así, si el usuario hace clic varias veces
+    * sobre la misma canción, reutilizamos la misma
+    * Promise y no generamos requests duplicados.
+    */
+    const resolveCache =
+        new Map<number, Promise<string | null>>();
+
+    const resolvedYouTubeIds =
+        new Map<number, string>();
+
+    /*
+    * Identifica cuál fue la última selección
+    * realizada por el usuario.
+    *
+    * Una respuesta antigua puede terminar después
+    * de una selección nueva, pero no debe tomar
+    * control de la reproducción.
+    */
+    let playbackRequestId = 0;
+
+    /*
+    * Identifica la generación actual de la queue.
+    *
+    * Una respuesta antigua de Artist Radio no debe
+    * reemplazar una queue generada por una selección
+    * posterior.
+    */
+    let queueRequestId = 0;
+
     let youtubeShuffleHistory: number[] = [];
+
     let youtubeShuffleHistoryPosition = -1;
 
     let youtubeProgressInterval:
@@ -660,7 +704,152 @@ function selectStation(
 
     let youtubeSeekTargetTime:
     number | null = null;
-    
+
+async function resolveYouTubeTrack(
+    track: MusicTrack
+): Promise<string | null> {
+
+    const cachedVideoId =
+        resolvedYouTubeIds.get(
+            track.id
+        );
+
+    if (cachedVideoId) {
+
+        console.log(
+            '[MusicPlayer] Using cached YouTube ID:',
+            {
+                deezerId: track.id,
+                youtubeId: cachedVideoId,
+            }
+        );
+
+        return cachedVideoId;
+    }
+
+    const existingRequest =
+        resolveCache.get(
+            track.id
+        );
+
+    if (existingRequest) {
+
+        console.log(
+            '[MusicPlayer] Reusing in-flight resolve:',
+            track.id
+        );
+
+        return existingRequest;
+    }
+
+    const artistName =
+        track.artist?.name ??
+        '';
+
+    const trackName =
+        track.title ??
+        '';
+
+    if (
+        !artistName ||
+        !trackName
+    ) {
+
+        console.log(
+            '[MusicPlayer] Cannot resolve track: missing artist or title.'
+        );
+
+        return null;
+    }
+
+    console.log(
+        '[MusicPlayer] Starting resolve:',
+        {
+            deezerId: track.id,
+            artist: artistName,
+            title: trackName,
+        }
+    );
+
+    const request =
+        (async (): Promise<string | null> => {
+
+            try {
+
+                const response =
+                    await resolveTrack(
+                        track.id,
+                        artistName,
+                        trackName
+                    );
+
+                const videoId =
+                    response.results?.[0]?.id;
+
+                if (!videoId) {
+
+                    console.log(
+                        '[MusicPlayer] No YouTube video found:',
+                        track.id
+                    );
+
+                    return null;
+                }
+
+                resolvedYouTubeIds.set(
+                    track.id,
+                    videoId
+                );
+
+                console.log(
+                    '[MusicPlayer] Resolve completed:',
+                    {
+                        deezerId: track.id,
+                        youtubeId: videoId,
+                    }
+                );
+
+                return videoId;
+
+            } catch (error) {
+
+                console.error(
+                    '[MusicPlayer] Music resolve failed:',
+                    error
+                );
+
+                return null;
+            }
+
+        })();
+
+    resolveCache.set(
+        track.id,
+        request
+    );
+
+    try {
+
+        return await request;
+
+    } finally {
+
+        /*
+         * La Promise ya terminó.
+         *
+         * El resultado exitoso permanece en
+         * resolvedYouTubeIds.
+         *
+         * Si falló, eliminamos la Promise para
+         * permitir un nuevo intento posteriormente.
+         */
+        resolveCache.delete(
+            track.id
+        );
+
+    }
+}
+
 function formatTime(
     seconds: number
 ): string {
