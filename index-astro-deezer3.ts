@@ -3,18 +3,22 @@ export const prerender = false;
 
 const search = Astro.url.searchParams.get("q")?.trim() || "";
 
-async function deezerFetch<T = any>(url: string): Promise<T> {
+function apiUrl(path: string) {
+  return new URL(path, Astro.url).toString();
+}
+
+async function apiFetch<T = any>(path: string): Promise<T> {
   try {
-    const response = await fetch(url);
+    const response = await fetch(apiUrl(path));
 
     if (!response.ok) {
-      console.error(`Deezer HTTP ${response.status}: ${url}`);
+      console.error(`API HTTP ${response.status}: ${path}`);
       return {} as T;
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error consultando Deezer:", error);
+    console.error("Error consultando API interna:", error);
     return {} as T;
   }
 }
@@ -37,17 +41,17 @@ if (search) {
     albumsResult,
     playlistsResult
   ] = await Promise.all([
-    deezerFetch(
-      `https://api.deezer.com/search/track?q=${encodedSearch}&limit=10`
+    apiFetch(
+      `/api/v1/search/track?q=${encodedSearch}&limit=10`
     ),
-    deezerFetch(
-      `https://api.deezer.com/search/artist?q=${encodedSearch}&limit=10`
+    apiFetch(
+      `/api/v1/search/artist?q=${encodedSearch}&limit=10`
     ),
-    deezerFetch(
-      `https://api.deezer.com/search/album?q=${encodedSearch}&limit=10`
+    apiFetch(
+      `/api/v1/search/album?q=${encodedSearch}&limit=10`
     ),
-    deezerFetch(
-      `https://api.deezer.com/search/playlist?q=${encodedSearch}&limit=10`
+    apiFetch(
+      `/api/v1/search/playlist?q=${encodedSearch}&limit=10`
     )
   ]);
 
@@ -67,8 +71,8 @@ let trendingArtists: any[] = [];
 let trendingPlaylists: any[] = [];
 
 if (!search) {
-  const chart = await deezerFetch(
-    "https://api.deezer.com/chart?limit=10"
+  const chart = await apiFetch(
+    "/api/v1/chart?limit=10"
   );
 
   trendingTracks = chart?.tracks?.data ?? [];
@@ -84,8 +88,8 @@ if (!search) {
 let genres: any[] = [];
 
 if (!search) {
-  const genresResult = await deezerFetch(
-    "https://api.deezer.com/genre"
+  const genresResult = await apiFetch(
+    "/api/v1/genre"
   );
 
   genres = genresResult?.data ?? [];
@@ -107,7 +111,6 @@ if (!search) {
       </a>
 
       <form method="GET" action="/deezer-test" class="search-form">
-
         <input
           type="search"
           name="q"
@@ -126,18 +129,17 @@ if (!search) {
 
   </header>
 
-
   <!-- =====================================================
        CONTENIDO
   ====================================================== -->
-      <!-- =================================================
-           RESULTADOS DE BUSQUEDA
-      ================================================== -->
+
   <main class="content">
 
+    <!-- =================================================
+         RESULTADOS DE BUSQUEDA
+    ================================================== -->
+
     {search ? (
-
-
 
       <section class="search-results">
 
@@ -158,6 +160,7 @@ if (!search) {
         <!-- TRACKS -->
 
         {searchTracks.length > 0 && (
+
           <section class="result-section">
 
             <h2>TRACKS</h2>
@@ -176,7 +179,7 @@ if (!search) {
                   </span>
 
                   <img
-                    src={track.album?.cover_medium}
+                    src={track.album?.cover}
                     alt={track.title}
                   />
 
@@ -199,12 +202,14 @@ if (!search) {
             </div>
 
           </section>
+
         )}
 
 
         <!-- ARTISTAS -->
 
         {searchArtists.length > 0 && (
+
           <section class="result-section">
 
             <h2>ARTISTAS</h2>
@@ -219,7 +224,7 @@ if (!search) {
                 >
 
                   <img
-                    src={artist.picture_medium}
+                    src={artist.picture}
                     alt={artist.name}
                   />
 
@@ -238,12 +243,14 @@ if (!search) {
             </div>
 
           </section>
+
         )}
 
 
         <!-- ALBUMES -->
 
         {searchAlbums.length > 0 && (
+
           <section class="result-section">
 
             <h2>ÁLBUMES</h2>
@@ -258,7 +265,7 @@ if (!search) {
                 >
 
                   <img
-                    src={album.cover_medium}
+                    src={album.cover}
                     alt={album.title}
                   />
 
@@ -277,12 +284,14 @@ if (!search) {
             </div>
 
           </section>
+
         )}
 
 
         <!-- PLAYLISTS -->
 
         {searchPlaylists.length > 0 && (
+
           <section class="result-section">
 
             <h2>PLAYLISTS</h2>
@@ -297,7 +306,7 @@ if (!search) {
                 >
 
                   <img
-                    src={playlist.picture_medium}
+                    src={playlist.picture}
                     alt={playlist.title}
                   />
 
@@ -316,6 +325,7 @@ if (!search) {
             </div>
 
           </section>
+
         )}
 
 
@@ -381,7 +391,7 @@ if (!search) {
                   </span>
 
                   <img
-                    src={track.album?.cover_medium}
+                    src={track.album?.cover}
                     alt={track.title}
                   />
 
@@ -432,7 +442,7 @@ if (!search) {
                 >
 
                   <img
-                    src={album.cover_medium}
+                    src={album.cover}
                     alt={album.title}
                   />
 
@@ -479,7 +489,7 @@ if (!search) {
                 >
 
                   <img
-                    src={artist.picture_medium}
+                    src={artist.picture}
                     alt={artist.name}
                   />
 
@@ -522,7 +532,7 @@ if (!search) {
                 >
 
                   <img
-                    src={playlist.picture_medium}
+                    src={playlist.picture}
                     alt={playlist.title}
                   />
 
@@ -597,11 +607,13 @@ if (!search) {
                   class="genre-card"
                 >
 
-                  {genre.picture_medium && (
+                  {genre.picture && (
+
                     <img
-                      src={genre.picture_medium}
+                      src={genre.picture}
                       alt={genre.name}
                     />
+
                   )}
 
                   <span>
