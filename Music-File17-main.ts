@@ -193,11 +193,6 @@ const homeSections =
             '.music-player-youtube-results'
         );
 
-    const youtubeLoadMore =
-        player.querySelector(
-            '.music-player-youtube-load-more'
-        );
-
     const artworkImage =
         player.querySelector(
             '.music-player-track-artwork-image'
@@ -264,7 +259,6 @@ const homeSections =
         !(youtubeSearchForm instanceof HTMLFormElement) ||
         !(youtubeSearchInput instanceof HTMLInputElement) ||
         !(youtubeResults instanceof HTMLElement) ||
-        !(youtubeLoadMore instanceof HTMLButtonElement) ||
         !(youtubePlayerContainer instanceof HTMLElement) ||
         !(previousButton instanceof HTMLButtonElement) ||
         !(nextButton instanceof HTMLButtonElement) ||
@@ -622,13 +616,6 @@ function selectStation(
         /* --------------------------------------------------
        YOUTUBE SEARCH
     -------------------------------------------------- */
-
-    let youtubeNextPageToken:
-        string | undefined;
-
-    let youtubeCurrentQuery =
-        '';
-
     let activePlaybackSource:
         'radio' | 'youtube' =
         'radio';
@@ -658,8 +645,6 @@ function selectStation(
 
     let youtubeSelectedTrackId:
         number | null = null;
-
-    let youtubeCurrentIndex = -1;
 
     let youtubeRepeat = false;
     let youtubeShuffle = false;
@@ -1298,8 +1283,6 @@ async function playMusicQueueTrack(
     );
 
     youtubePlayer.play();
-
-    updateTrackInfo();
 
     updateUI();
 
@@ -2837,11 +2820,6 @@ homeNavItems.forEach(
 
         youtubeResults.innerHTML = '';
 
-        youtubeNextPageToken =
-            undefined;
-
-        youtubeLoadMore.hidden =
-            true;
     }
 
 
@@ -3058,6 +3036,16 @@ function appendYouTubeResults(
                                 Number(trackId)
                         );
 
+                    currentMusicTrack =
+                        result;
+
+                    activePlaybackSource =
+                        'youtube';
+
+                    updateTrackInfo();
+
+                    updateUI();
+
                     console.log(
                         '[MusicPlayer] Music track selected:',
                         {
@@ -3194,9 +3182,6 @@ function appendYouTubeResults(
                                     result.id
                             );
 
-                        currentMusicTrack =
-                            result;
-
                         /*
                         * Una nueva queue representa
                         * una nueva sesión de navegación.
@@ -3260,17 +3245,8 @@ async function searchYouTube(
 
     if (!append) {
 
-        youtubeCurrentQuery =
-            query;
-
-        youtubeNextPageToken =
-            undefined;
-
         youtubeTracks =
             [];
-
-        youtubeCurrentIndex =
-            -1;
 
         youtubeSelectedTrackId =
         null;
@@ -3331,8 +3307,6 @@ async function searchYouTube(
          *
          * Por ahora ocultamos "Cargar más".
          */
-        youtubeNextPageToken =
-            undefined;
 
         youtubeLoadMore.hidden =
             true;
@@ -3393,23 +3367,6 @@ async function searchYouTube(
         }
     );
 
-
-    youtubeLoadMore.addEventListener(
-        'click',
-        () => {
-
-            if (
-                !youtubeNextPageToken
-            ) {
-                return;
-            }
-
-            searchYouTube(
-                youtubeCurrentQuery,
-                true
-            );
-        }
-    );
 
 const initialStation =
     audioStations[0];
@@ -3606,16 +3563,18 @@ function updateArtwork(
         '1';
 }
 
+let currentTrackInfoKey = '';
+
 function updateTrackInfo(): void {
 
     const source =
         audioPlayer.getState().source;
 
-
-    /* --------------------------------------------------
-       YOUTUBE
-    -------------------------------------------------- */
-
+    /*
+     * --------------------------------------------------
+     * YOUTUBE
+     * --------------------------------------------------
+     */
     if (
         activePlaybackSource ===
         'youtube'
@@ -3627,6 +3586,26 @@ function updateTrackInfo(): void {
         if (!track) {
             return;
         }
+
+        const infoKey =
+            `youtube:${track.id}`;
+
+        /*
+         * La canción no cambió.
+         *
+         * No tocamos el DOM.
+         * Esto es especialmente importante para
+         * no reiniciar el marquee.
+         */
+        if (
+            infoKey ===
+            currentTrackInfoKey
+        ) {
+            return;
+        }
+
+        currentTrackInfoKey =
+            infoKey;
 
         player.classList.add(
             'is-track'
@@ -3655,11 +3634,22 @@ function updateTrackInfo(): void {
         return;
     }
 
-    /* --------------------------------------------------
-       SIN FUENTE
-    -------------------------------------------------- */
-
+    /*
+     * --------------------------------------------------
+     * SIN FUENTE
+     * --------------------------------------------------
+     */
     if (!source) {
+
+        if (
+            currentTrackInfoKey ===
+            'none'
+        ) {
+            return;
+        }
+
+        currentTrackInfoKey =
+            'none';
 
         player.classList.remove(
             'is-radio',
@@ -3670,7 +3660,8 @@ function updateTrackInfo(): void {
             'src'
         );
 
-        artworkImage.alt = '';
+        artworkImage.alt =
+            '';
 
         artworkImage.style.opacity =
             '0';
@@ -3690,15 +3681,28 @@ function updateTrackInfo(): void {
         return;
     }
 
-
-    /* --------------------------------------------------
-       RADIO
-    -------------------------------------------------- */
-
+    /*
+     * --------------------------------------------------
+     * RADIO
+     * --------------------------------------------------
+     */
     if (
         source.type ===
         'radio'
     ) {
+
+        const infoKey =
+            `radio:${currentStationId}`;
+
+        if (
+            infoKey ===
+            currentTrackInfoKey
+        ) {
+            return;
+        }
+
+        currentTrackInfoKey =
+            infoKey;
 
         player.classList.add(
             'is-radio'
@@ -3719,7 +3723,9 @@ function updateTrackInfo(): void {
             `${source.name} - portada`
         );
 
-        if (isInitialInfoLoading) {
+        if (
+            isInitialInfoLoading
+        ) {
             finishInitialInfoLoading();
         }
 
@@ -3730,10 +3736,23 @@ function updateTrackInfo(): void {
         return;
     }
 
+    /*
+     * --------------------------------------------------
+     * OTRA FUENTE
+     * --------------------------------------------------
+     */
+    const infoKey =
+        `${source.type}:${source.name}`;
 
-    /* --------------------------------------------------
-       TRACK NORMAL
-    -------------------------------------------------- */
+    if (
+        infoKey ===
+        currentTrackInfoKey
+    ) {
+        return;
+    }
+
+    currentTrackInfoKey =
+        infoKey;
 
     player.classList.add(
         'is-track'
@@ -3760,51 +3779,28 @@ function updateTrackInfo(): void {
     );
 }
 
-let currentMarqueeSignature = '';
 
-function updateTrackMarquee(
-    force = false
-): void {
+function updateTrackMarquee(): void {
 
-    const signature =
-    `${trackTitle.textContent ?? ''}\u0000${trackArtist.textContent ?? ''}`;
-
-    if (
-        !force &&
-        signature ===
-            currentMarqueeSignature
-    ) {
-        return;
-    }
-
-    currentMarqueeSignature =
-        signature;
-        
     const marqueeElements = [
         {
-            element: trackTitle,
-            wrapper: trackTitleWrapper,
-            overflowVariable:
-                '--music-player-title-overflow',
-            durationVariable:
-                '--music-player-title-marquee-duration'
+            element:
+                trackTitle,
+            wrapper:
+                trackTitleWrapper
         },
         {
-            element: trackArtist,
-            wrapper: trackArtistWrapper,
-            overflowVariable:
-                '--music-player-artist-overflow',
-            durationVariable:
-                '--music-player-artist-marquee-duration'
+            element:
+                trackArtist,
+            wrapper:
+                trackArtistWrapper
         }
     ];
 
     marqueeElements.forEach(
         ({
             element,
-            wrapper,
-            overflowVariable,
-            durationVariable
+            wrapper
         }) => {
 
             element.classList.remove(
@@ -3812,11 +3808,11 @@ function updateTrackMarquee(
             );
 
             element.style.removeProperty(
-                overflowVariable
+                '--music-player-marquee-overflow'
             );
 
             element.style.removeProperty(
-                durationVariable
+                '--music-player-marquee-duration'
             );
 
             const overflow =
@@ -3844,12 +3840,12 @@ function updateTrackMarquee(
                 );
 
             element.style.setProperty(
-                overflowVariable,
+                '--music-player-marquee-overflow',
                 `${distance}px`
             );
 
             element.style.setProperty(
-                durationVariable,
+                '--music-player-marquee-duration',
                 `${duration}s`
             );
 
@@ -3975,8 +3971,6 @@ function updateTrackMarquee(
             'is-active',
             youtubeShuffle
         );
-
-        updateTrackInfo();
 
         player.classList.toggle(
             'is-playing',
