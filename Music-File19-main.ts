@@ -586,12 +586,11 @@ function selectStation(
         'click',
         event => {
 
-            const target =
-                event.target;
+            const eventPath =
+                event.composedPath();
 
             if (
-                target instanceof Node &&
-                !player.contains(target)
+                !eventPath.includes(player)
             ) {
                 closeStationMenu();
             }
