@@ -3203,42 +3203,16 @@ async function searchYouTube(
             );
 
         if (
-            response.status !==
-            'success'
+            response.status !== 'success'
         ) {
-
-            throw new Error(
-                'Music search failed.'
-            );
-        }
-
-        if (!response.ok) {
-
             throw new Error(
                 `Music search failed: ${response.status}`
             );
         }
 
-        const data =
-            await response.json();
-
-        if (!data.success) {
-
-            throw new Error(
-                data.error ??
-                'Music search failed.'
-            );
-        }
-
-        if (!append) {
-
-            youtubeResults.innerHTML =
-                '';
-        }
-
         const newTracks:
             MusicTrack[] =
-            response.data;
+            response.data ?? [];
 
         youtubeTracks.push(
             ...newTracks
