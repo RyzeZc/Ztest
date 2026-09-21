@@ -3,10 +3,16 @@ import { audioStations } from '../../lib/audio/audio-stations';
 import { YouTubePlayer } from '../../lib/youtube/youtube-player';
 import {
     getArtistRadio,
+    getChart,
+    getGenres,
     resolveTrack,
+    searchTracks,
 } from '../../lib/music/music-service';
 
 import type {
+    MusicAlbum,
+    MusicChart,
+    MusicGenre,
     MusicRadioTrack,
     MusicTrack,
 } from '../../lib/music/music-types';
@@ -638,9 +644,25 @@ function selectStation(
     let youtubeQueue:
         YouTubeQueueTrack[] = [];
 
+        /*
+    * --------------------------------------------------
+    * MUSIC QUEUE
+    * --------------------------------------------------
+    *
+    * Esta es nuestra nueva cola basada en Deezer.
+    *
+    * Todavía NO sustituye a youtubeQueue.
+    * La mantendremos separada durante la migración.
+    */
+    let musicQueue:
+        MusicRadioTrack[] = [];
+
+    let musicQueueCurrentIndex =
+        -1;
+
 
     let youtubeTracks:
-    DeezerTrack[] = [];
+        MusicTrack[] = [];
 
     let youtubeSelectedTrackId:
     number | null = null;
@@ -672,6 +694,30 @@ function selectStation(
 
     const resolvedYouTubeIds =
         new Map<number, string>();
+
+        /*
+    * --------------------------------------------------
+    * ARTIST RADIO CACHE
+    * --------------------------------------------------
+    *
+    * Igual que con resolve:
+    *
+    * - Si ya existe el resultado, lo reutilizamos.
+    * - Si existe una petición en curso, reutilizamos
+    *   la misma Promise.
+    * - Artistas diferentes pueden resolverse en paralelo.
+    */
+    const artistRadioCache =
+        new Map<
+            number,
+            Promise<MusicRadioTrack[]>
+        >();
+
+    const artistRadioResults =
+        new Map<
+            number,
+            MusicRadioTrack[]
+        >();
 
     /*
     * Identifica cuál fue la última selección
@@ -845,6 +891,114 @@ async function resolveYouTubeTrack(
          */
         resolveCache.delete(
             track.id
+        );
+
+    }
+}
+
+async function getArtistRadioTracks(
+    artistId: number
+): Promise<MusicRadioTrack[]> {
+
+    const cachedTracks =
+        artistRadioResults.get(
+            artistId
+        );
+
+    if (cachedTracks) {
+
+        console.log(
+            '[MusicPlayer] Using cached Artist Radio:',
+            artistId
+        );
+
+        return cachedTracks;
+    }
+
+    const existingRequest =
+        artistRadioCache.get(
+            artistId
+        );
+
+    if (existingRequest) {
+
+        console.log(
+            '[MusicPlayer] Reusing in-flight Artist Radio:',
+            artistId
+        );
+
+        return existingRequest;
+    }
+
+    console.log(
+        '[MusicPlayer] Starting Artist Radio:',
+        artistId
+    );
+
+    const request =
+        (async (): Promise<
+            MusicRadioTrack[]
+        > => {
+
+            try {
+
+                const response =
+                    await getArtistRadio(
+                        artistId
+                    );
+
+                const tracks =
+                    response.data ?? [];
+
+                artistRadioResults.set(
+                    artistId,
+                    tracks
+                );
+
+                console.log(
+                    '[MusicPlayer] Artist Radio completed:',
+                    {
+                        artistId,
+                        tracks:
+                            tracks.length,
+                    }
+                );
+
+                return tracks;
+
+            } catch (error) {
+
+                console.error(
+                    '[MusicPlayer] Artist Radio failed:',
+                    error
+                );
+
+                return [];
+
+            }
+
+        })();
+
+    artistRadioCache.set(
+        artistId,
+        request
+    );
+
+    try {
+
+        return await request;
+
+    } finally {
+
+        /*
+         * La Promise solo se mantiene mientras
+         * la petición está en curso.
+         *
+         * El resultado exitoso queda en
+         * artistRadioResults.
+         */
+        artistRadioCache.delete(
+            artistId
         );
 
     }
@@ -1504,59 +1658,59 @@ function getHomeSectionElement(
     return element ?? null;
 }
 
-async function fetchHomeChannel<T>(
-    endpoint: string
-): Promise<T[]> {
+let homeChartCache:
+    MusicChart | null = null;
 
-    const response =
-        await fetch(
-            `/api/v2/music/${endpoint}?page=1`
-        );
+let homeChartPromise:
+    Promise<MusicChart> | null = null;
 
 
-    if (!response.ok) {
+async function getHomeChartData():
+    Promise<MusicChart> {
 
-        throw new Error(
-            `Home request failed: ${response.status}`
-        );
+    if (homeChartCache) {
+
+        return homeChartCache;
     }
 
+    if (homeChartPromise) {
 
-    const data =
-        await response.json();
-
-
-    if (
-        !data.success
-    ) {
-
-        throw new Error(
-            data.error ??
-            'Home request failed.'
-        );
+        return homeChartPromise;
     }
 
+    homeChartPromise =
+        (async (): Promise<MusicChart> => {
 
-    const items =
-        data.results
-            ?.channel
-            ?.content
-            ?.data;
+            const response =
+                await getChart();
 
+            if (
+                response.status !==
+                'success'
+            ) {
 
-    if (
-        !Array.isArray(items)
-    ) {
+                throw new Error(
+                    'Music Chart request failed.'
+                );
+            }
 
-        throw new Error(
-            'Invalid Home API response.'
-        );
+            homeChartCache =
+                response;
+
+            return response;
+
+        })();
+
+    try {
+
+        return await homeChartPromise;
+
+    } finally {
+
+        homeChartPromise =
+            null;
     }
-
-
-    return items as T[];
 }
-
 
 function renderHomeError(
     section: HomeSection,
@@ -1646,10 +1800,11 @@ async function loadTrending(): Promise<void> {
 
     try {
 
+        const chart =
+            await getHomeChartData();
+
         const tracks =
-            await fetchHomeChannel<DeezerTrack>(
-                'trending'
-            );
+            chart.tracks.data;
 
 
         renderTrending(
@@ -1679,58 +1834,9 @@ async function loadTrending(): Promise<void> {
     }
 }
 
-function getDeezerArtistsText(
-    track: DeezerTrack
-): string {
-
-    return (
-        track.artists
-            ?.map(
-                artist =>
-                    artist.name
-            )
-            .filter(
-                Boolean
-            )
-            .join(', ') ||
-        'ARTISTA DESCONOCIDO'
-    );
-}
-
-
-function formatDeezerDuration(
-    duration: number | null
-): string {
-
-    if (
-        duration === null ||
-        !Number.isFinite(
-            duration
-        )
-    ) {
-        return '--:--';
-    }
-
-
-    /*
-     * Deezer normalmente devuelve
-     * duración en milisegundos.
-     */
-
-    const seconds =
-        duration > 10_000
-            ? duration / 1000
-            : duration;
-
-
-    return formatTime(
-        seconds
-    );
-}
-
 
 function renderTrending(
-    tracks: DeezerTrack[]
+    tracks: MusicTrack[]
 ): void {
 
     const section =
@@ -1823,10 +1929,10 @@ function renderTrending(
                 'music-player-trending-thumbnail';
 
             thumbnail.src =
-                track.image;
+                track.album.cover;
 
             thumbnail.alt =
-                `${track.name} - portada`;
+                `${track.title} - portada`;
 
 
             /*
@@ -1851,7 +1957,7 @@ function renderTrending(
                 'music-player-trending-title';
 
             title.textContent =
-                track.name;
+                track.title;
 
 
             const artist =
@@ -1863,9 +1969,8 @@ function renderTrending(
                 'music-player-trending-artist';
 
             artist.textContent =
-                getDeezerArtistsText(
-                    track
-                );
+                track.artist.name ||
+                'ARTISTA DESCONOCIDO';
 
 
             info.appendChild(
@@ -1890,7 +1995,7 @@ function renderTrending(
                 'music-player-list-column-duration';
 
             duration.textContent =
-                formatDeezerDuration(
+                formatTime(
                     track.duration
                 );
 
@@ -1967,10 +2072,11 @@ async function loadDiscover(): Promise<void> {
 
     try {
 
+        const chart =
+            await getHomeChartData();
+
         const albums =
-            await fetchHomeChannel<DeezerAlbum>(
-                'discover'
-            );
+            chart.albums.data;
 
 
         renderDiscover(
@@ -2031,19 +2137,11 @@ function formatReleaseDate(
 
 
 function getAlbumArtistsText(
-    album: DeezerAlbum
+    album: MusicAlbum
 ): string {
 
     return (
-        album.artists
-            ?.map(
-                artist =>
-                    artist.name
-            )
-            .filter(
-                Boolean
-            )
-            .join(', ') ||
+        album.artist?.name ||
         'ARTISTA DESCONOCIDO'
     );
 }
@@ -2051,9 +2149,8 @@ function getAlbumArtistsText(
 
 function renderDiscover(
     section: HTMLElement,
-    albums: DeezerAlbum[]
+    albums: MusicAlbum[]
 ): void {
-
     if (
         albums.length === 0
     ) {
@@ -2104,10 +2201,10 @@ function renderDiscover(
                 );
 
             image.src =
-                album.image;
+                album.cover;
 
             image.alt =
-                `${album.name} - portada`;
+                `${album.title} - portada`;
 
 
             const title =
@@ -2119,7 +2216,7 @@ function renderDiscover(
                 'music-player-discover-title';
 
             title.textContent =
-                album.name;
+                album.title;
 
 
             const artist =
@@ -2212,10 +2309,21 @@ async function loadGenres(): Promise<void> {
 
     try {
 
-        const genres =
-            await fetchHomeChannel<DeezerGenre>(
-                'genres'
+        const response =
+            await getGenres();
+
+        if (
+            response.status !==
+            'success'
+        ) {
+
+            throw new Error(
+                'Genres request failed.'
             );
+        }
+
+        const genres =
+            response.data;
 
 
         renderGenres(
@@ -2249,7 +2357,7 @@ async function loadGenres(): Promise<void> {
 
 function renderGenres(
     section: HTMLElement,
-    genres: DeezerGenre[]
+    genres: MusicGenre[]
 ): void {
 
     if (
@@ -2305,10 +2413,11 @@ function renderGenres(
                 );
 
             image.src =
-                genre.image;
+                genre.picture ??
+                '';
 
             image.alt =
-                genre.display_name;
+                genre.name;
 
 
             const name =
@@ -2320,7 +2429,7 @@ function renderGenres(
                 'music-player-genre-name';
 
             name.textContent =
-                genre.display_name;
+                genre.name;
 
 
             card.appendChild(
@@ -2690,7 +2799,7 @@ homeNavItems.forEach(
 }
 
 function appendYouTubeResults(
-    results: DeezerTrack[]
+    results: MusicTrack[]
 ): void {
 
     results.forEach(
@@ -2757,10 +2866,10 @@ function appendYouTubeResults(
                     'music-player-youtube-result-thumbnail';
 
                 thumbnail.src =
-                    result.image;
+                    result.album.cover;
 
                 thumbnail.alt =
-                    `${result.name} - portada`;
+                    `${result.title} - portada`;
 
 
             /*
@@ -2787,7 +2896,7 @@ function appendYouTubeResults(
                 'music-player-youtube-result-title';
 
             title.textContent =
-                result.name;
+                result.title;
 
 
             const artist =
@@ -2799,14 +2908,8 @@ function appendYouTubeResults(
                 'music-player-youtube-result-channel';
 
             artist.textContent =
-                result.artists
-                    ?.map(
-                        currentArtist =>
-                            currentArtist.name
-                    )
-                    .join(', ') ??
+                result.artist.name ||
                 'ARTISTA DESCONOCIDO';
-
 
             info.appendChild(
                 title
@@ -2833,8 +2936,7 @@ function appendYouTubeResults(
 
             duration.textContent =
                 formatTime(
-                    (result.duration ?? 0) /
-                    1000
+                    result.duration
                 );
 
 
@@ -2860,7 +2962,6 @@ function appendYouTubeResults(
              * SELECCIÓN
              * --------------------------------------------------
              */
-
             item.addEventListener(
                 'click',
                 async () => {
@@ -2877,11 +2978,6 @@ function appendYouTubeResults(
 
                     updateSelectedYouTubeResult();
 
-                    console.log(
-                        '[MusicPlayer] Deezer track selected:',
-                        result
-                    );
-
                     youtubeCurrentIndex =
                         youtubeTracks.findIndex(
                             track =>
@@ -2890,271 +2986,96 @@ function appendYouTubeResults(
                         );
 
                     console.log(
-                        '[MusicPlayer] Deezer track index:',
-                        youtubeCurrentIndex
+                        '[MusicPlayer] Music track selected:',
+                        {
+                            id:
+                                result.id,
+
+                            title:
+                                result.title,
+
+                            artist:
+                                result.artist.name,
+
+                            artistId:
+                                result.artist.id,
+                        }
                     );
 
                     /*
-                     * La lógica de resolución
-                     * que ya tienes continúa
-                     * exactamente aquí.
-                     */
+                    * -----------------------------------------------
+                    * NUEVA SELECCIÓN
+                    * -----------------------------------------------
+                    */
+                    const currentPlaybackRequestId =
+                        ++playbackRequestId;
 
-                    const artistName =
-                        result.artists
-                            ?.map(
-                                currentArtist =>
-                                    currentArtist.name
-                            )
-                            .join(', ') ??
-                        '';
+                    const currentQueueRequestId =
+                        ++queueRequestId;
 
-                    const trackName =
-                        result.name;
-
-                    if (
-                        !artistName ||
-                        !trackName
-                    ) {
-
-                        console.log(
-                            '[MusicPlayer] Cannot resolve track: missing artist or title.'
+                    /*
+                    * -----------------------------------------------
+                    * RESOLVE + ARTIST RADIO EN PARALELO
+                    * -----------------------------------------------
+                    */
+                    const resolvePromise =
+                        resolveYouTubeTrack(
+                            result
                         );
 
-                        return;
-                    }
+                    const queuePromise =
+                        getArtistRadioTracks(
+                            result.artist.id
+                        );
 
-
-                    console.log(
-                        '[MusicPlayer] Resolving Deezer track:',
-                        {
-                            id: result.id,
-                            artist: artistName,
-                            title: trackName,
-                        }
-                    );
-
-
+                    /*
+                    * -----------------------------------------------
+                    * RESOLVE
+                    * -----------------------------------------------
+                    */
                     try {
 
-                        const params =
-                            new URLSearchParams();
-
-                        params.set(
-                            'id',
-                            String(result.id)
-                        );
-
-                        params.set(
-                            'artist',
-                            artistName
-                        );
-
-                        params.set(
-                            'title',
-                            trackName
-                        );
-
-
-                        const response =
-                            await fetch(
-                                `/api/v2/music/resolve?${params.toString()}`
-                            );
-
-
-                        if (!response.ok) {
-
-                            throw new Error(
-                                `Music resolve failed: ${response.status}`
-                            );
-                        }
-
-
-                        const data =
-                            await response.json();
-
-
-                        if (!data.success) {
-
-                            throw new Error(
-                                data.error ??
-                                'Music resolve failed.'
-                            );
-                        }
-
-
-                        const resolvedTracks =
-                            data.results ?? [];
-
-
-                        console.log(
-                            '[MusicPlayer] Resolved YouTube tracks:',
-                            resolvedTracks
-                        );
-
+                        const videoId =
+                            await resolvePromise;
 
                         if (
-                            resolvedTracks.length === 0
+                            currentPlaybackRequestId !==
+                            playbackRequestId
                         ) {
 
                             console.log(
-                                '[MusicPlayer] No YouTube video was found for this track.'
+                                '[MusicPlayer] Ignoring outdated playback resolve:',
+                                result.id
                             );
 
-                            return;
-                        }
+                        } else if (videoId) {
 
+                            currentYouTubeVideoId =
+                                videoId;
 
-                        const videoId =
-                            resolvedTracks[0]?.id;
+                            audioPlayer.pause();
 
+                            activePlaybackSource =
+                                'youtube';
 
-                        if (!videoId) {
+                            youtubePlayer.load(
+                                videoId
+                            );
+
+                            youtubePlayer.play();
 
                             console.log(
-                                '[MusicPlayer] Resolved result does not contain a video ID.'
+                                '[MusicPlayer] YouTube playback started:',
+                                videoId
                             );
 
-                            return;
-                        }
-
-
-                        currentYouTubeVideoId =
-                            videoId;
-
-
-                        console.log(
-                            '[MusicPlayer] Using YouTube video:',
-                            videoId
-                        );
-
-
-                        audioPlayer.pause();
-
-                        activePlaybackSource =
-                            'youtube';
-
-
-                        youtubePlayer.load(
-                            videoId
-                        );
-
-                        youtubePlayer.play();
-
-
-                        console.log(
-                            '[MusicPlayer] YouTube playback started:',
-                            videoId
-                        );
-
-
-                        /*
-                        * --------------------------------------------------
-                        * UP NEXT
-                        * --------------------------------------------------
-                        */
-
-                        try {
-
-                            const upNextResponse =
-                                await fetch(
-                                    `/api/v2/music/up-next?videoId=${encodeURIComponent(
-                                        videoId
-                                    )}`
-                                );
-
-
-                            if (!upNextResponse.ok) {
-
-                                throw new Error(
-                                    `Up Next request failed: ${upNextResponse.status}`
-                                );
-                            }
-
-
-                            const upNextData =
-                                await upNextResponse.json();
-
-
-                            if (
-                                !upNextData.success ||
-                                !Array.isArray(
-                                    upNextData.results
-                                )
-                            ) {
-
-                                throw new Error(
-                                    'Invalid Up Next response'
-                                );
-                            }
-
-
-                            youtubeQueue =
-                                upNextData.results;
-
-
-                            youtubeQueueCurrentIndex =
-                                youtubeQueue.findIndex(
-                                    track =>
-                                        track.videoId ===
-                                        videoId
-                                );
-
-
-                            if (
-                                youtubeQueueCurrentIndex < 0 &&
-                                youtubeQueue.length > 0
-                            ) {
-
-                                youtubeQueueCurrentIndex =
-                                    0;
-                            }
-
+                        } else {
 
                             console.log(
-                                '[MusicPlayer] YouTube Up Next queue loaded:',
-                                youtubeQueue
-                            );
-
-                            console.log(
-                                '[MusicPlayer] YouTube Up Next queue length:',
-                                youtubeQueue.length
-                            );
-
-                            console.log(
-                                '[MusicPlayer] YouTube queue current index:',
-                                youtubeQueueCurrentIndex
-                            );
-
-
-                            renderQueuePanel();
-
-
-                            /*
-                            * Cuando la queue ya existe,
-                            * mostramos A CONTINUACIÓN.
-                            */
-
-                            if (
-                                youtubeQueue.length > 0
-                            ) {
-
-                                activatePanelTab(
-                                    'queue'
-                                );
-                            }
-
-
-                            updateUI();
-
-                        } catch (error) {
-
-                            console.error(
-                                '[MusicPlayer] Failed to load YouTube Up Next:',
-                                error
+                                '[MusicPlayer] No YouTube video found:',
+                                result.id
                             );
                         }
-
 
                     } catch (error) {
 
@@ -3164,10 +3085,63 @@ function appendYouTubeResults(
                         );
                     }
 
+                    /*
+                    * -----------------------------------------------
+                    * ARTIST RADIO
+                    * -----------------------------------------------
+                    */
+                    try {
+
+                        const radioTracks =
+                            await queuePromise;
+
+                        if (
+                            currentQueueRequestId !==
+                            queueRequestId
+                        ) {
+
+                            console.log(
+                                '[MusicPlayer] Ignoring outdated Artist Radio:',
+                                result.artist.id
+                            );
+
+                            return;
+                        }
+
+                        musicQueue =
+                            radioTracks;
+
+                        musicQueueCurrentIndex =
+                            musicQueue.findIndex(
+                                track =>
+                                    track.id ===
+                                    result.id
+                            );
+
+                        console.log(
+                            '[MusicPlayer] New Music Queue ready:',
+                            {
+                                artistId:
+                                    result.artist.id,
+
+                                length:
+                                    musicQueue.length,
+
+                                currentIndex:
+                                    musicQueueCurrentIndex,
+                            }
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            '[MusicPlayer] Artist Radio failed:',
+                            error
+                        );
+                    }
 
                 }
             );
-
 
             youtubeResults.appendChild(
                 item
@@ -3223,18 +3197,20 @@ async function searchYouTube(
 
     try {
 
-        const params =
-            new URLSearchParams();
-
-        params.set(
-            'query',
-            youtubeCurrentQuery
-        );
-
         const response =
-            await fetch(
-                `/api/v2/music/search?${params.toString()}`
+            await searchTracks(
+                youtubeCurrentQuery
             );
+
+        if (
+            response.status !==
+            'success'
+        ) {
+
+            throw new Error(
+                'Music search failed.'
+            );
+        }
 
         if (!response.ok) {
 
@@ -3261,8 +3237,8 @@ async function searchYouTube(
         }
 
         const newTracks:
-            DeezerTrack[] =
-            data.results ?? [];
+            MusicTrack[] =
+            response.data;
 
         youtubeTracks.push(
             ...newTracks
