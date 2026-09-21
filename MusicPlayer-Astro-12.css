@@ -294,24 +294,30 @@
    MARQUEE
 -------------------------------------------------- */
 
-.music-player-track-title.is-marquee {
+.music-player-track-title.is-marquee,
+.music-player-track-artist.is-marquee {
+    display: inline-block;
+
+    min-width: max-content;
+
     padding-right: 35px;
 
     animation:
-        music-player-title-scroll
+        music-player-text-scroll
         var(--music-player-marquee-duration, 7s)
         linear
         infinite alternate;
 }
 
-
 .music-player-track-title-wrapper:hover
-.music-player-track-title.is-marquee {
+.music-player-track-title.is-marquee,
+
+.music-player-track-artist-wrapper:hover
+.music-player-track-artist.is-marquee {
     animation-play-state: paused;
 }
 
-
-@keyframes music-player-title-scroll {
+@keyframes music-player-text-scroll {
 
     0% {
         transform:
@@ -329,7 +335,7 @@
                 calc(
                     -1 *
                     var(
-                        --music-player-title-overflow
+                        --music-player-marquee-overflow
                     )
                 )
             );
@@ -341,7 +347,7 @@
                 calc(
                     -1 *
                     var(
-                        --music-player-title-overflow
+                        --music-player-marquee-overflow
                     )
                 )
             );
