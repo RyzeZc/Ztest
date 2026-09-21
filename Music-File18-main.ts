@@ -620,17 +620,18 @@ function selectStation(
         'radio' | 'youtube' =
         'radio';
     
-
-        /*
+    /*
     * --------------------------------------------------
     * MUSIC QUEUE
     * --------------------------------------------------
     *
-    * Esta es nuestra nueva cola basada en Deezer.
+    * Cola principal basada en MusicTrack.
     *
-    * Todavía NO sustituye a youtubeQueue.
-    * La mantendremos separada durante la migración.
+    * Contiene únicamente metadata musical.
+    * El YouTube ID se resuelve cuando una pista
+    * necesita reproducirse.
     */
+
     let musicQueue:
         MusicTrack[] = [];
 
@@ -727,6 +728,8 @@ function selectStation(
 
     let youtubeSeekTargetTime:
     number | null = null;
+
+    let currentTrackInfoKey = '';
 
 async function resolveYouTubeTrack(
     track: MusicTrack
@@ -3029,13 +3032,6 @@ function appendYouTubeResults(
 
                     updateSelectedYouTubeResult();
 
-                    youtubeCurrentIndex =
-                        youtubeTracks.findIndex(
-                            track =>
-                                track.id ===
-                                Number(trackId)
-                        );
-
                     currentMusicTrack =
                         result;
 
@@ -3235,51 +3231,48 @@ function appendYouTubeResults(
 }
 
 async function searchYouTube(
-    query: string,
-    append = false
+    query: string
 ): Promise<void> {
 
-    if (!query) {
+    const normalizedQuery =
+        query.trim();
+
+    if (!normalizedQuery) {
         return;
     }
 
-    if (!append) {
+    /*
+     * Nueva búsqueda:
+     * comenzamos con resultados limpios.
+     */
+    youtubeTracks =
+        [];
 
-        youtubeTracks =
-            [];
-
-        youtubeSelectedTrackId =
+    youtubeSelectedTrackId =
         null;
 
-        youtubeResults.innerHTML =
-            '';
-
-        youtubeLoadMore.hidden =
-            true;
-    }
-
-    youtubeSearchInput.disabled =
-        true;
-
-    if (!append) {
-
-        youtubeResults.innerHTML = `
+    youtubeResults.innerHTML =
+        `
             <div class="music-player-youtube-loading">
                 BUSCANDO...
             </div>
         `;
-    }
+
+    youtubeSearchInput.disabled =
+        true;
 
     try {
 
         const response =
             await searchTracks(
-                youtubeCurrentQuery
+                normalizedQuery
             );
 
         if (
-            response.status !== 'success'
+            response.status !==
+            'success'
         ) {
+
             throw new Error(
                 `Music search failed: ${response.status}`
             );
@@ -3289,9 +3282,13 @@ async function searchYouTube(
             MusicTrack[] =
             response.data ?? [];
 
-        if (!append) {
-            youtubeResults.innerHTML = '';
-        }
+        /*
+         * Elimina BUSCANDO...
+         * y deja el contenedor listo
+         * para los resultados.
+         */
+        youtubeResults.innerHTML =
+            '';
 
         youtubeTracks.push(
             ...newTracks
@@ -3301,16 +3298,6 @@ async function searchYouTube(
             newTracks
         );
 
-        /*
-         * Soundbliz/Deezer no utiliza
-         * la paginación de YouTube.
-         *
-         * Por ahora ocultamos "Cargar más".
-         */
-
-        youtubeLoadMore.hidden =
-            true;
-
     } catch (error) {
 
         console.error(
@@ -3318,14 +3305,12 @@ async function searchYouTube(
             error
         );
 
-        if (!append) {
-
-            youtubeResults.innerHTML = `
+        youtubeResults.innerHTML =
+            `
                 <div class="music-player-youtube-error">
                     NO SE PUDO REALIZAR LA BÚSQUEDA
                 </div>
             `;
-        }
 
     } finally {
 
@@ -3563,7 +3548,6 @@ function updateArtwork(
         '1';
 }
 
-let currentTrackInfoKey = '';
 
 function updateTrackInfo(): void {
 
