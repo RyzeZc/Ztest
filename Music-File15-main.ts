@@ -2453,7 +2453,7 @@ function renderQueuePanel(): void {
     queueList.innerHTML = '';
 
     if (
-        youtubeQueue.length === 0
+        musicQueue.length === 0
     ) {
 
         queueList.innerHTML = `
@@ -2465,8 +2465,7 @@ function renderQueuePanel(): void {
         return;
     }
 
-
-    youtubeQueue.forEach(
+    musicQueue.forEach(
         (track, index) => {
 
             const item =
@@ -2483,10 +2482,9 @@ function renderQueuePanel(): void {
             item.dataset.queueIndex =
                 String(index);
 
-
             if (
                 index ===
-                youtubeQueueCurrentIndex
+                musicQueueCurrentIndex
             ) {
 
                 item.classList.add(
@@ -2494,10 +2492,11 @@ function renderQueuePanel(): void {
                 );
             }
 
-
-            /* --------------------------------------------
-               COLUMNA #
-            -------------------------------------------- */
+            /*
+             * --------------------------------------------
+             * COLUMNA #
+             * --------------------------------------------
+             */
 
             const number =
                 document.createElement(
@@ -2509,16 +2508,17 @@ function renderQueuePanel(): void {
 
             number.textContent =
                 index ===
-                youtubeQueueCurrentIndex
+                musicQueueCurrentIndex
                     ? '▶'
                     : String(
                         index + 1
                     );
 
-
-            /* --------------------------------------------
-               COLUMNA COVER
-            -------------------------------------------- */
+            /*
+             * --------------------------------------------
+             * COLUMNA COVER
+             * --------------------------------------------
+             */
 
             const thumbnail =
                 document.createElement(
@@ -2529,16 +2529,16 @@ function renderQueuePanel(): void {
                 'music-player-queue-thumbnail';
 
             thumbnail.src =
-                track.thumbnail ??
-                '';
+                track.album.cover;
 
             thumbnail.alt =
                 `${track.title} - portada`;
 
-
-            /* --------------------------------------------
-               COLUMNA TÍTULO / ARTISTA
-            -------------------------------------------- */
+            /*
+             * --------------------------------------------
+             * COLUMNA TÍTULO / ARTISTA
+             * --------------------------------------------
+             */
 
             const info =
                 document.createElement(
@@ -2547,7 +2547,6 @@ function renderQueuePanel(): void {
 
             info.className =
                 'music-player-queue-info';
-
 
             const title =
                 document.createElement(
@@ -2560,7 +2559,6 @@ function renderQueuePanel(): void {
             title.textContent =
                 track.title;
 
-
             const artist =
                 document.createElement(
                     'span'
@@ -2570,9 +2568,8 @@ function renderQueuePanel(): void {
                 'music-player-queue-track-artist';
 
             artist.textContent =
-                track.artist ||
+                track.artist.name ||
                 'ARTISTA DESCONOCIDO';
-
 
             info.appendChild(
                 title
@@ -2582,10 +2579,11 @@ function renderQueuePanel(): void {
                 artist
             );
 
-
-            /* --------------------------------------------
-               COLUMNA DURACIÓN
-            -------------------------------------------- */
+            /*
+             * --------------------------------------------
+             * COLUMNA DURACIÓN
+             * --------------------------------------------
+             */
 
             const duration =
                 document.createElement(
@@ -2596,16 +2594,15 @@ function renderQueuePanel(): void {
                 'music-player-list-column-duration';
 
             duration.textContent =
-                track.duration !== null
-                    ? formatTime(
-                        track.duration
-                    )
-                    : '--:--';
+                formatTime(
+                    track.duration
+                );
 
-
-            /* --------------------------------------------
-               FILA
-            -------------------------------------------- */
+            /*
+             * --------------------------------------------
+             * FILA
+             * --------------------------------------------
+             */
 
             item.appendChild(
                 number
@@ -2623,43 +2620,16 @@ function renderQueuePanel(): void {
                 duration
             );
 
-
-            item.addEventListener(
-                'click',
-                event => {
-
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    activatePanelTab(
-                        'queue'
-                    );
-
-                    playYouTubeQueueTrack(
-                        index
-                    );
-
-                    /*
-                    * El panel ya estaba abierto porque
-                    * el usuario acaba de interactuar
-                    * con A CONTINUACIÓN.
-                    *
-                    * Lo mantenemos abierto por seguridad
-                    * mientras cambia la reproducción.
-                    */
-                    requestAnimationFrame(
-                        () => {
-
-                            openStationMenu();
-
-                            scrollQueueTrackIntoView(
-                                index
-                            );
-                        }
-                    );
-                }
-            );
-
+            /*
+             * --------------------------------------------------
+             * TODAVÍA NO HACEMOS CLICK EN LA QUEUE
+             * --------------------------------------------------
+             *
+             * MusicRadioTrack todavía no tiene youtubeId.
+             *
+             * La reproducción desde A continuación se conectará
+             * cuando pasemos esta cola a MusicPlayerTrack.
+             */
 
             queueList.appendChild(
                 item
@@ -2667,7 +2637,6 @@ function renderQueuePanel(): void {
         }
     );
 }
-
 function scrollQueueTrackIntoView(
     index: number
 ): void {
@@ -3132,6 +3101,17 @@ function appendYouTubeResults(
                             }
                         );
 
+                        if (
+                            musicQueue.length > 0
+                        ) {
+
+                            renderQueuePanel();
+
+                            activatePanelTab(
+                                'queue'
+                            );
+                        }
+
                     } catch (error) {
 
                         console.error(
@@ -3213,6 +3193,10 @@ async function searchYouTube(
         const newTracks:
             MusicTrack[] =
             response.data ?? [];
+
+        if (!append) {
+            youtubeResults.innerHTML = '';
+        }
 
         youtubeTracks.push(
             ...newTracks
