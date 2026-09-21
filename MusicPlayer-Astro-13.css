@@ -224,7 +224,7 @@
     position: relative;
 
     width: 100%;
-    height: 12px;
+    height: 20px;
 
     overflow: hidden;
 }
@@ -1886,59 +1886,6 @@ YOUTUBE VIDEO
 .music-player-youtube-error {
     color:
         #777;
-}
-
-
-.music-player-youtube-load-more {
-    display: block;
-
-    flex-shrink: 0;
-
-    width:
-        calc(100% - 48px);
-
-    height: 34px;
-
-    margin:
-        10px 24px 18px;
-
-    border:
-        1px solid #303030;
-
-    border-radius: 3px;
-
-    background:
-        #111;
-
-    color:
-        #666;
-
-    font-family: inherit;
-
-    font-size: 8px;
-
-    font-weight: 800;
-
-    letter-spacing: 0.1em;
-
-    cursor: pointer;
-}
-
-
-.music-player-youtube-load-more:hover {
-    border-color:
-        #454545;
-
-    background:
-        #191919;
-
-    color:
-        #d97832;
-}
-
-
-.music-player-youtube-load-more[hidden] {
-    display: none;
 }
 
 
