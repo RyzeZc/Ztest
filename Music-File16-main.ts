@@ -633,16 +633,6 @@ function selectStation(
         'radio' | 'youtube' =
         'radio';
     
-    interface YouTubeQueueTrack {
-        videoId: string;
-        title: string;
-        artist: string;
-        duration: number | null;
-        thumbnail: string | null;
-    }
-
-    let youtubeQueue:
-        YouTubeQueueTrack[] = [];
 
         /*
     * --------------------------------------------------
@@ -655,25 +645,27 @@ function selectStation(
     * La mantendremos separada durante la migración.
     */
     let musicQueue:
-        MusicRadioTrack[] = [];
+        MusicTrack[] = [];
 
     let musicQueueCurrentIndex =
         -1;
 
+    let currentMusicTrack:
+        MusicTrack | null = null;
 
     let youtubeTracks:
         MusicTrack[] = [];
 
     let youtubeSelectedTrackId:
-    number | null = null;
+        number | null = null;
 
-    let youtubeQueueCurrentIndex = -1;
     let youtubeCurrentIndex = -1;
 
     let youtubeRepeat = false;
     let youtubeShuffle = false;
 
-    let currentYouTubeVideoId: string | null = null;
+    let currentYouTubeVideoId:
+        string | null = null;
 
     /*
     * --------------------------------------------------
@@ -1004,6 +996,82 @@ async function getArtistRadioTracks(
     }
 }
 
+function buildMusicQueue(
+    selectedTrack: MusicTrack,
+    radioTracks: MusicRadioTrack[]
+): MusicTrack[] {
+
+    /*
+     * Primero eliminamos duplicados de Artist Radio
+     * usando el Deezer ID como identidad única.
+     */
+    const uniqueRadioTracks:
+        MusicTrack[] = [];
+
+    const seenTrackIds =
+        new Set<number>();
+
+    for (
+        const track of radioTracks
+    ) {
+
+        if (
+            seenTrackIds.has(
+                track.id
+            )
+        ) {
+            continue;
+        }
+
+        seenTrackIds.add(
+            track.id
+        );
+
+        uniqueRadioTracks.push(
+            track
+        );
+    }
+
+    /*
+     * ¿Artist Radio ya contiene la canción
+     * que el usuario seleccionó?
+     */
+    const selectedTrackIndex =
+        uniqueRadioTracks.findIndex(
+            track =>
+                track.id ===
+                selectedTrack.id
+        );
+
+    /*
+     * CASO 1:
+     *
+     * La canción ya existe.
+     *
+     * Conservamos el orden generado por
+     * Artist Radio.
+     */
+    if (
+        selectedTrackIndex >= 0
+    ) {
+
+        return uniqueRadioTracks;
+    }
+
+    /*
+     * CASO 2:
+     *
+     * Artist Radio no la incluyó.
+     *
+     * La ponemos al principio para que
+     * sea siempre el track actual de la cola.
+     */
+    return [
+        selectedTrack,
+        ...uniqueRadioTracks,
+    ];
+}
+
 function formatTime(
     seconds: number
 ): string {
@@ -1117,16 +1185,17 @@ function stopYouTubeProgress(): void {
         null;
 }
 
-function playYouTubeQueueTrack(
+async function playMusicQueueTrack(
     index: number
-): void {
+): Promise<void> {
 
     if (
         index < 0 ||
-        index >= youtubeQueue.length
+        index >= musicQueue.length
     ) {
+
         console.log(
-            '[MusicPlayer] Invalid YouTube queue index:',
+            '[MusicPlayer] Invalid music queue index:',
             index
         );
 
@@ -1134,17 +1203,21 @@ function playYouTubeQueueTrack(
     }
 
     const track =
-        youtubeQueue[index];
+        musicQueue[index];
 
     if (!track) {
         return;
     }
 
-    youtubeQueueCurrentIndex =
+    /*
+     * Esta selección pasa a ser inmediatamente
+     * la pista actual.
+     */
+    musicQueueCurrentIndex =
         index;
 
-    currentYouTubeVideoId =
-        track.videoId;
+    currentMusicTrack =
+        track;
 
     renderQueuePanel();
 
@@ -1152,15 +1225,68 @@ function playYouTubeQueueTrack(
         index
     );
 
-    console.log(
-        '[MusicPlayer] Playing YouTube queue track:',
-        track
-    );
+    activePlaybackSource =
+        'youtube';
+
+    updateTrackInfo();
+
+    updateUI();
+
+    /*
+     * Cada reproducción obtiene un request ID.
+     *
+     * Si el usuario hace clic rápidamente
+     * en otra canción, este resolve ya no
+     * podrá tomar control del player.
+     */
+    const currentRequestId =
+        ++playbackRequestId;
 
     console.log(
-        '[MusicPlayer] YouTube queue index:',
-        youtubeQueueCurrentIndex
+        '[MusicPlayer] Resolving music queue track:',
+        {
+            index,
+            deezerId:
+                track.id,
+            title:
+                track.title,
+            artist:
+                track.artist.name,
+        }
     );
+
+    const videoId =
+        await resolveYouTubeTrack(
+            track
+        );
+
+    if (
+        currentRequestId !==
+        playbackRequestId
+    ) {
+
+        console.log(
+            '[MusicPlayer] Ignoring outdated queue playback:',
+            track.id
+        );
+
+        return;
+    }
+
+    if (!videoId) {
+
+        console.log(
+            '[MusicPlayer] Unable to resolve queue track:',
+            track.id
+        );
+
+        updateUI();
+
+        return;
+    }
+
+    currentYouTubeVideoId =
+        videoId;
 
     audioPlayer.pause();
 
@@ -1168,22 +1294,40 @@ function playYouTubeQueueTrack(
         'youtube';
 
     youtubePlayer.load(
-        track.videoId
+        videoId
     );
 
     youtubePlayer.play();
+
+    updateTrackInfo();
+
+    updateUI();
+
+    console.log(
+        '[MusicPlayer] Music queue playback started:',
+        {
+            index,
+            deezerId:
+                track.id,
+            youtubeId:
+                videoId,
+        }
+    );
 }
 
-function getNextShuffleIndex(): number | null {
+
+function getNextShuffleIndex():
+    number | null {
 
     if (
-        youtubeQueue.length <= 1
+        musicQueue.length <= 1
     ) {
+
         return null;
     }
 
     const availableIndexes =
-        youtubeQueue
+        musicQueue
             .map(
                 (_, index) =>
                     index
@@ -1191,12 +1335,13 @@ function getNextShuffleIndex(): number | null {
             .filter(
                 index =>
                     index !==
-                    youtubeQueueCurrentIndex
+                    musicQueueCurrentIndex
             );
 
     if (
         availableIndexes.length === 0
     ) {
+
         return null;
     }
 
@@ -1213,35 +1358,37 @@ function getNextShuffleIndex(): number | null {
     );
 }
 
-function playNextYouTubeQueueTrack(): void {
+
+async function playNextMusicQueueTrack():
+    Promise<void> {
 
     if (
-        youtubeQueue.length === 0
+        musicQueue.length === 0
     ) {
+
         console.log(
-            '[MusicPlayer] YouTube queue is empty.'
+            '[MusicPlayer] Music queue is empty.'
         );
 
         return;
     }
 
     if (
-        youtubeQueueCurrentIndex < 0
+        musicQueueCurrentIndex < 0
     ) {
+
         console.log(
-            '[MusicPlayer] YouTube queue index is invalid:',
-            youtubeQueueCurrentIndex
+            '[MusicPlayer] Music queue index is invalid:',
+            musicQueueCurrentIndex
         );
 
         return;
     }
 
     /*
-     * Shuffle:
-     *
-     * Si estamos navegando hacia atrás
-     * dentro del historial, primero avanzamos
-     * dentro de ese historial.
+     * Si estamos navegando hacia adelante
+     * dentro del historial de Shuffle,
+     * recuperamos ese recorrido primero.
      */
     if (
         youtubeShuffle &&
@@ -1249,7 +1396,8 @@ function playNextYouTubeQueueTrack(): void {
             youtubeShuffleHistory.length - 1
     ) {
 
-        youtubeShuffleHistoryPosition += 1;
+        youtubeShuffleHistoryPosition +=
+            1;
 
         const historyIndex =
             youtubeShuffleHistory[
@@ -1257,17 +1405,14 @@ function playNextYouTubeQueueTrack(): void {
             ];
 
         if (
-            historyIndex === undefined
+            historyIndex ===
+            undefined
         ) {
+
             return;
         }
 
-        console.log(
-            '[MusicPlayer] Shuffle next from history:',
-            historyIndex
-        );
-
-        playYouTubeQueueTrack(
+        await playMusicQueueTrack(
             historyIndex
         );
 
@@ -1287,6 +1432,7 @@ function playNextYouTubeQueueTrack(): void {
         if (
             nextIndex === null
         ) {
+
             console.log(
                 '[MusicPlayer] Shuffle could not select another track.'
             );
@@ -1294,14 +1440,6 @@ function playNextYouTubeQueueTrack(): void {
             return;
         }
 
-        /*
-         * Eliminamos cualquier tramo
-         * posterior del historial.
-         *
-         * Esto ocurre si hicimos Previous
-         * y luego Next genera una nueva
-         * continuación.
-         */
         youtubeShuffleHistory =
             youtubeShuffleHistory.slice(
                 0,
@@ -1315,27 +1453,18 @@ function playNextYouTubeQueueTrack(): void {
         youtubeShuffleHistoryPosition =
             youtubeShuffleHistory.length - 1;
 
-        console.log(
-            '[MusicPlayer] Shuffle selected next track:',
-            nextIndex
-        );
-
-        console.log(
-            '[MusicPlayer] Shuffle history:',
-            youtubeShuffleHistory
-        );
-
     } else {
 
         const sequentialIndex =
-            youtubeQueueCurrentIndex + 1;
+            musicQueueCurrentIndex + 1;
 
         if (
             sequentialIndex >=
-            youtubeQueue.length
+            musicQueue.length
         ) {
+
             console.log(
-                '[MusicPlayer] YouTube queue reached the end.'
+                '[MusicPlayer] Music queue reached the end.'
             );
 
             return;
@@ -1343,37 +1472,38 @@ function playNextYouTubeQueueTrack(): void {
 
         nextIndex =
             sequentialIndex;
-
-        console.log(
-            '[MusicPlayer] Playing next YouTube queue track:',
-            nextIndex
-        );
     }
 
-    playYouTubeQueueTrack(
+    if (
+        nextIndex === null
+    ) {
+
+        return;
+    }
+
+    await playMusicQueueTrack(
         nextIndex
     );
 }
 
-function playPreviousYouTubeQueueTrack(): void {
+
+async function playPreviousMusicQueueTrack():
+    Promise<void> {
 
     if (
-        youtubeQueue.length === 0
+        musicQueue.length === 0
     ) {
+
         console.log(
-            '[MusicPlayer] YouTube queue is empty.'
+            '[MusicPlayer] Music queue is empty.'
         );
 
         return;
     }
 
     if (
-        youtubeQueueCurrentIndex < 0
+        musicQueueCurrentIndex < 0
     ) {
-        console.log(
-            '[MusicPlayer] YouTube queue index is invalid:',
-            youtubeQueueCurrentIndex
-        );
 
         return;
     }
@@ -1381,35 +1511,35 @@ function playPreviousYouTubeQueueTrack(): void {
     const currentTime =
         youtubePlayer.getCurrentTime();
 
+    /*
+     * Como antes:
+     * si llevamos más de 3 segundos,
+     * Previous reinicia la canción actual.
+     */
     if (
         currentTime > 3
     ) {
-        console.log(
-            '[MusicPlayer] Restarting current YouTube track.'
+
+        youtubePlayer.seekTo(
+            0
         );
 
-        youtubePlayer.seekTo(0);
         youtubePlayer.play();
 
         return;
     }
 
     /*
-     * Shuffle:
-     *
-     * El historial representa el camino
-     * real recorrido:
-     *
-     * [6, 4, 6, 12]
-     *           ↑
-     *        posición 3
+     * Previous con Shuffle:
+     * navegamos por el historial real.
      */
     if (
         youtubeShuffle &&
         youtubeShuffleHistoryPosition > 0
     ) {
 
-        youtubeShuffleHistoryPosition -= 1;
+        youtubeShuffleHistoryPosition -=
+            1;
 
         const previousIndex =
             youtubeShuffleHistory[
@@ -1417,31 +1547,14 @@ function playPreviousYouTubeQueueTrack(): void {
             ];
 
         if (
-            previousIndex === undefined
+            previousIndex ===
+            undefined
         ) {
-            console.log(
-                '[MusicPlayer] Shuffle history has no previous track.'
-            );
 
             return;
         }
 
-        console.log(
-            '[MusicPlayer] Shuffle previous track:',
-            previousIndex
-        );
-
-        console.log(
-            '[MusicPlayer] Shuffle history position:',
-            youtubeShuffleHistoryPosition
-        );
-
-        console.log(
-            '[MusicPlayer] Shuffle history:',
-            youtubeShuffleHistory
-        );
-
-        playYouTubeQueueTrack(
+        await playMusicQueueTrack(
             previousIndex
         );
 
@@ -1449,53 +1562,45 @@ function playPreviousYouTubeQueueTrack(): void {
     }
 
     /*
-     * Shuffle activado pero no existe
-     * un elemento anterior en el historial.
+     * Shuffle activo pero no hay historial
+     * anterior.
      */
     if (
         youtubeShuffle
     ) {
 
-        console.log(
-            '[MusicPlayer] Shuffle history has no previous track.'
+        youtubePlayer.seekTo(
+            0
         );
 
-        youtubePlayer.seekTo(0);
         youtubePlayer.play();
 
         return;
     }
 
     /*
-     * Shuffle desactivado:
-     * comportamiento secuencial normal.
+     * Navegación secuencial.
      */
     const previousIndex =
-        youtubeQueueCurrentIndex - 1;
+        musicQueueCurrentIndex - 1;
 
     if (
         previousIndex < 0
     ) {
-        console.log(
-            '[MusicPlayer] YouTube queue is already at the first track.'
+
+        youtubePlayer.seekTo(
+            0
         );
 
-        youtubePlayer.seekTo(0);
         youtubePlayer.play();
 
         return;
     }
 
-    console.log(
-        '[MusicPlayer] Playing previous YouTube queue track:',
-        previousIndex
-    );
-
-    playYouTubeQueueTrack(
+    await playMusicQueueTrack(
         previousIndex
     );
 }
-
 
 type MusicPanelTab =
     | 'home'
@@ -2620,16 +2725,15 @@ function renderQueuePanel(): void {
                 duration
             );
 
-            /*
-             * --------------------------------------------------
-             * TODAVÍA NO HACEMOS CLICK EN LA QUEUE
-             * --------------------------------------------------
-             *
-             * MusicRadioTrack todavía no tiene youtubeId.
-             *
-             * La reproducción desde A continuación se conectará
-             * cuando pasemos esta cola a MusicPlayerTrack.
-             */
+            item.addEventListener(
+                'click',
+                () => {
+
+                    playMusicQueueTrack(
+                        index
+                    );
+                }
+            );
 
             queueList.appendChild(
                 item
@@ -3078,7 +3182,10 @@ function appendYouTubeResults(
                         }
 
                         musicQueue =
-                            radioTracks;
+                            buildMusicQueue(
+                                result,
+                                radioTracks
+                            );
 
                         musicQueueCurrentIndex =
                             musicQueue.findIndex(
@@ -3086,6 +3193,18 @@ function appendYouTubeResults(
                                     track.id ===
                                     result.id
                             );
+
+                        currentMusicTrack =
+                            result;
+
+                        /*
+                        * Una nueva queue representa
+                        * una nueva sesión de navegación.
+                        */
+                        youtubeShuffleHistory = [];
+
+                        youtubeShuffleHistoryPosition =
+                            -1;
 
                         console.log(
                             '[MusicPlayer] New Music Queue ready:',
@@ -3503,9 +3622,7 @@ function updateTrackInfo(): void {
     ) {
 
         const track =
-            youtubeQueue[
-                youtubeQueueCurrentIndex
-            ];
+            currentMusicTrack;
 
         if (!track) {
             return;
@@ -3523,11 +3640,11 @@ function updateTrackInfo(): void {
             track.title;
 
         trackArtist.textContent =
-            track.artist ??
+            track.artist.name ||
             'ARTISTA DESCONOCIDO';
 
         updateArtwork(
-            track.thumbnail,
+            track.album.cover,
             `${track.title} - portada`
         );
 
@@ -3537,7 +3654,6 @@ function updateTrackInfo(): void {
 
         return;
     }
-
 
     /* --------------------------------------------------
        SIN FUENTE
@@ -3644,9 +3760,26 @@ function updateTrackInfo(): void {
     );
 }
 
+let currentMarqueeSignature = '';
 
-function updateTrackMarquee(): void {
+function updateTrackMarquee(
+    force = false
+): void {
 
+    const signature =
+    `${trackTitle.textContent ?? ''}\u0000${trackArtist.textContent ?? ''}`;
+
+    if (
+        !force &&
+        signature ===
+            currentMarqueeSignature
+    ) {
+        return;
+    }
+
+    currentMarqueeSignature =
+        signature;
+        
     const marqueeElements = [
         {
             element: trackTitle,
@@ -3762,37 +3895,30 @@ function updateTrackMarquee(): void {
 
         }
 
-videoToggle.hidden =
-    !isYouTube;
+            videoToggle.hidden =
+                !isYouTube;
 
-if (!isYouTube) {
+            if (!isYouTube) {
 
-    videoPanel.hidden =
-        true;
+                videoPanel.hidden =
+                    true;
 
-    videoPanel.setAttribute(
-        'aria-hidden',
-        'true'
-    );
+                videoPanel.setAttribute(
+                    'aria-hidden',
+                    'true'
+                );
 
-    videoToggle.setAttribute(
-        'aria-pressed',
-        'false'
-    );
+                videoToggle.setAttribute(
+                    'aria-pressed',
+                    'false'
+                );
 
-    videoToggle.setAttribute(
-        'aria-label',
-        'Mostrar video de YouTube'
-    );
-}
+                videoToggle.setAttribute(
+                    'aria-label',
+                    'Mostrar video de YouTube'
+                );
+            }
 
-
-
-        const hasYouTubeQueue =
-            activePlaybackSource === 'youtube' &&
-            youtubeQueue.length > 0 &&
-            youtubeQueueCurrentIndex >= 0;
-        
 
         videoToggle.classList.toggle(
             'is-visible',
@@ -3820,15 +3946,25 @@ if (!isYouTube) {
             );
         }
 
-        previousButton.disabled = !hasYouTubeQueue;
+        const hasMusicQueue =
+            activePlaybackSource === 'youtube' &&
+            musicQueue.length > 0 &&
+            musicQueueCurrentIndex >= 0;
+
+        previousButton.disabled =
+            !hasMusicQueue;
 
         nextButton.disabled =
-            !hasYouTubeQueue ||
-            youtubeQueueCurrentIndex >= youtubeQueue.length - 1;
+            !hasMusicQueue ||
+            musicQueueCurrentIndex >=
+                musicQueue.length - 1;
 
-        repeatButton.disabled = !hasYouTubeQueue;
+        repeatButton.disabled =
+            !hasMusicQueue;
 
-        shuffleButton.disabled = !hasYouTubeQueue;
+        shuffleButton.disabled =
+            !hasMusicQueue ||
+            musicQueue.length < 2;
 
         shuffleButton.setAttribute(
             'aria-pressed',
@@ -4053,7 +4189,7 @@ previousButton.addEventListener(
             return;
         }
 
-        playPreviousYouTubeQueueTrack();
+        playPreviousMusicQueueTrack();
     }
 );
 
@@ -4068,7 +4204,7 @@ nextButton.addEventListener(
             return;
         }
 
-        playNextYouTubeQueueTrack();
+        playNextMusicQueueTrack();
     }
 );
 
@@ -4111,9 +4247,11 @@ shuffleButton.addEventListener('click', () => {
     if (youtubeShuffle) {
         youtubeShuffleHistory = [];
 
-        if (youtubeQueueCurrentIndex >= 0) {
+        if (
+            musicQueueCurrentIndex >= 0
+        ) {
             youtubeShuffleHistory.push(
-                youtubeQueueCurrentIndex
+                musicQueueCurrentIndex
             );
         }
 
@@ -4183,21 +4321,22 @@ youtubePlayer.subscribe(
         );
 
         if (
-            youtubeQueueCurrentIndex < 0 ||
-            youtubeQueueCurrentIndex >=
-                youtubeQueue.length
+            musicQueueCurrentIndex < 0 ||
+            musicQueueCurrentIndex >=
+                musicQueue.length
         ) {
 
             console.log(
-                '[MusicPlayer] Cannot handle ended track: invalid YouTube queue index.',
-                youtubeQueueCurrentIndex
+                '[MusicPlayer] Cannot handle ended track: invalid music queue index.',
+                musicQueueCurrentIndex
             );
 
             return;
         }
 
         /*
-         * Repeat repite únicamente
+         * Repeat:
+         * repetimos exclusivamente
          * la canción actual.
          */
         if (
@@ -4205,19 +4344,12 @@ youtubePlayer.subscribe(
         ) {
 
             console.log(
-                '[MusicPlayer] Repeat enabled. Replaying current YouTube track.'
+                '[MusicPlayer] Repeat enabled. Replaying current music track.'
             );
 
-            const repeatVideoId =
-                youtubeQueue[
-                    youtubeQueueCurrentIndex
-                ]?.videoId ??
-                currentYouTubeVideoId;
-
-            if (repeatVideoId) {
-
-                currentYouTubeVideoId =
-                    repeatVideoId;
+            if (
+                currentYouTubeVideoId
+            ) {
 
                 youtubePlayer.seekTo(
                     0
@@ -4227,8 +4359,8 @@ youtubePlayer.subscribe(
 
             } else {
 
-                console.log(
-                    '[MusicPlayer] Cannot repeat: current YouTube video ID is missing.'
+                void playMusicQueueTrack(
+                    musicQueueCurrentIndex
                 );
             }
 
@@ -4237,13 +4369,13 @@ youtubePlayer.subscribe(
 
         /*
          * Repeat apagado:
-         * avanzamos a la siguiente canción.
+         * avanzamos.
          */
         console.log(
-            '[MusicPlayer] Repeat disabled. Playing next YouTube track.'
+            '[MusicPlayer] Repeat disabled. Playing next music track.'
         );
 
-        playNextYouTubeQueueTrack();
+        void playNextMusicQueueTrack();
     }
 );
     
