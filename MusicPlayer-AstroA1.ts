@@ -167,25 +167,15 @@ import './MusicPlayer.css';
           GÉNEROS
         </button>
 
+        <button
+        class="music-player-panel-nav-item"
+        type="button"
+        data-home-section-button="stations"
+      >
+        EMISORAS
+      </button>
+
       </nav>
-
-
-      <!-- ESTACIONES -->
-
-      <div class="music-player-panel-stations">
-
-        <div class="music-player-panel-section-label">
-          ESTACIONES
-        </div>
-
-        <div
-          class="music-player-station-options"
-          role="listbox"
-          aria-label="Estaciones de radio"
-        >
-        </div>
-
-      </div>
 
     </aside>
 
@@ -409,6 +399,48 @@ import './MusicPlayer.css';
 
             </section>
 
+
+            <section
+  class="music-player-home-section"
+  data-home-section="stations"
+>
+
+  <div
+    class="music-player-list-header
+           music-player-station-list-header"
+  >
+
+    <span class="music-player-list-column-index">
+      #
+    </span>
+
+    <span
+      class="music-player-list-column-cover"
+      aria-hidden="true"
+    ></span>
+
+    <span class="music-player-list-column-title">
+      EMISORA
+    </span>
+
+    <span
+      class="music-player-list-column-duration"
+      aria-hidden="true"
+    ></span>
+
+  </div>
+
+
+  <div
+    class="music-player-station-options
+           music-player-station-home-list"
+    role="listbox"
+    aria-label="Estaciones de radio"
+  >
+  </div>
+
+</section>
+
           </div>
 
         </section>
@@ -476,11 +508,16 @@ import './MusicPlayer.css';
           </form>
 
 
-          <div class="music-player-list-header music-player-results-list-header">
+        <div class="music-player-list-header music-player-results-list-header">
 
           <span class="music-player-list-column-index">
             #
           </span>
+
+          <span
+            class="music-player-list-column-cover"
+            aria-hidden="true"
+          ></span>
 
           <span class="music-player-list-column-title">
             TÍTULO
@@ -524,6 +561,11 @@ import './MusicPlayer.css';
             <span class="music-player-list-column-index">
               #
             </span>
+
+            <span
+              class="music-player-list-column-cover"
+              aria-hidden="true"
+            ></span>
 
             <span class="music-player-list-column-title">
               TÍTULO
