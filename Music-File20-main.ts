@@ -643,14 +643,15 @@ function selectStation(
     let youtubeTracks:
         MusicTrack[] = [];
 
-    let youtubeSelectedTrackId:
-        number | null = null;
-
     let youtubeRepeat = false;
     let youtubeShuffle = false;
 
     let currentYouTubeVideoId:
         string | null = null;
+
+    let playbackIntent:
+    'play' | 'pause' =
+    'pause'; 
 
     /*
     * --------------------------------------------------
@@ -1172,6 +1173,378 @@ function stopYouTubeProgress(): void {
         null;
 }
 
+async function selectMusicTrack(
+    track: MusicTrack,
+    options: {
+        queueIndex?: number;
+        generateQueue?: boolean;
+    } = {}
+): Promise<void> {
+
+    const isSameCurrentTrack =
+        activePlaybackSource ===
+            'youtube' &&
+        currentMusicTrack?.id ===
+            track.id;
+
+    /*
+     * --------------------------------------------------
+     * MISMA CANCIÓN
+     * --------------------------------------------------
+     *
+     * No hacemos resolve.
+     * No hacemos Artist Radio.
+     * No hacemos ningún request.
+     *
+     * Simplemente alternamos play/pause.
+     */
+    if (
+        isSameCurrentTrack &&
+        (
+            currentYouTubeVideoId !== null ||
+            resolveCache.has(
+                track.id
+            )
+        )
+    ) {
+
+        playbackIntent =
+            playbackIntent === 'play'
+                ? 'pause'
+                : 'play';
+
+        console.log(
+            '[MusicPlayer] Toggling current track:',
+            {
+                deezerId:
+                    track.id,
+                intent:
+                    playbackIntent,
+            }
+        );
+
+        if (
+            currentYouTubeVideoId
+        ) {
+
+            if (
+                playbackIntent ===
+                'pause'
+            ) {
+
+                youtubePlayer.pause();
+
+            } else {
+
+                youtubePlayer.play();
+            }
+
+        }
+
+        updateTrackPlaybackIndicators();
+        updateUI();
+
+        return;
+    }
+
+    /*
+     * --------------------------------------------------
+     * NUEVA CANCIÓN
+     * --------------------------------------------------
+     */
+
+    const currentPlaybackRequestId =
+        ++playbackRequestId;
+
+    /*
+     * Invalidamos cualquier Artist Radio
+     * anterior que todavía esté llegando.
+     */
+    const currentQueueRequestId =
+        ++queueRequestId;
+
+    /*
+     * Si viene desde A continuación,
+     * conocemos inmediatamente su posición.
+     */
+    if (
+        options.queueIndex !==
+        undefined
+    ) {
+
+        musicQueueCurrentIndex =
+            options.queueIndex;
+
+        renderQueuePanel();
+
+        scrollQueueTrackIntoView(
+            options.queueIndex
+        );
+
+    } else if (
+        options.generateQueue
+    ) {
+
+        /*
+         * Mientras esperamos la nueva
+         * Artist Radio queue, la antigua
+         * no debe considerarse la queue
+         * actual.
+         */
+        musicQueueCurrentIndex =
+            -1;
+    }
+
+    /*
+     * La nueva pista pasa a ser la actual
+     * inmediatamente.
+     */
+    currentMusicTrack =
+        track;
+
+    activePlaybackSource =
+        'youtube';
+
+    playbackIntent =
+        'play';
+
+    currentYouTubeVideoId =
+        null;
+
+    /*
+     * Detenemos la canción anterior
+     * mientras resolvemos la nueva.
+     */
+    youtubePlayer.pause();
+
+    updateTrackInfo();
+    updateUI();
+    updateTrackPlaybackIndicators();
+
+    console.log(
+        '[MusicPlayer] Music track selected:',
+        {
+            id:
+                track.id,
+            title:
+                track.title,
+            artist:
+                track.artist.name,
+        }
+    );
+
+    /*
+     * --------------------------------------------------
+     * RESOLVE + ARTIST RADIO EN PARALELO
+     * --------------------------------------------------
+     */
+
+    const resolvePromise =
+        resolveYouTubeTrack(
+            track
+        );
+
+    const queuePromise =
+        options.generateQueue
+            ? getArtistRadioTracks(
+                track.artist.id
+            )
+            : null;
+
+    /*
+     * --------------------------------------------------
+     * RESOLVE
+     * --------------------------------------------------
+     */
+
+    try {
+
+        const videoId =
+            await resolvePromise;
+
+        /*
+         * Otra canción pasó a ser la actual.
+         */
+        if (
+            currentPlaybackRequestId !==
+            playbackRequestId
+        ) {
+
+            console.log(
+                '[MusicPlayer] Ignoring outdated playback resolve:',
+                track.id
+            );
+
+            return;
+        }
+
+        if (!videoId) {
+
+            console.log(
+                '[MusicPlayer] No YouTube video found:',
+                track.id
+            );
+
+            playbackIntent =
+                'pause';
+
+            updateUI();
+            updateTrackPlaybackIndicators();
+
+        } else {
+
+            /*
+             * Guardamos el ID aunque el usuario
+             * haya pulsado nuevamente la canción
+             * durante el resolve.
+             */
+            currentYouTubeVideoId =
+                videoId;
+
+            /*
+             * El usuario pulsó nuevamente
+             * mientras esperábamos.
+             *
+             * No reproducimos automáticamente.
+             */
+            if (
+                playbackIntent !==
+                'play'
+            ) {
+
+                console.log(
+                    '[MusicPlayer] Track resolved but playback was paused by user:',
+                    track.id
+                );
+
+                updateUI();
+                updateTrackPlaybackIndicators();
+
+            } else {
+
+                audioPlayer.pause();
+
+                activePlaybackSource =
+                    'youtube';
+
+                youtubePlayer.load(
+                    videoId
+                );
+
+                youtubePlayer.play();
+
+                updateUI();
+                updateTrackPlaybackIndicators();
+
+                console.log(
+                    '[MusicPlayer] YouTube playback started:',
+                    {
+                        deezerId:
+                            track.id,
+                        youtubeId:
+                            videoId,
+                    }
+                );
+            }
+        }
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Music resolve failed:',
+            error
+        );
+
+        playbackIntent =
+            'pause';
+
+        updateUI();
+        updateTrackPlaybackIndicators();
+    }
+
+    /*
+     * --------------------------------------------------
+     * ARTIST RADIO
+     * --------------------------------------------------
+     *
+     * Solo se genera cuando la pista fue
+     * seleccionada desde una fuente que debe
+     * crear una nueva queue.
+     */
+    if (!queuePromise) {
+        return;
+    }
+
+    try {
+
+        const radioTracks =
+            await queuePromise;
+
+        if (
+            currentQueueRequestId !==
+            queueRequestId
+        ) {
+
+            console.log(
+                '[MusicPlayer] Ignoring outdated Artist Radio:',
+                track.artist.id
+            );
+
+            return;
+        }
+
+        musicQueue =
+            buildMusicQueue(
+                track,
+                radioTracks
+            );
+
+        musicQueueCurrentIndex =
+            musicQueue.findIndex(
+                currentTrack =>
+                    currentTrack.id ===
+                    track.id
+            );
+
+        youtubeShuffleHistory =
+            [];
+
+        youtubeShuffleHistoryPosition =
+            -1;
+
+        console.log(
+            '[MusicPlayer] New Music Queue ready:',
+            {
+                artistId:
+                    track.artist.id,
+                length:
+                    musicQueue.length,
+                currentIndex:
+                    musicQueueCurrentIndex,
+            }
+        );
+
+        if (
+            musicQueue.length > 0
+        ) {
+
+            renderQueuePanel();
+
+            activatePanelTab(
+                'queue'
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Artist Radio failed:',
+            error
+        );
+    }
+}
+
 async function playMusicQueueTrack(
     index: number
 ): Promise<void> {
@@ -1196,110 +1569,17 @@ async function playMusicQueueTrack(
         return;
     }
 
-    /*
-     * Esta selección pasa a ser inmediatamente
-     * la pista actual.
-     */
-    musicQueueCurrentIndex =
-        index;
-
-    currentMusicTrack =
-        track;
-
-    renderQueuePanel();
-
-    scrollQueueTrackIntoView(
-        index
-    );
-
-    activePlaybackSource =
-        'youtube';
-
-    updateTrackInfo();
-
-    updateUI();
-
-    /*
-     * Cada reproducción obtiene un request ID.
-     *
-     * Si el usuario hace clic rápidamente
-     * en otra canción, este resolve ya no
-     * podrá tomar control del player.
-     */
-    const currentRequestId =
-        ++playbackRequestId;
-
-    console.log(
-        '[MusicPlayer] Resolving music queue track:',
+    await selectMusicTrack(
+        track,
         {
-            index,
-            deezerId:
-                track.id,
-            title:
-                track.title,
-            artist:
-                track.artist.name,
-        }
-    );
+            queueIndex:
+                index,
 
-    const videoId =
-        await resolveYouTubeTrack(
-            track
-        );
-
-    if (
-        currentRequestId !==
-        playbackRequestId
-    ) {
-
-        console.log(
-            '[MusicPlayer] Ignoring outdated queue playback:',
-            track.id
-        );
-
-        return;
-    }
-
-    if (!videoId) {
-
-        console.log(
-            '[MusicPlayer] Unable to resolve queue track:',
-            track.id
-        );
-
-        updateUI();
-
-        return;
-    }
-
-    currentYouTubeVideoId =
-        videoId;
-
-    audioPlayer.pause();
-
-    activePlaybackSource =
-        'youtube';
-
-    youtubePlayer.load(
-        videoId
-    );
-
-    youtubePlayer.play();
-
-    updateUI();
-
-    console.log(
-        '[MusicPlayer] Music queue playback started:',
-        {
-            index,
-            deezerId:
-                track.id,
-            youtubeId:
-                videoId,
+            generateQueue:
+                false,
         }
     );
 }
-
 
 function getNextShuffleIndex():
     number | null {
@@ -2117,6 +2397,24 @@ function renderTrending(
              * flujo de resolución de búsqueda.
              */
 
+
+            item.dataset.trendingIndex =
+                String(index);
+
+            item.addEventListener(
+                'click',
+                () => {
+
+                    void selectMusicTrack(
+                        track,
+                        {
+                            generateQueue:
+                                true,
+                        }
+                    );
+                }
+            );
+
             list.appendChild(
                 item
             );
@@ -2571,6 +2869,11 @@ function renderQueuePanel(): void {
 
             item.dataset.queueIndex =
                 String(index);
+                
+            item.dataset.trackId =
+                String(
+                    track.id
+                );
 
             if (
                 index ===
@@ -2597,12 +2900,9 @@ function renderQueuePanel(): void {
                 'music-player-queue-index';
 
             number.textContent =
-                index ===
-                musicQueueCurrentIndex
-                    ? '▶'
-                    : String(
-                        index + 1
-                    );
+                String(
+                    index + 1
+                );
 
             /*
              * --------------------------------------------
@@ -2725,7 +3025,10 @@ function renderQueuePanel(): void {
             );
         }
     );
+
+    updateTrackPlaybackIndicators();
 }
+
 function scrollQueueTrackIntoView(
     index: number
 ): void {
@@ -2825,10 +3128,46 @@ homeNavItems.forEach(
     }
 
 
-    function updateSelectedYouTubeResult(): void {
+function updateTrackPlaybackIndicators(): void {
+
+    const state =
+        youtubePlayer.getState();
+
+    const currentTrackId =
+        activePlaybackSource ===
+        'youtube'
+            ? currentMusicTrack?.id ??
+              null
+            : null;
+
+    const isActuallyPlaying =
+        state.status ===
+        'playing';
+
+    const isPendingPlayback =
+        currentTrackId !== null &&
+        playbackIntent === 'play' &&
+        currentYouTubeVideoId === null &&
+        resolveCache.has(
+            currentTrackId
+        );
+
+    const isVisuallyPlaying =
+        activePlaybackSource ===
+            'youtube' &&
+        (
+            isActuallyPlaying ||
+            isPendingPlayback
+        );
+
+    /*
+     * --------------------------------------------------
+     * RESULTADOS
+     * --------------------------------------------------
+     */
 
     const resultItems =
-        youtubeResults.querySelectorAll(
+        youtubeResults.querySelectorAll<HTMLElement>(
             '.music-player-youtube-result'
         );
 
@@ -2837,16 +3176,169 @@ homeNavItems.forEach(
 
             const trackId =
                 Number(
-                    (item as HTMLElement)
-                        .dataset
-                        .trackId
+                    item.dataset.trackId
                 );
+
+            const isCurrent =
+                trackId ===
+                currentTrackId;
 
             item.classList.toggle(
                 'is-selected',
-                trackId ===
-                youtubeSelectedTrackId
+                isCurrent
             );
+
+            const index =
+                item.querySelector<HTMLElement>(
+                    '.music-player-list-column-index'
+                );
+
+            if (index) {
+
+                const resultIndex =
+                    youtubeTracks.findIndex(
+                        track =>
+                            track.id ===
+                            trackId
+                    );
+
+                index.textContent =
+                    isCurrent
+                        ? (
+                            isVisuallyPlaying
+                                ? '▶'
+                                : '⏸'
+                        )
+                        : String(
+                            resultIndex + 1
+                        );
+            }
+
+            item.setAttribute(
+                'aria-label',
+                isCurrent &&
+                isVisuallyPlaying
+                    ? `Pausar ${item
+                        .querySelector(
+                            '.music-player-youtube-result-title'
+                        )
+                        ?.textContent ?? ''}`
+                    : `Reproducir ${item
+                        .querySelector(
+                            '.music-player-youtube-result-title'
+                        )
+                        ?.textContent ?? ''}`
+            );
+        }
+    );
+
+    /*
+     * --------------------------------------------------
+     * QUEUE
+     * --------------------------------------------------
+     */
+
+    const queueItems =
+        queueList.querySelectorAll<HTMLElement>(
+            '.music-player-queue-item'
+        );
+
+    queueItems.forEach(
+        item => {
+
+            const trackId =
+                Number(
+                    item.dataset.trackId
+                );
+
+            const isCurrent =
+                trackId ===
+                currentTrackId;
+
+            item.classList.toggle(
+                'is-current',
+                isCurrent
+            );
+
+            const index =
+                item.querySelector<HTMLElement>(
+                    '.music-player-queue-index'
+                );
+
+            if (index) {
+
+                const queueIndex =
+                    Number(
+                        item.dataset
+                            .queueIndex
+                    );
+
+                index.textContent =
+                    isCurrent
+                        ? (
+                            isVisuallyPlaying
+                                ? '▶'
+                                : '⏸'
+                        )
+                        : String(
+                            queueIndex + 1
+                        );
+            }
+        }
+    );
+
+    /*
+     * --------------------------------------------------
+     * TENDENCIAS
+     * --------------------------------------------------
+     */
+
+    const trendingItems =
+        player.querySelectorAll<HTMLElement>(
+            '.music-player-trending-item'
+        );
+
+    trendingItems.forEach(
+        item => {
+
+            const trackId =
+                Number(
+                    item.dataset.trackId
+                );
+
+            const isCurrent =
+                trackId ===
+                currentTrackId;
+
+            item.classList.toggle(
+                'is-current',
+                isCurrent
+            );
+
+            const index =
+                item.querySelector<HTMLElement>(
+                    '.music-player-list-column-index'
+                );
+
+            if (index) {
+
+                const trendingIndex =
+                    Number(
+                        item.dataset
+                            .trendingIndex
+                    );
+
+                index.textContent =
+                    isCurrent
+                        ? (
+                            isVisuallyPlaying
+                                ? '▶'
+                                : '⏸'
+                        )
+                        : String(
+                            trendingIndex + 1
+                        );
+            }
         }
     );
 }
@@ -2871,12 +3363,6 @@ function appendYouTubeResults(
 
             item.dataset.trackId =
                 String(result.id);
-
-
-            if (
-                result.id ===
-                youtubeSelectedTrackId
-            ) {
 
                 item.classList.add(
                     'is-selected'
@@ -3017,208 +3503,15 @@ function appendYouTubeResults(
              */
             item.addEventListener(
                 'click',
-                async () => {
+                () => {
 
-                    const trackId =
-                        item.dataset.trackId;
-
-                    if (!trackId) {
-                        return;
-                    }
-
-                    youtubeSelectedTrackId =
-                        Number(trackId);
-
-                    updateSelectedYouTubeResult();
-
-                    currentMusicTrack =
-                        result;
-
-                    activePlaybackSource =
-                        'youtube';
-
-                    updateTrackInfo();
-
-                    updateUI();
-
-                    console.log(
-                        '[MusicPlayer] Music track selected:',
+                    void selectMusicTrack(
+                        result,
                         {
-                            id:
-                                result.id,
-
-                            title:
-                                result.title,
-
-                            artist:
-                                result.artist.name,
-
-                            artistId:
-                                result.artist.id,
+                            generateQueue:
+                                true,
                         }
                     );
-
-                    /*
-                    * -----------------------------------------------
-                    * NUEVA SELECCIÓN
-                    * -----------------------------------------------
-                    */
-                    const currentPlaybackRequestId =
-                        ++playbackRequestId;
-
-                    const currentQueueRequestId =
-                        ++queueRequestId;
-
-                    /*
-                    * -----------------------------------------------
-                    * RESOLVE + ARTIST RADIO EN PARALELO
-                    * -----------------------------------------------
-                    */
-                    const resolvePromise =
-                        resolveYouTubeTrack(
-                            result
-                        );
-
-                    const queuePromise =
-                        getArtistRadioTracks(
-                            result.artist.id
-                        );
-
-                    /*
-                    * -----------------------------------------------
-                    * RESOLVE
-                    * -----------------------------------------------
-                    */
-                    try {
-
-                        const videoId =
-                            await resolvePromise;
-
-                        if (
-                            currentPlaybackRequestId !==
-                            playbackRequestId
-                        ) {
-
-                            console.log(
-                                '[MusicPlayer] Ignoring outdated playback resolve:',
-                                result.id
-                            );
-
-                        } else if (videoId) {
-
-                            currentYouTubeVideoId =
-                                videoId;
-
-                            audioPlayer.pause();
-
-                            activePlaybackSource =
-                                'youtube';
-
-                            youtubePlayer.load(
-                                videoId
-                            );
-
-                            youtubePlayer.play();
-
-                            console.log(
-                                '[MusicPlayer] YouTube playback started:',
-                                videoId
-                            );
-
-                        } else {
-
-                            console.log(
-                                '[MusicPlayer] No YouTube video found:',
-                                result.id
-                            );
-                        }
-
-                    } catch (error) {
-
-                        console.error(
-                            '[MusicPlayer] Music resolve failed:',
-                            error
-                        );
-                    }
-
-                    /*
-                    * -----------------------------------------------
-                    * ARTIST RADIO
-                    * -----------------------------------------------
-                    */
-                    try {
-
-                        const radioTracks =
-                            await queuePromise;
-
-                        if (
-                            currentQueueRequestId !==
-                            queueRequestId
-                        ) {
-
-                            console.log(
-                                '[MusicPlayer] Ignoring outdated Artist Radio:',
-                                result.artist.id
-                            );
-
-                            return;
-                        }
-
-                        musicQueue =
-                            buildMusicQueue(
-                                result,
-                                radioTracks
-                            );
-
-                        musicQueueCurrentIndex =
-                            musicQueue.findIndex(
-                                track =>
-                                    track.id ===
-                                    result.id
-                            );
-
-                        /*
-                        * Una nueva queue representa
-                        * una nueva sesión de navegación.
-                        */
-                        youtubeShuffleHistory = [];
-
-                        youtubeShuffleHistoryPosition =
-                            -1;
-
-                        console.log(
-                            '[MusicPlayer] New Music Queue ready:',
-                            {
-                                artistId:
-                                    result.artist.id,
-
-                                length:
-                                    musicQueue.length,
-
-                                currentIndex:
-                                    musicQueueCurrentIndex,
-                            }
-                        );
-
-                        if (
-                            musicQueue.length > 0
-                        ) {
-
-                            renderQueuePanel();
-
-                            activatePanelTab(
-                                'queue'
-                            );
-                        }
-
-                    } catch (error) {
-
-                        console.error(
-                            '[MusicPlayer] Artist Radio failed:',
-                            error
-                        );
-                    }
-
                 }
             );
 
@@ -4148,6 +4441,8 @@ function updateTrackMarquee(): void {
                 statusText.textContent = 'LISTO';
                 break;
         }
+
+        updateTrackPlaybackIndicators();
     }
 
 
@@ -4622,17 +4917,15 @@ playButton.addEventListener(
                 'playing'
             ) {
 
-                console.log(
-                    '[MusicPlayer] YouTube pause()'
-                );
+                playbackIntent =
+                    'pause';
 
                 youtubePlayer.pause();
 
             } else {
 
-                console.log(
-                    '[MusicPlayer] YouTube play()'
-                );
+                playbackIntent =
+                    'play';
 
                 youtubePlayer.play();
             }
