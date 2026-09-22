@@ -3072,6 +3072,27 @@ YOUTUBE VIDEO
     }
 }
 
+
+/* SPINNER INFINITY SCROLL */
+
+.music-player-search-infinite-loader {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+
+    min-height: 42px;
+
+    flex-shrink: 0;
+}
+
+.music-player-search-infinite-loader
+.loading-spinner {
+    margin: 8px auto;
+}
+
 /* =========================================================
    RESPONSIVE
    ========================================================= */
