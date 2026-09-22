@@ -14,6 +14,7 @@ import {
 
 import {
     buildMusicQueue,
+    createPlaybackState,
     getArtistRadioTracks,
     getNextShuffleIndex,
     hasResolveInFlight,
@@ -681,7 +682,10 @@ function selectStation(
     let activePlaybackSource:
         'radio' | 'youtube' =
         'radio';
-    
+
+    const playbackState =
+        createPlaybackState();
+
     /*
     * --------------------------------------------------
     * MUSIC QUEUE
@@ -693,15 +697,6 @@ function selectStation(
     * El YouTube ID se resuelve cuando una pista
     * necesita reproducirse.
     */
-
-    let musicQueue:
-        MusicTrack[] = [];
-
-    let musicQueueCurrentIndex =
-        -1;
-
-    let currentMusicTrack:
-        MusicTrack | null = null;
 
     let youtubeTracks:
         MusicTrack[] = [];
@@ -723,40 +718,6 @@ function selectStation(
     let searchObserver:
         IntersectionObserver | null =
         null;
-
-    let youtubeRepeat = false;
-    let youtubeShuffle = false;
-
-    let currentYouTubeVideoId:
-        string | null = null;
-
-    let playbackIntent:
-    'play' | 'pause' =
-    'pause'; 
-
-
-    /*
-    * Identifica cuál fue la última selección
-    * realizada por el usuario.
-    *
-    * Una respuesta antigua puede terminar después
-    * de una selección nueva, pero no debe tomar
-    * control de la reproducción.
-    */
-    let playbackRequestId = 0;
-
-    /*
-    * Identifica la generación actual de la queue.
-    *
-    * Una respuesta antigua de Artist Radio no debe
-    * reemplazar una queue generada por una selección
-    * posterior.
-    */
-    let queueRequestId = 0;
-
-    let youtubeShuffleHistory: number[] = [];
-
-    let youtubeShuffleHistoryPosition = -1;
 
     let youtubeProgressInterval:
     ReturnType<typeof setInterval> | null =
@@ -893,7 +854,7 @@ async function selectMusicTrack(
     const isSameCurrentTrack =
         activePlaybackSource ===
             'youtube' &&
-        currentMusicTrack?.id ===
+        playbackState.currentMusicTrack?.id ===
             track.id;
 
     /*
@@ -910,15 +871,15 @@ async function selectMusicTrack(
     if (
         isSameCurrentTrack &&
         (
-            currentYouTubeVideoId !== null ||
+            playbackState.currentYouTubeVideoId !== null ||
             hasResolveInFlight(
                 track.id
             )
         )
     ) {
 
-        playbackIntent =
-            playbackIntent === 'play'
+        playbackState.playbackIntent =
+            playbackState.playbackIntent === 'play'
                 ? 'pause'
                 : 'play';
 
@@ -928,16 +889,16 @@ async function selectMusicTrack(
                 deezerId:
                     track.id,
                 intent:
-                    playbackIntent,
+                    playbackState.playbackIntent,
             }
         );
 
         if (
-            currentYouTubeVideoId
+            playbackState.currentYouTubeVideoId
         ) {
 
             if (
-                playbackIntent ===
+                playbackState.playbackIntent ===
                 'pause'
             ) {
 
@@ -963,14 +924,14 @@ async function selectMusicTrack(
      */
 
     const currentPlaybackRequestId =
-        ++playbackRequestId;
+        ++playbackState.playbackRequestId;
 
     /*
      * Invalidamos cualquier Artist Radio
      * anterior que todavía esté llegando.
      */
     const currentQueueRequestId =
-        ++queueRequestId;
+        ++playbackState.queueRequestId;
 
     /*
      * Si viene desde A continuación,
@@ -981,7 +942,7 @@ async function selectMusicTrack(
         undefined
     ) {
 
-        musicQueueCurrentIndex =
+        playbackState.playbackState.musicQueueCurrentIndex =
             options.queueIndex;
 
         renderQueuePanel();
@@ -1000,10 +961,10 @@ async function selectMusicTrack(
         * Esta selección será la nueva fuente
         * de la cola.
         */
-        musicQueue =
+        playbackState.musicQueue =
             [];
 
-        musicQueueCurrentIndex =
+        playbackState.playbackState.musicQueueCurrentIndex =
             -1;
 
         renderQueuePanel();
@@ -1021,10 +982,10 @@ async function selectMusicTrack(
         * continúen operando sobre una selección
         * anterior de Resultados.
         */
-        musicQueue =
+        playbackState.musicQueue =
             [];
 
-        musicQueueCurrentIndex =
+        playbackState.playbackState.musicQueueCurrentIndex =
             -1;
 
         renderQueuePanel();
@@ -1034,16 +995,16 @@ async function selectMusicTrack(
      * La nueva pista pasa a ser la actual
      * inmediatamente.
      */
-    currentMusicTrack =
+    playbackState.currentMusicTrack =
         track;
 
     activePlaybackSource =
         'youtube';
 
-    playbackIntent =
+    playbackState.playbackIntent =
         'play';
 
-    currentYouTubeVideoId =
+    playbackState.currentYouTubeVideoId =
         null;
 
     /*
@@ -1102,7 +1063,7 @@ async function selectMusicTrack(
          */
         if (
             currentPlaybackRequestId !==
-            playbackRequestId
+            playbackState.playbackRequestId
         ) {
 
             console.log(
@@ -1120,7 +1081,7 @@ async function selectMusicTrack(
                 track.id
             );
 
-            playbackIntent =
+            playbackState.playbackIntent =
                 'pause';
 
             updateUI();
@@ -1133,7 +1094,7 @@ async function selectMusicTrack(
              * haya pulsado nuevamente la canción
              * durante el resolve.
              */
-            currentYouTubeVideoId =
+            playbackState.currentYouTubeVideoId =
                 videoId;
 
             /*
@@ -1143,7 +1104,7 @@ async function selectMusicTrack(
              * No reproducimos automáticamente.
              */
             if (
-                playbackIntent !==
+                playbackState.playbackIntent !==
                 'play'
             ) {
 
@@ -1190,7 +1151,7 @@ async function selectMusicTrack(
             error
         );
 
-        playbackIntent =
+        playbackState.playbackIntent =
             'pause';
 
         updateUI();
@@ -1217,7 +1178,7 @@ async function selectMusicTrack(
 
         if (
             currentQueueRequestId !==
-            queueRequestId
+            playbackState.queueRequestId
         ) {
 
             console.log(
@@ -1228,23 +1189,23 @@ async function selectMusicTrack(
             return;
         }
 
-        musicQueue =
+        playbackState.musicQueue =
             buildMusicQueue(
                 track,
                 radioTracks
             );
 
-        musicQueueCurrentIndex =
-            musicQueue.findIndex(
+        playbackState.playbackState.musicQueueCurrentIndex =
+            playbackState.musicQueue.findIndex(
                 currentTrack =>
                     currentTrack.id ===
                     track.id
             );
 
-        youtubeShuffleHistory =
+        playbackState.playbackState.youtubeShuffleHistory =
             [];
 
-        youtubeShuffleHistoryPosition =
+        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition =
             -1;
 
         console.log(
@@ -1253,14 +1214,14 @@ async function selectMusicTrack(
                 artistId:
                     track.artist.id,
                 length:
-                    musicQueue.length,
+                    playbackState.musicQueue.length,
                 currentIndex:
-                    musicQueueCurrentIndex,
+                    playbackState.playbackState.musicQueueCurrentIndex,
             }
         );
 
         if (
-            musicQueue.length > 0
+            playbackState.musicQueue.length > 0
         ) {
 
             renderQueuePanel();
@@ -1286,7 +1247,7 @@ async function playMusicQueueTrack(
 
     if (
         index < 0 ||
-        index >= musicQueue.length
+        index >= playbackState.musicQueue.length
     ) {
 
         console.log(
@@ -1298,7 +1259,7 @@ async function playMusicQueueTrack(
     }
 
     const track =
-        musicQueue[index];
+        playbackState.musicQueue[index];
 
     if (!track) {
         return;
@@ -1321,7 +1282,7 @@ async function playNextMusicQueueTrack():
     Promise<void> {
 
     if (
-        musicQueue.length === 0
+        playbackState.musicQueue.length === 0
     ) {
 
         console.log(
@@ -1332,12 +1293,12 @@ async function playNextMusicQueueTrack():
     }
 
     if (
-        musicQueueCurrentIndex < 0
+        playbackState.playbackState.musicQueueCurrentIndex < 0
     ) {
 
         console.log(
             '[MusicPlayer] Music queue index is invalid:',
-            musicQueueCurrentIndex
+            playbackState.playbackState.musicQueueCurrentIndex
         );
 
         return;
@@ -1349,17 +1310,17 @@ async function playNextMusicQueueTrack():
      * recuperamos ese recorrido primero.
      */
     if (
-        youtubeShuffle &&
-        youtubeShuffleHistoryPosition <
-            youtubeShuffleHistory.length - 1
+        playbackState.youtubeShuffle &&
+        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition <
+            playbackState.playbackState.youtubeShuffleHistory.length - 1
     ) {
 
-        youtubeShuffleHistoryPosition +=
+        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition +=
             1;
 
         const historyIndex =
-            youtubeShuffleHistory[
-                youtubeShuffleHistoryPosition
+            playbackState.playbackState.youtubeShuffleHistory[
+                playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition
             ];
 
         if (
@@ -1381,13 +1342,13 @@ async function playNextMusicQueueTrack():
         number | null = null;
 
     if (
-        youtubeShuffle
+        playbackState.youtubeShuffle
     ) {
 
         nextIndex =
             getNextShuffleIndex(
-                musicQueue,
-                musicQueueCurrentIndex
+                playbackState.musicQueue,
+                playbackState.playbackState.musicQueueCurrentIndex
             );
 
         if (
@@ -1401,27 +1362,27 @@ async function playNextMusicQueueTrack():
             return;
         }
 
-        youtubeShuffleHistory =
-            youtubeShuffleHistory.slice(
+        playbackState.playbackState.youtubeShuffleHistory =
+            playbackState.playbackState.youtubeShuffleHistory.slice(
                 0,
-                youtubeShuffleHistoryPosition + 1
+                playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition + 1
             );
 
-        youtubeShuffleHistory.push(
+        playbackState.playbackState.youtubeShuffleHistory.push(
             nextIndex
         );
 
-        youtubeShuffleHistoryPosition =
-            youtubeShuffleHistory.length - 1;
+        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition =
+            playbackState.playbackState.youtubeShuffleHistory.length - 1;
 
     } else {
 
         const sequentialIndex =
-            musicQueueCurrentIndex + 1;
+            playbackState.playbackState.musicQueueCurrentIndex + 1;
 
         if (
             sequentialIndex >=
-            musicQueue.length
+            playbackState.musicQueue.length
         ) {
 
             console.log(
@@ -1452,7 +1413,7 @@ async function playPreviousMusicQueueTrack():
     Promise<void> {
 
     if (
-        musicQueue.length === 0
+        playbackState.musicQueue.length === 0
     ) {
 
         console.log(
@@ -1463,7 +1424,7 @@ async function playPreviousMusicQueueTrack():
     }
 
     if (
-        musicQueueCurrentIndex < 0
+        playbackState.playbackState.musicQueueCurrentIndex < 0
     ) {
 
         return;
@@ -1495,16 +1456,16 @@ async function playPreviousMusicQueueTrack():
      * navegamos por el historial real.
      */
     if (
-        youtubeShuffle &&
-        youtubeShuffleHistoryPosition > 0
+        playbackState.youtubeShuffle &&
+        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition > 0
     ) {
 
-        youtubeShuffleHistoryPosition -=
+        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition -=
             1;
 
         const previousIndex =
-            youtubeShuffleHistory[
-                youtubeShuffleHistoryPosition
+            playbackState.playbackState.youtubeShuffleHistory[
+                playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition
             ];
 
         if (
@@ -1527,7 +1488,7 @@ async function playPreviousMusicQueueTrack():
      * anterior.
      */
     if (
-        youtubeShuffle
+        playbackState.youtubeShuffle
     ) {
 
         youtubePlayer.seekTo(
@@ -1543,7 +1504,7 @@ async function playPreviousMusicQueueTrack():
      * Navegación secuencial.
      */
     const previousIndex =
-        musicQueueCurrentIndex - 1;
+        playbackState.playbackState.musicQueueCurrentIndex - 1;
 
     if (
         previousIndex < 0
@@ -3125,7 +3086,7 @@ function renderQueuePanel(): void {
     queueList.innerHTML = '';
 
     if (
-        musicQueue.length === 0
+        playbackState.musicQueue.length === 0
     ) {
 
         queueList.innerHTML = `
@@ -3137,7 +3098,7 @@ function renderQueuePanel(): void {
         return;
     }
 
-    musicQueue.forEach(
+    playbackState.musicQueue.forEach(
         (track, index) => {
 
             const item =
@@ -3161,7 +3122,7 @@ function renderQueuePanel(): void {
 
             if (
                 index ===
-                musicQueueCurrentIndex
+                playbackState.playbackState.musicQueueCurrentIndex
             ) {
 
                 item.classList.add(
@@ -3420,7 +3381,7 @@ function updateTrackPlaybackIndicators(): void {
     const currentTrackId =
         activePlaybackSource ===
         'youtube'
-            ? currentMusicTrack?.id ??
+            ? playbackState.currentMusicTrack?.id ??
               null
             : null;
 
@@ -3430,8 +3391,8 @@ function updateTrackPlaybackIndicators(): void {
 
     const isPendingPlayback =
         currentTrackId !== null &&
-        playbackIntent === 'play' &&
-        currentYouTubeVideoId === null &&
+        playbackState.playbackIntent === 'play' &&
+        playbackState.currentYouTubeVideoId === null &&
         hasResolveInFlight(
             currentTrackId
         );
@@ -4480,7 +4441,7 @@ function updateTrackInfo(): void {
     ) {
 
         const track =
-            currentMusicTrack;
+            playbackState.currentMusicTrack;
 
         if (!track) {
             return;
@@ -4843,32 +4804,32 @@ function updateTrackMarquee(): void {
 
         const hasMusicQueue =
             activePlaybackSource === 'youtube' &&
-            musicQueue.length > 0 &&
-            musicQueueCurrentIndex >= 0;
+            playbackState.musicQueue.length > 0 &&
+            playbackState.playbackState.musicQueueCurrentIndex >= 0;
 
         previousButton.disabled =
             !hasMusicQueue;
 
         nextButton.disabled =
             !hasMusicQueue ||
-            musicQueueCurrentIndex >=
-                musicQueue.length - 1;
+            playbackState.playbackState.musicQueueCurrentIndex >=
+                playbackState.musicQueue.length - 1;
 
         repeatButton.disabled =
             !hasMusicQueue;
 
         shuffleButton.disabled =
             !hasMusicQueue ||
-            musicQueue.length < 2;
+            playbackState.musicQueue.length < 2;
 
         shuffleButton.setAttribute(
             'aria-pressed',
-            String(youtubeShuffle)
+            String(playbackState.youtubeShuffle)
         );
 
         shuffleButton.classList.toggle(
             'is-active',
-            youtubeShuffle
+            playbackState.youtubeShuffle
         );
 
         player.classList.toggle(
@@ -5114,22 +5075,22 @@ repeatButton.addEventListener(
             return;
         }
 
-        youtubeRepeat =
-            !youtubeRepeat;
+        playbackState.youtubeRepeat =
+            !playbackState.youtubeRepeat;
 
         repeatButton.setAttribute(
             'aria-pressed',
-            String(youtubeRepeat)
+            String(playbackState.youtubeRepeat)
         );
 
         repeatButton.classList.toggle(
             'is-active',
-            youtubeRepeat
+            playbackState.youtubeRepeat
         );
 
         console.log(
             '[MusicPlayer] YouTube repeat:',
-            youtubeRepeat
+            playbackState.youtubeRepeat
         );
     }
 );
@@ -5137,45 +5098,45 @@ repeatButton.addEventListener(
 shuffleButton.addEventListener('click', () => {
     if (activePlaybackSource !== 'youtube') return;
 
-    youtubeShuffle = !youtubeShuffle;
+    playbackState.youtubeShuffle = !playbackState.youtubeShuffle;
 
-    if (youtubeShuffle) {
-        youtubeShuffleHistory = [];
+    if (playbackState.youtubeShuffle) {
+        playbackState.playbackState.youtubeShuffleHistory = [];
 
         if (
-            musicQueueCurrentIndex >= 0
+            playbackState.playbackState.musicQueueCurrentIndex >= 0
         ) {
-            youtubeShuffleHistory.push(
-                musicQueueCurrentIndex
+            playbackState.playbackState.youtubeShuffleHistory.push(
+                playbackState.playbackState.musicQueueCurrentIndex
             );
         }
 
-        youtubeShuffleHistoryPosition =
-            youtubeShuffleHistory.length - 1;
+        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition =
+            playbackState.playbackState.youtubeShuffleHistory.length - 1;
 
         console.log(
             '[MusicPlayer] Shuffle history reset:',
-            youtubeShuffleHistory
+            playbackState.playbackState.youtubeShuffleHistory
         );
 
     } else {
-        youtubeShuffleHistory = [];
-        youtubeShuffleHistoryPosition = -1;
+        playbackState.playbackState.youtubeShuffleHistory = [];
+        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition = -1;
     }
 
     shuffleButton.setAttribute(
         'aria-pressed',
-        String(youtubeShuffle)
+        String(playbackState.youtubeShuffle)
     );
 
     shuffleButton.classList.toggle(
         'is-active',
-        youtubeShuffle
+        playbackState.youtubeShuffle
     );
 
     console.log(
         '[MusicPlayer] YouTube shuffle:',
-        youtubeShuffle
+        playbackState.youtubeShuffle
     );
 });
     audioPlayer.subscribe(
@@ -5216,14 +5177,14 @@ youtubePlayer.subscribe(
         );
 
         if (
-            musicQueueCurrentIndex < 0 ||
-            musicQueueCurrentIndex >=
-                musicQueue.length
+            playbackState.playbackState.musicQueueCurrentIndex < 0 ||
+            playbackState.playbackState.musicQueueCurrentIndex >=
+                playbackState.musicQueue.length
         ) {
 
             console.log(
                 '[MusicPlayer] Cannot handle ended track: invalid music queue index.',
-                musicQueueCurrentIndex
+                playbackState.playbackState.musicQueueCurrentIndex
             );
 
             return;
@@ -5235,7 +5196,7 @@ youtubePlayer.subscribe(
          * la canción actual.
          */
         if (
-            youtubeRepeat
+            playbackState.youtubeRepeat
         ) {
 
             console.log(
@@ -5243,7 +5204,7 @@ youtubePlayer.subscribe(
             );
 
             if (
-                currentYouTubeVideoId
+                playbackState.currentYouTubeVideoId
             ) {
 
                 youtubePlayer.seekTo(
@@ -5255,7 +5216,7 @@ youtubePlayer.subscribe(
             } else {
 
                 void playMusicQueueTrack(
-                    musicQueueCurrentIndex
+                    playbackState.playbackState.musicQueueCurrentIndex
                 );
             }
 
@@ -5540,14 +5501,14 @@ playButton.addEventListener(
                 'playing'
             ) {
 
-                playbackIntent =
+                playbackState.playbackIntent =
                     'pause';
 
                 youtubePlayer.pause();
 
             } else {
 
-                playbackIntent =
+                playbackState.playbackIntent =
                     'play';
 
                 youtubePlayer.play();
