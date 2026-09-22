@@ -14,14 +14,15 @@ import {
     createPlaybackController,
     createPlaybackState,
     hasResolveInFlight,
+    isPlaybackPanelSource,
 } from '../../lib/MusicPlayer/playback';
 
 
 import type {
+    MusicApiCollection,
     MusicSearchResponse,
     MusicTrack,
 } from '../../lib/music/music-types';
-
 
 import type {
     HomeDetailRoute,
@@ -171,6 +172,25 @@ function initializeMusicPlayer(): void {
             '.music-player-queue-list'
         );
 
+    const playbackListLoader =
+        document.createElement(
+            'div'
+        );
+
+    playbackListLoader.className =
+        'music-player-playback-list-loader';
+
+    playbackListLoader.innerHTML =
+        `
+            <span
+                class="music-player-playback-list-loader-spinner"
+                aria-hidden="true"
+            ></span>
+        `;
+
+    playbackListLoader.hidden =
+        true;
+
     const panelTabs =
         Array.from(
             player.querySelectorAll<HTMLButtonElement>(
@@ -204,30 +224,10 @@ function initializeMusicPlayer(): void {
         '.music-player-home-sections'
     );
 
-    const homeDetail =
-        player.querySelector<HTMLElement>(
-            '[data-home-detail]'
-        );
-
     const panelCloseButton =
     player.querySelector<HTMLButtonElement>(
         '[data-panel-close]'
     );
-
-    const homeDetailBack =
-        player.querySelector<HTMLButtonElement>(
-            '[data-home-detail-back]'
-        );
-
-    const homeDetailTitle =
-        player.querySelector<HTMLElement>(
-            '[data-home-detail-title]'
-        );
-
-    const homeDetailContent =
-        player.querySelector<HTMLElement>(
-            '[data-home-detail-content]'
-        );
 
     const youtubeButton =
         player.querySelector(
@@ -336,10 +336,6 @@ function initializeMusicPlayer(): void {
         !(queueList instanceof HTMLElement) ||
         !(searchLoader instanceof HTMLElement) ||
         !(homeSectionsContainer instanceof HTMLElement) ||
-        !(homeDetail instanceof HTMLElement) ||
-        !(homeDetailBack instanceof HTMLButtonElement) ||
-        !(homeDetailTitle instanceof HTMLElement) ||
-        !(homeDetailContent instanceof HTMLElement) ||
         !(panelCloseButton instanceof HTMLButtonElement)
     ) {
         console.error(
@@ -798,6 +794,23 @@ const {
         activatePanelTab,
     });
 
+const searchCategoryTabs =
+    player.querySelector<HTMLElement>(
+        '[data-music-search-tabs]'
+    );
+
+if (
+    !(searchCategoryTabs instanceof HTMLElement)
+) {
+
+    console.error(
+        '[MusicPlayer] Search category tabs not found.'
+    );
+
+    return;
+}
+
+
 const searchController:
     MusicSearchController =
     createSearchController({
@@ -814,6 +827,9 @@ const searchController:
         searchInput:
             youtubeSearchInput,
 
+        categoryTabs:
+            searchCategoryTabs,
+
         activateSearchTab:
             () => {
 
@@ -823,24 +839,94 @@ const searchController:
             },
 
         onTrackSelected:
-            track => {
+            (
+                track,
+                source
+            ) => {
+
+                if (
+                    source ===
+                    'search-tracks-queue'
+                ) {
+
+                    void selectMusicTrack(
+                        track,
+                        {
+                            queueAction:
+                                'generate',
+                        }
+                    );
+
+                    return;
+                }
+
 
                 void selectMusicTrack(
                     track,
                     {
                         queueAction:
-                            'generate',
+                            'clear',
+
+                        playbackList:
+                            [
+                                track,
+                            ],
+
+                        playbackListMode:
+                            'context',
+
+                        playbackListSource:
+                            'search-all',
                     }
                 );
             },
+
+    onTrackListSelected:
+        (
+            tracks,
+            source,
+            next,
+            total
+        ) => {
+
+            if (
+                tracks.length ===
+                0
+            ) {
+                return;
+            }
+
+            void selectMusicTrack(
+                tracks[0],
+                {
+                    queueAction:
+                        'clear',
+
+                    playbackList:
+                        tracks,
+
+                    playbackListMode:
+                        'context',
+
+                    playbackListSource:
+                        source,
+
+                    playbackListNext:
+                        next,
+
+                    playbackListTotal:
+                        total,
+                }
+            );
+        },
 
         formatDuration:
             formatTime,
 
         maxPages:
-            3,
+            4,
     });
-
+    
     /*
     * --------------------------------------------------
     * MUSIC QUEUE
@@ -977,84 +1063,100 @@ function stopYouTubeProgress(): void {
         null;
 }
 
-function showHomeRoot(): void {
+/*
+ * --------------------------------------------------
+ * HOME → PLAYBACK CONTEXT
+ * --------------------------------------------------
+ */
 
-    homeDetail.classList.remove(
-        'is-active'
-    );
+let homePlaybackRequestId = 0;
 
-    homeSectionsContainer.classList.remove(
-        'is-hidden'
-    );
-}
+async function loadAllHomeTracks(
+    firstResponse:
+        MusicApiCollection<MusicTrack>
+): Promise<MusicTrack[]> {
 
+    const tracks: MusicTrack[] = [
+        ...firstResponse.data,
+    ];
 
-function openHomeDetail(
-    route: HomeDetailRoute
-): void {
+    let next =
+        firstResponse.next ?? null;
 
-    activeHomeDetail =
-        route;
-
-    homeSectionsContainer.classList.add(
-        'is-hidden'
-    );
-
-    homeDetail.classList.add(
-        'is-active'
-    );
-
-    homeDetailTitle.textContent =
-        route.title;
-
-    homeDetailContent.innerHTML = `
-        <div class="music-player-home-loading">
-            CARGANDO...
-        </div>
-    `;
-
-    void loadHomeDetail(
-        route
-    );
-}
-
-
-function closeHomeDetail(): void {
-
-    if (
-        !activeHomeDetail
+    while (
+        typeof next === 'string' &&
+        next.length > 0
     ) {
-        return;
+
+        const response =
+            await getMusicApiNext<
+                MusicApiCollection<MusicTrack>
+            >(
+                next
+            );
+
+        if (
+            response.status !==
+            'success'
+        ) {
+            throw new Error(
+                'Additional tracks request failed.'
+            );
+        }
+
+        tracks.push(
+            ...response.data
+        );
+
+        next =
+            response.next ?? null;
     }
 
-    const returnSection =
-        activeHomeDetail.returnSection;
-
-    activeHomeDetail =
-        null;
-
-    showHomeRoot();
-
-    activateHomeSection(
-        returnSection
-    );
+    return tracks;
 }
 
-homeDetailBack.addEventListener(
-    'click',
-    () => {
-        closeHomeDetail();
-    }
-);
 
-async function loadHomeDetail(
-    route: HomeDetailRoute
+function getHomePlaybackSource(
+    route:
+        HomeDetailRoute
+): 'home-album'
+    | 'home-playlist'
+    | 'home-genre' {
+
+    switch (
+        route.type
+    ) {
+
+        case 'album':
+            return 'home-album';
+
+        case 'playlist':
+            return 'home-playlist';
+
+        case 'genre':
+            return 'home-genre';
+    }
+}
+
+
+async function openHomeDetail(
+    route:
+        HomeDetailRoute
 ): Promise<void> {
+
+    const requestId =
+        ++homePlaybackRequestId;
 
     try {
 
         let tracks:
             MusicTrack[] = [];
+
+        let next:
+            string | null = null;
+
+        let total =
+            0;
 
         switch (
             route.type
@@ -1079,10 +1181,19 @@ async function loadHomeDetail(
                 }
 
                 tracks =
-                    response.data;
+                    response.data ?? [];
+
+                next =
+                    response.next ??
+                    null;
+
+                total =
+                    response.total ??
+                    tracks.length;
 
                 break;
             }
+
 
             case 'playlist': {
 
@@ -1103,10 +1214,19 @@ async function loadHomeDetail(
                 }
 
                 tracks =
-                    response.data;
+                    response.data ?? [];
+
+                next =
+                    response.next ??
+                    null;
+
+                total =
+                    response.total ??
+                    tracks.length;
 
                 break;
             }
+
 
             case 'genre': {
 
@@ -1125,242 +1245,189 @@ async function loadHomeDetail(
                 }
 
                 tracks =
-                    response.tracks.data;
+                    response.tracks?.data ??
+                    [];
+
+                next =
+                    response.tracks?.next ??
+                    null;
+
+                total =
+                    response.tracks?.total ??
+                    tracks.length;
 
                 break;
             }
         }
 
-        renderHomeDetailTracks(
-            tracks
+
+        /*
+         * Si el usuario seleccionó otro
+         * contexto mientras esta petición
+         * estaba cargando, descartamos
+         * esta respuesta.
+         */
+        if (
+            requestId !==
+            homePlaybackRequestId
+        ) {
+            return;
+        }
+
+
+        if (
+            tracks.length === 0
+        ) {
+
+            console.warn(
+                '[MusicPlayer] Home context has no tracks:',
+                route
+            );
+
+            return;
+        }
+
+
+        /*
+         * El primer track comienza
+         * la reproducción.
+         *
+         * Toda la lista pasa a ser
+         * el contexto actual.
+         */
+        void selectMusicTrack(
+            tracks[0],
+            {
+                queueAction:
+                    'clear',
+
+                playbackList:
+                    tracks,
+
+                playbackListMode:
+                    'context',
+
+                playbackListSource:
+                    getHomePlaybackSource(
+                        route
+                    ),
+
+                playbackListNext:
+                    next,
+
+                playbackListTotal:
+                    total,
+            }
         );
 
-    } catch (error) {
+    } catch (
+        error
+    ) {
 
         console.error(
-            '[MusicPlayer] Home detail failed:',
+            '[MusicPlayer] Home playback context failed:',
             error
         );
-
-        homeDetailContent.innerHTML = `
-            <div class="music-player-home-placeholder">
-                NO SE PUDIERON CARGAR LAS CANCIONES
-            </div>
-        `;
     }
 }
 
-function renderHomeDetailTracks(
-    tracks: MusicTrack[]
-): void {
 
-    if (
-        tracks.length === 0
-    ) {
+const playbackListObserver =
+    new IntersectionObserver(
+        entries => {
 
-        homeDetailContent.innerHTML = `
-            <div class="music-player-home-placeholder">
-                NO HAY CANCIONES DISPONIBLES
-            </div>
-        `;
+            if (
+                !entries.some(
+                    entry =>
+                        entry.isIntersecting
+                )
+            ) {
+                return;
+            }
 
-        return;
-    }
 
-    homeDetailContent.innerHTML = `
-        <div class="music-player-list-header music-player-home-detail-list-header">
+            if (
+                playbackState.playbackListLoadingMore
+            ) {
+                return;
+            }
 
-            <span class="music-player-list-column-index">
-                #
-            </span>
 
-            <span
-                class="music-player-list-column-cover"
-                aria-hidden="true"
-            ></span>
+            if (
+                !playbackState.playbackListNext
+            ) {
+                return;
+            }
 
-            <span class="music-player-list-column-title">
-                TÍTULO
-            </span>
 
-            <span class="music-player-list-column-duration">
-                DURACIÓN
-            </span>
+            void loadMorePlaybackList();
+        },
+        {
+            root:
+                queueList,
 
-        </div>
+            rootMargin:
+                '0px 0px 250px 0px',
 
-        <div
-            class="music-player-trending-list music-player-home-detail-list"
-        ></div>
-    `;
-
-    const list =
-        homeDetailContent.querySelector(
-            '.music-player-home-detail-list'
-        );
-
-    if (
-        !(list instanceof HTMLElement)
-    ) {
-        return;
-    }
-
-    tracks.forEach(
-        (
-            track,
-            index
-        ) => {
-
-            const item =
-                document.createElement(
-                    'button'
-                );
-
-            item.type =
-                'button';
-
-            item.className =
-                'music-player-trending-item music-player-home-detail-track';
-
-            item.dataset.trackId =
-                String(
-                    track.id
-                );
-
-            item.dataset.detailIndex =
-                String(index);
-
-            const number =
-                document.createElement(
-                    'span'
-                );
-
-            number.className =
-                'music-player-list-column-index';
-
-            number.textContent =
-                String(
-                    index + 1
-                );
-
-            const thumbnail =
-                document.createElement(
-                    'img'
-                );
-
-            thumbnail.className =
-                'music-player-trending-thumbnail';
-
-            thumbnail.src =
-                track.album.cover;
-
-            thumbnail.alt =
-                `${track.title} - portada`;
-
-            const info =
-                document.createElement(
-                    'span'
-                );
-
-            info.className =
-                'music-player-trending-info';
-
-            const title =
-                document.createElement(
-                    'span'
-                );
-
-            title.className =
-                'music-player-trending-title';
-
-            title.textContent =
-                track.title;
-
-            const artist =
-                document.createElement(
-                    'span'
-                );
-
-            artist.className =
-                'music-player-trending-artist';
-
-            artist.textContent =
-                track.artist.name ||
-                'ARTISTA DESCONOCIDO';
-
-            info.appendChild(
-                title
-            );
-
-            info.appendChild(
-                artist
-            );
-
-            const duration =
-                document.createElement(
-                    'span'
-                );
-
-            duration.className =
-                'music-player-list-column-duration';
-
-            duration.textContent =
-                formatTime(
-                    track.duration
-                );
-
-            item.appendChild(
-                number
-            );
-
-            item.appendChild(
-                thumbnail
-            );
-
-            item.appendChild(
-                info
-            );
-
-            item.appendChild(
-                duration
-            );
-
-            item.addEventListener(
-                'click',
-                () => {
-
-                    void selectMusicTrack(
-                        track,
-                        {
-                            queueAction:
-                                'clear',
-                        }
-                    );
-                }
-            );
-
-            list.appendChild(
-                item
-            );
+            threshold:
+                0,
         }
     );
 
-    updateTrackPlaybackIndicators();
-}
+
+    playbackListObserver.observe(
+        playbackListLoader
+    );
+
+
 
 function renderQueuePanel(): void {
+
+    const playbackTab =
+        panelTabs.find(
+            button =>
+                button.dataset.panelTab ===
+                'playback'
+        );
+
+    const shouldShowPlaybackPanel =
+        playbackState.playbackList.length > 0 &&
+        isPlaybackPanelSource(
+            playbackState.playbackListSource
+        );
+
+    if (playbackTab) {
+
+        playbackTab.hidden =
+            !shouldShowPlaybackPanel;
+    }
+
+    queuePanel.hidden =
+        !shouldShowPlaybackPanel;
 
     queueList.innerHTML = '';
 
     if (
-        playbackState.playbackList.length === 0
+        !shouldShowPlaybackPanel
     ) {
 
-        queueList.innerHTML = `
-            <div class="music-player-queue-empty">
-                LA COLA SE GENERARÁ AL REPRODUCIR UNA CANCIÓN
-            </div>
-        `;
+
+
+        queueList.appendChild(
+            playbackListLoader
+        );
+
+
+        playbackListLoader.hidden =
+            !playbackState.playbackListNext;
+
+
+        playbackListLoader.classList.toggle(
+            'is-loading',
+            playbackState.playbackListLoadingMore
+        );
+
+        updateTrackPlaybackIndicators();
 
         return;
     }
@@ -1774,6 +1841,9 @@ function updateTrackPlaybackIndicators(): void {
         }
     );
 
+        queueList.appendChild(
+            playbackListLoader
+        );
     /*
      * --------------------------------------------------
      * TENDENCIAS
