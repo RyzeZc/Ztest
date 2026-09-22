@@ -14,6 +14,7 @@ import type {
     MusicAlbum,
     MusicChart,
     MusicGenre,
+    MusicPlaylist,
     MusicRadioTrack,
     MusicSearchResponse,
     MusicTrack,
@@ -127,53 +128,83 @@ function initializeMusicPlayer(): void {
             '.music-player-station-menu'
         );
 
-const stationPanel =
+    const stationPanel =
+        player.querySelector(
+            '[data-panel="home"]'
+        );
+
+    const youtubePanel =
+        player.querySelector(
+            '[data-panel="results"]'
+        );
+
+    const queuePanel =
+        player.querySelector(
+            '[data-panel="queue"]'
+        );
+
+    const queueList =
+        player.querySelector(
+            '.music-player-queue-list'
+        );
+
+    const panelTabs =
+        Array.from(
+            player.querySelectorAll<HTMLButtonElement>(
+                '[data-panel-tab]'
+            )
+        );
+
+    const panelViews =
+        Array.from(
+            player.querySelectorAll<HTMLElement>(
+                '[data-panel-view]'
+            )
+        );
+
+    const homeNavItems =
+        Array.from(
+            player.querySelectorAll<HTMLButtonElement>(
+                '[data-home-section-button]'
+            )
+        );
+
+    const homeSections =
+        Array.from(
+            player.querySelectorAll<HTMLElement>(
+                '[data-home-section]'
+            )
+        );
+
+    const homeSectionsContainer =
     player.querySelector(
-        '[data-panel="home"]'
+        '.music-player-home-sections'
     );
 
-const youtubePanel =
-    player.querySelector(
-        '[data-panel="results"]'
+    const homeDetail =
+        player.querySelector<HTMLElement>(
+            '[data-home-detail]'
+        );
+
+    const panelCloseButton =
+    player.querySelector<HTMLButtonElement>(
+        '[data-panel-close]'
     );
 
-const queuePanel =
-    player.querySelector(
-        '[data-panel="queue"]'
-    );
+    const homeDetailBack =
+        player.querySelector<HTMLButtonElement>(
+            '[data-home-detail-back]'
+        );
 
-const queueList =
-    player.querySelector(
-        '.music-player-queue-list'
-    );
+    const homeDetailTitle =
+        player.querySelector<HTMLElement>(
+            '[data-home-detail-title]'
+        );
 
-const panelTabs =
-    Array.from(
-        player.querySelectorAll<HTMLButtonElement>(
-            '[data-panel-tab]'
-        )
-    );
-
-const panelViews =
-    Array.from(
-        player.querySelectorAll<HTMLElement>(
-            '[data-panel-view]'
-        )
-    );
-
-const homeNavItems =
-    Array.from(
-        player.querySelectorAll<HTMLButtonElement>(
-            '[data-home-section-button]'
-        )
-    );
-
-const homeSections =
-    Array.from(
-        player.querySelectorAll<HTMLElement>(
-            '[data-home-section]'
-        )
-    );
+    const homeDetailContent =
+        player.querySelector<HTMLElement>(
+            '[data-home-detail-content]'
+        );
 
     const youtubeButton =
         player.querySelector(
@@ -280,7 +311,13 @@ const homeSections =
         !(videoPanel instanceof HTMLElement) ||
         !(queuePanel instanceof HTMLElement) ||
         !(queueList instanceof HTMLElement) ||
-        !(searchLoader instanceof HTMLElement)
+        !(searchLoader instanceof HTMLElement) ||
+        !(homeSectionsContainer instanceof HTMLElement) ||
+        !(homeDetail instanceof HTMLElement) ||
+        !(homeDetailBack instanceof HTMLButtonElement) ||
+        !(homeDetailTitle instanceof HTMLElement) ||
+        !(homeDetailContent instanceof HTMLElement) ||
+        !(panelCloseButton instanceof HTMLButtonElement)
     ) {
         console.error(
             '[MusicPlayer] Required elements not found.'
@@ -1203,7 +1240,7 @@ async function selectMusicTrack(
     track: MusicTrack,
     options: {
         queueIndex?: number;
-        generateQueue?: boolean;
+        queueAction?: 'generate' | 'keep' | 'clear';
     } = {}
 ): Promise<void> {
 
@@ -1308,17 +1345,43 @@ async function selectMusicTrack(
         );
 
     } else if (
-        options.generateQueue
+        options.queueAction ===
+        'generate'
     ) {
 
         /*
-         * Mientras esperamos la nueva
-         * Artist Radio queue, la antigua
-         * no debe considerarse la queue
-         * actual.
-         */
+        * La queue anterior deja de ser válida.
+        * Esta selección será la nueva fuente
+        * de la cola.
+        */
+        musicQueue =
+            [];
+
         musicQueueCurrentIndex =
             -1;
+
+        renderQueuePanel();
+
+    } else if (
+        options.queueAction ===
+        'clear'
+    ) {
+
+        /*
+        * Las secciones de Home NO crean queue.
+        *
+        * También limpiamos cualquier queue
+        * anterior para evitar que Previous/Next
+        * continúen operando sobre una selección
+        * anterior de Resultados.
+        */
+        musicQueue =
+            [];
+
+        musicQueueCurrentIndex =
+            -1;
+
+        renderQueuePanel();
     }
 
     /*
@@ -1601,8 +1664,8 @@ async function playMusicQueueTrack(
             queueIndex:
                 index,
 
-            generateQueue:
-                false,
+            queueAction:
+                'keep',
         }
     );
 }
@@ -1912,6 +1975,430 @@ type HomeLoadState =
     | 'loaded'
     | 'error';
 
+type HomeDetailRoute =
+    | {
+        type:
+            'album';
+
+        id:
+            number;
+
+        title:
+            string;
+
+        returnSection:
+            HomeSection;
+    }
+    | {
+        type:
+            'playlist';
+
+        id:
+            number;
+
+        title:
+            string;
+
+        returnSection:
+            HomeSection;
+    }
+    | {
+        type:
+            'genre';
+
+        id:
+            number;
+
+        title:
+            string;
+
+        returnSection:
+            HomeSection;
+    };
+
+let activeHomeDetail:
+    HomeDetailRoute | null =
+    null;
+
+function showHomeRoot(): void {
+
+    homeDetail.classList.remove(
+        'is-active'
+    );
+
+    homeSectionsContainer.classList.remove(
+        'is-hidden'
+    );
+}
+
+
+function openHomeDetail(
+    route: HomeDetailRoute
+): void {
+
+    activeHomeDetail =
+        route;
+
+    homeSectionsContainer.classList.add(
+        'is-hidden'
+    );
+
+    homeDetail.classList.add(
+        'is-active'
+    );
+
+    homeDetailTitle.textContent =
+        route.title;
+
+    homeDetailContent.innerHTML = `
+        <div class="music-player-home-loading">
+            CARGANDO...
+        </div>
+    `;
+
+    void loadHomeDetail(
+        route
+    );
+}
+
+
+function closeHomeDetail(): void {
+
+    if (
+        !activeHomeDetail
+    ) {
+        return;
+    }
+
+    const returnSection =
+        activeHomeDetail.returnSection;
+
+    activeHomeDetail =
+        null;
+
+    showHomeRoot();
+
+    activateHomeSection(
+        returnSection
+    );
+}
+
+
+panelCloseButton.addEventListener(
+    'click',
+    () => {
+
+        closeStationMenu();
+    }
+);
+
+homeDetailBack.addEventListener(
+    'click',
+    () => {
+        closeHomeDetail();
+    }
+);
+
+async function loadHomeDetail(
+    route: HomeDetailRoute
+): Promise<void> {
+
+    try {
+
+        let tracks:
+            MusicTrack[] = [];
+
+        switch (
+            route.type
+        ) {
+
+            case 'album': {
+
+                const response =
+                    await getAlbumTracks(
+                        route.id,
+                        0,
+                        10
+                    );
+
+                if (
+                    response.status !==
+                    'success'
+                ) {
+                    throw new Error(
+                        'Album tracks request failed.'
+                    );
+                }
+
+                tracks =
+                    response.data;
+
+                break;
+            }
+
+            case 'playlist': {
+
+                const response =
+                    await getPlaylistTracks(
+                        route.id,
+                        0,
+                        10
+                    );
+
+                if (
+                    response.status !==
+                    'success'
+                ) {
+                    throw new Error(
+                        'Playlist tracks request failed.'
+                    );
+                }
+
+                tracks =
+                    response.data;
+
+                break;
+            }
+
+            case 'genre': {
+
+                const response =
+                    await getGenreChart(
+                        route.id
+                    );
+
+                if (
+                    response.status !==
+                    'success'
+                ) {
+                    throw new Error(
+                        'Genre chart request failed.'
+                    );
+                }
+
+                tracks =
+                    response.tracks.data;
+
+                break;
+            }
+        }
+
+        renderHomeDetailTracks(
+            tracks
+        );
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Home detail failed:',
+            error
+        );
+
+        homeDetailContent.innerHTML = `
+            <div class="music-player-home-placeholder">
+                NO SE PUDIERON CARGAR LAS CANCIONES
+            </div>
+        `;
+    }
+}
+
+function renderHomeDetailTracks(
+    tracks: MusicTrack[]
+): void {
+
+    if (
+        tracks.length === 0
+    ) {
+
+        homeDetailContent.innerHTML = `
+            <div class="music-player-home-placeholder">
+                NO HAY CANCIONES DISPONIBLES
+            </div>
+        `;
+
+        return;
+    }
+
+    homeDetailContent.innerHTML = `
+        <div class="music-player-list-header music-player-home-detail-list-header">
+
+            <span class="music-player-list-column-index">
+                #
+            </span>
+
+            <span
+                class="music-player-list-column-cover"
+                aria-hidden="true"
+            ></span>
+
+            <span class="music-player-list-column-title">
+                TÍTULO
+            </span>
+
+            <span class="music-player-list-column-duration">
+                DURACIÓN
+            </span>
+
+        </div>
+
+        <div
+            class="music-player-trending-list music-player-home-detail-list"
+        ></div>
+    `;
+
+    const list =
+        homeDetailContent.querySelector(
+            '.music-player-home-detail-list'
+        );
+
+    if (
+        !(list instanceof HTMLElement)
+    ) {
+        return;
+    }
+
+    tracks.forEach(
+        (
+            track,
+            index
+        ) => {
+
+            const item =
+                document.createElement(
+                    'button'
+                );
+
+            item.type =
+                'button';
+
+            item.className =
+                'music-player-trending-item music-player-home-detail-track';
+
+            item.dataset.trackId =
+                String(
+                    track.id
+                );
+
+            item.dataset.detailIndex =
+                String(index);
+
+            const number =
+                document.createElement(
+                    'span'
+                );
+
+            number.className =
+                'music-player-list-column-index';
+
+            number.textContent =
+                String(
+                    index + 1
+                );
+
+            const thumbnail =
+                document.createElement(
+                    'img'
+                );
+
+            thumbnail.className =
+                'music-player-trending-thumbnail';
+
+            thumbnail.src =
+                track.album.cover;
+
+            thumbnail.alt =
+                `${track.title} - portada`;
+
+            const info =
+                document.createElement(
+                    'span'
+                );
+
+            info.className =
+                'music-player-trending-info';
+
+            const title =
+                document.createElement(
+                    'span'
+                );
+
+            title.className =
+                'music-player-trending-title';
+
+            title.textContent =
+                track.title;
+
+            const artist =
+                document.createElement(
+                    'span'
+                );
+
+            artist.className =
+                'music-player-trending-artist';
+
+            artist.textContent =
+                track.artist.name ||
+                'ARTISTA DESCONOCIDO';
+
+            info.appendChild(
+                title
+            );
+
+            info.appendChild(
+                artist
+            );
+
+            const duration =
+                document.createElement(
+                    'span'
+                );
+
+            duration.className =
+                'music-player-list-column-duration';
+
+            duration.textContent =
+                formatTime(
+                    track.duration
+                );
+
+            item.appendChild(
+                number
+            );
+
+            item.appendChild(
+                thumbnail
+            );
+
+            item.appendChild(
+                info
+            );
+
+            item.appendChild(
+                duration
+            );
+
+            item.addEventListener(
+                'click',
+                () => {
+
+                    void selectMusicTrack(
+                        track,
+                        {
+                            queueAction:
+                                'clear',
+                        }
+                    );
+                }
+            );
+
+            list.appendChild(
+                item
+            );
+        }
+    );
+
+    updateTrackPlaybackIndicators();
+}
 
 const homeLoadState: Record<
     HomeSection,
@@ -2434,8 +2921,8 @@ function renderTrending(
                     void selectMusicTrack(
                         track,
                         {
-                            generateQueue:
-                                true,
+                            queueAction:
+                                'clear',
                         }
                     );
                 }
@@ -2522,6 +3009,191 @@ async function loadDiscover(): Promise<void> {
     }
 }
 
+async function loadPlaylist(): Promise<void> {
+
+    if (
+        homeLoadState.playlist ===
+        'loading' ||
+        homeLoadState.playlist ===
+        'loaded'
+    ) {
+        return;
+    }
+
+    const section =
+        getHomeSectionElement(
+            'playlist'
+        );
+
+    if (!section) {
+        return;
+    }
+
+    homeLoadState.playlist =
+        'loading';
+
+    section.innerHTML = `
+        <div class="music-player-home-loading">
+            CARGANDO PLAYLISTS...
+        </div>
+    `;
+
+    try {
+
+        const chart =
+            await getHomeChartData();
+
+        const playlists =
+            chart.playlists.data;
+
+        renderPlaylists(
+            section,
+            playlists
+        );
+
+        homeLoadState.playlist =
+            'loaded';
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Playlist failed:',
+            error
+        );
+
+        homeLoadState.playlist =
+            'error';
+
+        section.innerHTML = `
+            <div class="music-player-home-placeholder">
+                NO SE PUDIERON CARGAR LAS PLAYLISTS
+            </div>
+        `;
+    }
+}
+
+function renderPlaylists(
+    section: HTMLElement,
+    playlists: MusicPlaylist[]
+): void {
+
+    if (
+        playlists.length === 0
+    ) {
+
+        section.innerHTML = `
+            <div class="music-player-home-placeholder">
+                NO HAY PLAYLISTS DISPONIBLES
+            </div>
+        `;
+
+        return;
+    }
+
+    section.innerHTML = `
+        <div class="music-player-discover-grid music-player-playlist-grid"></div>
+    `;
+
+    const grid =
+        section.querySelector(
+            '.music-player-playlist-grid'
+        );
+
+    if (
+        !(grid instanceof HTMLElement)
+    ) {
+        return;
+    }
+
+    playlists.forEach(
+        playlist => {
+
+            const card =
+                document.createElement(
+                    'button'
+                );
+
+            card.type =
+                'button';
+
+            card.className =
+                'music-player-discover-card music-player-playlist-card';
+
+            const image =
+                document.createElement(
+                    'img'
+                );
+
+            image.src =
+                playlist.picture ??
+                '';
+
+            image.alt =
+                `${playlist.title} - portada`;
+
+            const title =
+                document.createElement(
+                    'div'
+                );
+
+            title.className =
+                'music-player-discover-title';
+
+            title.textContent =
+                playlist.title;
+
+            const meta =
+                document.createElement(
+                    'div'
+                );
+
+            meta.className =
+                'music-player-discover-artist';
+
+            meta.textContent =
+                playlist.user?.name
+                    ? `${playlist.user.name} · ${playlist.nb_tracks ?? 0} pistas`
+                    : `${playlist.nb_tracks ?? 0} pistas`;
+
+            card.appendChild(
+                image
+            );
+
+            card.appendChild(
+                title
+            );
+
+            card.appendChild(
+                meta
+            );
+
+            card.addEventListener(
+                'click',
+                () => {
+
+                    openHomeDetail({
+                        type:
+                            'playlist',
+
+                        id:
+                            playlist.id,
+
+                        title:
+                            playlist.title,
+
+                        returnSection:
+                            'playlist',
+                    });
+                }
+            );
+
+            grid.appendChild(
+                card
+            );
+        }
+    );
+}
+
 function formatReleaseDate(
     date: string
 ): string {
@@ -2602,8 +3274,11 @@ function renderDiscover(
 
             const card =
                 document.createElement(
-                    'article'
+                    'button'
                 );
+
+            card.type =
+                'button';
 
             card.className =
                 'music-player-discover-card';
@@ -2681,6 +3356,26 @@ function renderDiscover(
             grid.appendChild(
                 card
             );
+        }
+    );
+
+    card.addEventListener(
+        'click',
+        () => {
+
+            openHomeDetail({
+                type:
+                    'album',
+
+                id:
+                    album.id,
+
+                title:
+                    album.title,
+
+                returnSection:
+                    'discover',
+            });
         }
     );
 }
@@ -2858,6 +3553,26 @@ function renderGenres(
             grid.appendChild(
                 card
             );
+        }
+    );
+
+    card.addEventListener(
+        'click',
+        () => {
+
+            openHomeDetail({
+                type:
+                    'genre',
+
+                id:
+                    genre.id,
+
+                title:
+                    genre.name,
+
+                returnSection:
+                    'genres',
+            });
         }
     );
 }
@@ -3258,6 +3973,54 @@ function updateTrackPlaybackIndicators(): void {
         }
     );
 
+    const detailItems =
+        player.querySelectorAll<HTMLElement>(
+            '.music-player-home-detail-track'
+        );
+
+    detailItems.forEach(
+        item => {
+
+            const trackId =
+                Number(
+                    item.dataset.trackId
+                );
+
+            const isCurrent =
+                trackId ===
+                currentTrackId;
+
+            item.classList.toggle(
+                'is-current',
+                isCurrent
+            );
+
+            const index =
+                item.querySelector<HTMLElement>(
+                    '.music-player-list-column-index'
+                );
+
+            if (index) {
+
+                const detailIndex =
+                    Number(
+                        item.dataset.detailIndex
+                    );
+
+                index.textContent =
+                    isCurrent
+                        ? (
+                            isVisuallyPlaying
+                                ? '⏸'
+                                : '▶'
+                        )
+                        : String(
+                            detailIndex + 1
+                        );
+            }
+        }
+    );
+
     /*
      * --------------------------------------------------
      * QUEUE
@@ -3633,8 +4396,8 @@ function appendYouTubeResults(
                     void selectMusicTrack(
                         result,
                         {
-                            generateQueue:
-                                true,
+                            queueAction:
+                                'generate',
                         }
                     );
                 }
