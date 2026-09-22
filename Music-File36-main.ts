@@ -696,13 +696,24 @@ const homeController:
         formatTime,
 
         onTrackSelected:
-            track => {
+            (
+                track,
+                playbackList
+            ) => {
 
                 void selectMusicTrack(
                     track,
                     {
                         queueAction:
                             'clear',
+
+                        playbackList,
+
+                        playbackListMode:
+                            'context',
+
+                        playbackListSource:
+                            'home-trending',
                     }
                 );
             },
