@@ -942,7 +942,7 @@ async function selectMusicTrack(
         undefined
     ) {
 
-        playbackState.playbackState.musicQueueCurrentIndex =
+        playbackState.musicQueueCurrentIndex =
             options.queueIndex;
 
         renderQueuePanel();
@@ -964,7 +964,7 @@ async function selectMusicTrack(
         playbackState.musicQueue =
             [];
 
-        playbackState.playbackState.musicQueueCurrentIndex =
+        playbackState.musicQueueCurrentIndex =
             -1;
 
         renderQueuePanel();
@@ -985,7 +985,7 @@ async function selectMusicTrack(
         playbackState.musicQueue =
             [];
 
-        playbackState.playbackState.musicQueueCurrentIndex =
+        playbackState.musicQueueCurrentIndex =
             -1;
 
         renderQueuePanel();
@@ -1195,17 +1195,17 @@ async function selectMusicTrack(
                 radioTracks
             );
 
-        playbackState.playbackState.musicQueueCurrentIndex =
+        playbackState.musicQueueCurrentIndex =
             playbackState.musicQueue.findIndex(
                 currentTrack =>
                     currentTrack.id ===
                     track.id
             );
 
-        playbackState.playbackState.youtubeShuffleHistory =
+        playbackState.youtubeShuffleHistory =
             [];
 
-        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition =
+        playbackState.youtubeShuffleHistoryPosition =
             -1;
 
         console.log(
@@ -1216,7 +1216,7 @@ async function selectMusicTrack(
                 length:
                     playbackState.musicQueue.length,
                 currentIndex:
-                    playbackState.playbackState.musicQueueCurrentIndex,
+                    playbackState.musicQueueCurrentIndex,
             }
         );
 
@@ -1293,12 +1293,12 @@ async function playNextMusicQueueTrack():
     }
 
     if (
-        playbackState.playbackState.musicQueueCurrentIndex < 0
+        playbackState.musicQueueCurrentIndex < 0
     ) {
 
         console.log(
             '[MusicPlayer] Music queue index is invalid:',
-            playbackState.playbackState.musicQueueCurrentIndex
+            playbackState.musicQueueCurrentIndex
         );
 
         return;
@@ -1311,16 +1311,16 @@ async function playNextMusicQueueTrack():
      */
     if (
         playbackState.youtubeShuffle &&
-        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition <
-            playbackState.playbackState.youtubeShuffleHistory.length - 1
+        playbackState.youtubeShuffleHistoryPosition <
+            playbackState.youtubeShuffleHistory.length - 1
     ) {
 
-        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition +=
+        playbackState.youtubeShuffleHistoryPosition +=
             1;
 
         const historyIndex =
-            playbackState.playbackState.youtubeShuffleHistory[
-                playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition
+            playbackState.youtubeShuffleHistory[
+                playbackState.youtubeShuffleHistoryPosition
             ];
 
         if (
@@ -1348,7 +1348,7 @@ async function playNextMusicQueueTrack():
         nextIndex =
             getNextShuffleIndex(
                 playbackState.musicQueue,
-                playbackState.playbackState.musicQueueCurrentIndex
+                playbackState.musicQueueCurrentIndex
             );
 
         if (
@@ -1362,23 +1362,23 @@ async function playNextMusicQueueTrack():
             return;
         }
 
-        playbackState.playbackState.youtubeShuffleHistory =
-            playbackState.playbackState.youtubeShuffleHistory.slice(
+        playbackState.youtubeShuffleHistory =
+            playbackState.youtubeShuffleHistory.slice(
                 0,
-                playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition + 1
+                playbackState.youtubeShuffleHistoryPosition + 1
             );
 
-        playbackState.playbackState.youtubeShuffleHistory.push(
+        playbackState.youtubeShuffleHistory.push(
             nextIndex
         );
 
-        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition =
-            playbackState.playbackState.youtubeShuffleHistory.length - 1;
+        playbackState.youtubeShuffleHistoryPosition =
+            playbackState.youtubeShuffleHistory.length - 1;
 
     } else {
 
         const sequentialIndex =
-            playbackState.playbackState.musicQueueCurrentIndex + 1;
+            playbackState.musicQueueCurrentIndex + 1;
 
         if (
             sequentialIndex >=
@@ -1424,7 +1424,7 @@ async function playPreviousMusicQueueTrack():
     }
 
     if (
-        playbackState.playbackState.musicQueueCurrentIndex < 0
+        playbackState.musicQueueCurrentIndex < 0
     ) {
 
         return;
@@ -1457,15 +1457,15 @@ async function playPreviousMusicQueueTrack():
      */
     if (
         playbackState.youtubeShuffle &&
-        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition > 0
+        playbackState.youtubeShuffleHistoryPosition > 0
     ) {
 
-        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition -=
+        playbackState.youtubeShuffleHistoryPosition -=
             1;
 
         const previousIndex =
-            playbackState.playbackState.youtubeShuffleHistory[
-                playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition
+            playbackState.youtubeShuffleHistory[
+                playbackState.youtubeShuffleHistoryPosition
             ];
 
         if (
@@ -1504,7 +1504,7 @@ async function playPreviousMusicQueueTrack():
      * Navegación secuencial.
      */
     const previousIndex =
-        playbackState.playbackState.musicQueueCurrentIndex - 1;
+        playbackState.musicQueueCurrentIndex - 1;
 
     if (
         previousIndex < 0
@@ -3122,7 +3122,7 @@ function renderQueuePanel(): void {
 
             if (
                 index ===
-                playbackState.playbackState.musicQueueCurrentIndex
+                playbackState.musicQueueCurrentIndex
             ) {
 
                 item.classList.add(
@@ -4805,14 +4805,14 @@ function updateTrackMarquee(): void {
         const hasMusicQueue =
             activePlaybackSource === 'youtube' &&
             playbackState.musicQueue.length > 0 &&
-            playbackState.playbackState.musicQueueCurrentIndex >= 0;
+            playbackState.musicQueueCurrentIndex >= 0;
 
         previousButton.disabled =
             !hasMusicQueue;
 
         nextButton.disabled =
             !hasMusicQueue ||
-            playbackState.playbackState.musicQueueCurrentIndex >=
+            playbackState.musicQueueCurrentIndex >=
                 playbackState.musicQueue.length - 1;
 
         repeatButton.disabled =
@@ -5101,27 +5101,27 @@ shuffleButton.addEventListener('click', () => {
     playbackState.youtubeShuffle = !playbackState.youtubeShuffle;
 
     if (playbackState.youtubeShuffle) {
-        playbackState.playbackState.youtubeShuffleHistory = [];
+        playbackState.youtubeShuffleHistory = [];
 
         if (
-            playbackState.playbackState.musicQueueCurrentIndex >= 0
+            playbackState.musicQueueCurrentIndex >= 0
         ) {
-            playbackState.playbackState.youtubeShuffleHistory.push(
-                playbackState.playbackState.musicQueueCurrentIndex
+            playbackState.youtubeShuffleHistory.push(
+                playbackState.musicQueueCurrentIndex
             );
         }
 
-        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition =
-            playbackState.playbackState.youtubeShuffleHistory.length - 1;
+        playbackState.youtubeShuffleHistoryPosition =
+            playbackState.youtubeShuffleHistory.length - 1;
 
         console.log(
             '[MusicPlayer] Shuffle history reset:',
-            playbackState.playbackState.youtubeShuffleHistory
+            playbackState.youtubeShuffleHistory
         );
 
     } else {
-        playbackState.playbackState.youtubeShuffleHistory = [];
-        playbackState.playbackState.playbackState.youtubeShuffleHistoryPosition = -1;
+        playbackState.youtubeShuffleHistory = [];
+        playbackState.youtubeShuffleHistoryPosition = -1;
     }
 
     shuffleButton.setAttribute(
@@ -5177,14 +5177,14 @@ youtubePlayer.subscribe(
         );
 
         if (
-            playbackState.playbackState.musicQueueCurrentIndex < 0 ||
-            playbackState.playbackState.musicQueueCurrentIndex >=
+            playbackState.musicQueueCurrentIndex < 0 ||
+            playbackState.musicQueueCurrentIndex >=
                 playbackState.musicQueue.length
         ) {
 
             console.log(
                 '[MusicPlayer] Cannot handle ended track: invalid music queue index.',
-                playbackState.playbackState.musicQueueCurrentIndex
+                playbackState.musicQueueCurrentIndex
             );
 
             return;
@@ -5216,7 +5216,7 @@ youtubePlayer.subscribe(
             } else {
 
                 void playMusicQueueTrack(
-                    playbackState.playbackState.musicQueueCurrentIndex
+                    playbackState.musicQueueCurrentIndex
                 );
             }
 
