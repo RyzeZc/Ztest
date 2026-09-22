@@ -1342,7 +1342,7 @@ function renderQueuePanel(): void {
     queueList.innerHTML = '';
 
     if (
-        playbackState.musicQueue.length === 0
+        playbackState.playbackList.length === 0
     ) {
 
         queueList.innerHTML = `
@@ -1354,7 +1354,7 @@ function renderQueuePanel(): void {
         return;
     }
 
-    playbackState.musicQueue.forEach(
+    playbackState.playbackList.forEach(
         (track, index) => {
 
             const item =
@@ -1378,7 +1378,7 @@ function renderQueuePanel(): void {
 
             if (
                 index ===
-                playbackState.musicQueueCurrentIndex
+                playbackState.playbackListCurrentIndex
             ) {
 
                 item.classList.add(
@@ -2402,23 +2402,23 @@ function updateTrackMarquee(): void {
 
         const hasMusicQueue =
             activePlaybackSource === 'youtube' &&
-            playbackState.musicQueue.length > 0 &&
-            playbackState.musicQueueCurrentIndex >= 0;
+            playbackState.playbackList.length > 0 &&
+            playbackState.playbackListCurrentIndex >= 0;
 
         previousButton.disabled =
             !hasMusicQueue;
 
         nextButton.disabled =
             !hasMusicQueue ||
-            playbackState.musicQueueCurrentIndex >=
-                playbackState.musicQueue.length - 1;
+            playbackState.playbackListCurrentIndex >=
+                playbackState.playbackList.length - 1;
 
         repeatButton.disabled =
             !hasMusicQueue;
 
         shuffleButton.disabled =
             !hasMusicQueue ||
-            playbackState.musicQueue.length < 2;
+            playbackState.playbackList.length < 2;
 
         shuffleButton.setAttribute(
             'aria-pressed',
@@ -2702,10 +2702,10 @@ shuffleButton.addEventListener('click', () => {
         playbackState.youtubeShuffleHistory = [];
 
         if (
-            playbackState.musicQueueCurrentIndex >= 0
+            playbackState.playbackListCurrentIndex >= 0
         ) {
             playbackState.youtubeShuffleHistory.push(
-                playbackState.musicQueueCurrentIndex
+                playbackState.playbackListCurrentIndex
             );
         }
 
@@ -2775,14 +2775,14 @@ youtubePlayer.subscribe(
         );
 
         if (
-            playbackState.musicQueueCurrentIndex < 0 ||
-            playbackState.musicQueueCurrentIndex >=
-                playbackState.musicQueue.length
+            playbackState.playbackListCurrentIndex < 0 ||
+            playbackState.playbackListCurrentIndex >=
+                playbackState.playbackList.length
         ) {
 
             console.log(
                 '[MusicPlayer] Cannot handle ended track: invalid music queue index.',
-                playbackState.musicQueueCurrentIndex
+                playbackState.playbackListCurrentIndex
             );
 
             return;
@@ -2814,7 +2814,7 @@ youtubePlayer.subscribe(
             } else {
 
                 void playMusicQueueTrack(
-                    playbackState.musicQueueCurrentIndex
+                    playbackState.playbackListCurrentIndex
                 );
             }
 
