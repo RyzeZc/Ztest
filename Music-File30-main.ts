@@ -33,8 +33,11 @@ import type {
     HomeDetailRoute,
     HomeLoadState,
     HomeSection,
-    MusicPanelTab,
 } from '../../lib/MusicPlayer/types';
+
+import {
+    createPanelController,
+} from '../../lib/MusicPlayer/panel';
 
 function initializeMusicPlayer(): void {
 
@@ -680,6 +683,57 @@ let activePlaybackSource:
     'radio' | 'youtube' =
     'radio';
 
+const {
+    activatePanelTab,
+    activateHomeSection,
+    showSearchPanel,
+} = createPanelController({
+
+    panelTabs,
+
+    panelViews,
+
+    homeNavItems,
+
+    homeSections,
+
+    panelCloseButton,
+
+    closePanel:
+        closeStationMenu,
+
+    focusSearch:
+        () => {
+            youtubeSearchInput.focus();
+        },
+
+    loadHomeSection:
+        section => {
+
+            switch (section) {
+
+                case 'trending':
+                    void loadTrending();
+                    break;
+
+                case 'discover':
+                    void loadDiscover();
+                    break;
+
+                case 'playlist':
+                    void loadPlaylist();
+                    break;
+
+                case 'genres':
+                    void loadGenres();
+                    break;
+
+                case 'stations':
+                    break;
+            }
+        },
+});
+
 const playbackState =
     createPlaybackState();
 
@@ -940,15 +994,6 @@ function closeHomeDetail(): void {
         returnSection
     );
 }
-
-
-panelCloseButton.addEventListener(
-    'click',
-    () => {
-
-        closeStationMenu();
-    }
-);
 
 homeDetailBack.addEventListener(
     'click',
@@ -1268,122 +1313,6 @@ const homeLoadState: Record<
     genres: 'idle',
     stations: 'idle',
 };
-
-
-function activatePanelTab(
-    tab: MusicPanelTab
-): void {
-
-    panelTabs.forEach(
-        button => {
-
-            const isActive =
-                button.dataset.panelTab ===
-                tab;
-
-            button.classList.toggle(
-                'is-active',
-                isActive
-            );
-
-            button.setAttribute(
-                'aria-selected',
-                String(isActive)
-            );
-        }
-    );
-
-
-    panelViews.forEach(
-        view => {
-
-            const isActive =
-                view.dataset.panelView ===
-                tab;
-
-            view.classList.toggle(
-                'is-active',
-                isActive
-            );
-        }
-    );
-}
-
-
-function activateHomeSection(
-    section: HomeSection
-): void {
-
-    homeNavItems.forEach(
-        button => {
-
-            const isActive =
-                button.dataset
-                    .homeSectionButton ===
-                section;
-
-            button.classList.toggle(
-                'is-active',
-                isActive
-            );
-
-            if (isActive) {
-
-                button.setAttribute(
-                    'aria-current',
-                    'page'
-                );
-
-            } else {
-
-                button.removeAttribute(
-                    'aria-current'
-                );
-            }
-        }
-    );
-
-
-    homeSections.forEach(
-        element => {
-
-            element.classList.toggle(
-                'is-active',
-                element.dataset
-                    .homeSection ===
-                section
-            );
-        }
-    );
-
-
-    /*
-     * Cargar únicamente la sección
-     * que el usuario está viendo.
-     */
-
-    switch (section) {
-
-        case 'trending':
-            void loadTrending();
-            break;
-
-        case 'discover':
-            void loadDiscover();
-            break;
-
-        case 'genres':
-            void loadGenres();
-            break;
-
-        case 'playlist':
-            void loadPlaylist();
-            break;
-
-        case 'stations':
-            break;
-    }
-}
 
 function getHomeSectionElement(
     section: HomeSection
@@ -2651,73 +2580,6 @@ function scrollQueueTrackIntoView(
     );
 }
 
-function showYouTubePanel(): void {
-
-    activatePanelTab(
-        'results'
-    );
-
-    youtubeSearchInput.focus();
-}
-
-panelTabs.forEach(
-    button => {
-
-        button.addEventListener(
-            'click',
-            () => {
-
-                const tab =
-                    button.dataset
-                        .panelTab;
-
-                if (
-                    tab === 'home' ||
-                    tab === 'results' ||
-                    tab === 'queue'
-                ) {
-
-                    activatePanelTab(
-                        tab
-                    );
-                }
-            }
-        );
-    }
-);
-
-
-homeNavItems.forEach(
-    button => {
-
-        button.addEventListener(
-            'click',
-            () => {
-
-                const section =
-                    button.dataset
-                        .homeSectionButton;
-
-                    if (
-                        section === 'trending' ||
-                        section === 'discover' ||
-                        section === 'playlist' ||
-                        section === 'genres' ||
-                        section === 'stations'
-                    ) {
-
-                    activatePanelTab(
-                        'home'
-                    );
-
-                    activateHomeSection(
-                        section
-                    );
-                }
-            }
-        );
-    }
-);
 
     function clearYouTubeResults(): void {
 
@@ -3553,7 +3415,7 @@ async function loadMoreSearchResults():
         'click',
         () => {
 
-            showYouTubePanel();
+            showSearchPanel();
         }
     );
 
