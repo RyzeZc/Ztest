@@ -3,25 +3,40 @@ import { audioStations } from '../../lib/audio/audio-stations';
 import { YouTubePlayer } from '../../lib/youtube/youtube-player';
 import {
     getAlbumTracks,
-    getArtistRadio,
     getChart,
     getGenreChart,
     getGenres,
     getMusicApiNext,
     getPlaylistTracks,
-    resolveTrack,
     searchTracks,
 } from '../../lib/music/music-service';
+
+
+import {
+    buildMusicQueue,
+    getArtistRadioTracks,
+    getNextShuffleIndex,
+    hasResolveInFlight,
+    resolveYouTubeTrack,
+} from '../../lib/MusicPlayer/playback';
+
 
 import type {
     MusicAlbum,
     MusicChart,
     MusicGenre,
     MusicPlaylist,
-    MusicRadioTrack,
     MusicSearchResponse,
     MusicTrack,
 } from '../../lib/music/music-types';
+
+
+import type {
+    HomeDetailRoute,
+    HomeLoadState,
+    HomeSection,
+    MusicPanelTab,
+} from '../../lib/MusicPlayer/types';
 
 function initializeMusicPlayer(): void {
 
@@ -719,49 +734,6 @@ function selectStation(
     'play' | 'pause' =
     'pause'; 
 
-    /*
-    * --------------------------------------------------
-    * MUSIC RESOLVE CACHE
-    * --------------------------------------------------
-    *
-    * Guarda tanto:
-    *
-    * 1. Resoluciones que ya terminaron.
-    * 2. Resoluciones que todavía están en curso.
-    *
-    * Así, si el usuario hace clic varias veces
-    * sobre la misma canción, reutilizamos la misma
-    * Promise y no generamos requests duplicados.
-    */
-    const resolveCache =
-        new Map<number, Promise<string | null>>();
-
-    const resolvedYouTubeIds =
-        new Map<number, string>();
-
-        /*
-    * --------------------------------------------------
-    * ARTIST RADIO CACHE
-    * --------------------------------------------------
-    *
-    * Igual que con resolve:
-    *
-    * - Si ya existe el resultado, lo reutilizamos.
-    * - Si existe una petición en curso, reutilizamos
-    *   la misma Promise.
-    * - Artistas diferentes pueden resolverse en paralelo.
-    */
-    const artistRadioCache =
-        new Map<
-            number,
-            Promise<MusicRadioTrack[]>
-        >();
-
-    const artistRadioResults =
-        new Map<
-            number,
-            MusicRadioTrack[]
-        >();
 
     /*
     * Identifica cuál fue la última selección
@@ -796,335 +768,6 @@ function selectStation(
     number | null = null;
 
     let currentTrackInfoKey = '';
-
-async function resolveYouTubeTrack(
-    track: MusicTrack
-): Promise<string | null> {
-
-    const cachedVideoId =
-        resolvedYouTubeIds.get(
-            track.id
-        );
-
-    if (cachedVideoId) {
-
-        console.log(
-            '[MusicPlayer] Using cached YouTube ID:',
-            {
-                deezerId: track.id,
-                youtubeId: cachedVideoId,
-            }
-        );
-
-        return cachedVideoId;
-    }
-
-    const existingRequest =
-        resolveCache.get(
-            track.id
-        );
-
-    if (existingRequest) {
-
-        console.log(
-            '[MusicPlayer] Reusing in-flight resolve:',
-            track.id
-        );
-
-        return existingRequest;
-    }
-
-    const artistName =
-        track.artist?.name ??
-        '';
-
-    const trackName =
-        track.title ??
-        '';
-
-    if (
-        !artistName ||
-        !trackName
-    ) {
-
-        console.log(
-            '[MusicPlayer] Cannot resolve track: missing artist or title.'
-        );
-
-        return null;
-    }
-
-    console.log(
-        '[MusicPlayer] Starting resolve:',
-        {
-            deezerId: track.id,
-            artist: artistName,
-            title: trackName,
-        }
-    );
-
-    const request =
-        (async (): Promise<string | null> => {
-
-            try {
-
-                const response =
-                    await resolveTrack(
-                        track.id,
-                        artistName,
-                        trackName
-                    );
-
-                const videoId =
-                    response.results?.[0]?.id;
-
-                if (!videoId) {
-
-                    console.log(
-                        '[MusicPlayer] No YouTube video found:',
-                        track.id
-                    );
-
-                    return null;
-                }
-
-                resolvedYouTubeIds.set(
-                    track.id,
-                    videoId
-                );
-
-                console.log(
-                    '[MusicPlayer] Resolve completed:',
-                    {
-                        deezerId: track.id,
-                        youtubeId: videoId,
-                    }
-                );
-
-                return videoId;
-
-            } catch (error) {
-
-                console.error(
-                    '[MusicPlayer] Music resolve failed:',
-                    error
-                );
-
-                return null;
-            }
-
-        })();
-
-    resolveCache.set(
-        track.id,
-        request
-    );
-
-    try {
-
-        return await request;
-
-    } finally {
-
-        /*
-         * La Promise ya terminó.
-         *
-         * El resultado exitoso permanece en
-         * resolvedYouTubeIds.
-         *
-         * Si falló, eliminamos la Promise para
-         * permitir un nuevo intento posteriormente.
-         */
-        resolveCache.delete(
-            track.id
-        );
-
-    }
-}
-
-async function getArtistRadioTracks(
-    artistId: number
-): Promise<MusicRadioTrack[]> {
-
-    const cachedTracks =
-        artistRadioResults.get(
-            artistId
-        );
-
-    if (cachedTracks) {
-
-        console.log(
-            '[MusicPlayer] Using cached Artist Radio:',
-            artistId
-        );
-
-        return cachedTracks;
-    }
-
-    const existingRequest =
-        artistRadioCache.get(
-            artistId
-        );
-
-    if (existingRequest) {
-
-        console.log(
-            '[MusicPlayer] Reusing in-flight Artist Radio:',
-            artistId
-        );
-
-        return existingRequest;
-    }
-
-    console.log(
-        '[MusicPlayer] Starting Artist Radio:',
-        artistId
-    );
-
-    const request =
-        (async (): Promise<
-            MusicRadioTrack[]
-        > => {
-
-            try {
-
-                const response =
-                    await getArtistRadio(
-                        artistId
-                    );
-
-                const tracks =
-                    response.data ?? [];
-
-                artistRadioResults.set(
-                    artistId,
-                    tracks
-                );
-
-                console.log(
-                    '[MusicPlayer] Artist Radio completed:',
-                    {
-                        artistId,
-                        tracks:
-                            tracks.length,
-                    }
-                );
-
-                return tracks;
-
-            } catch (error) {
-
-                console.error(
-                    '[MusicPlayer] Artist Radio failed:',
-                    error
-                );
-
-                return [];
-
-            }
-
-        })();
-
-    artistRadioCache.set(
-        artistId,
-        request
-    );
-
-    try {
-
-        return await request;
-
-    } finally {
-
-        /*
-         * La Promise solo se mantiene mientras
-         * la petición está en curso.
-         *
-         * El resultado exitoso queda en
-         * artistRadioResults.
-         */
-        artistRadioCache.delete(
-            artistId
-        );
-
-    }
-}
-
-function buildMusicQueue(
-    selectedTrack: MusicTrack,
-    radioTracks: MusicRadioTrack[]
-): MusicTrack[] {
-
-    /*
-     * Primero eliminamos duplicados de Artist Radio
-     * usando el Deezer ID como identidad única.
-     */
-    const uniqueRadioTracks:
-        MusicTrack[] = [];
-
-    const seenTrackIds =
-        new Set<number>();
-
-    for (
-        const track of radioTracks
-    ) {
-
-        if (
-            seenTrackIds.has(
-                track.id
-            )
-        ) {
-            continue;
-        }
-
-        seenTrackIds.add(
-            track.id
-        );
-
-        uniqueRadioTracks.push(
-            track
-        );
-    }
-
-    /*
-     * ¿Artist Radio ya contiene la canción
-     * que el usuario seleccionó?
-     */
-    const selectedTrackIndex =
-        uniqueRadioTracks.findIndex(
-            track =>
-                track.id ===
-                selectedTrack.id
-        );
-
-    /*
-     * CASO 1:
-     *
-     * La canción ya existe.
-     *
-     * Conservamos el orden generado por
-     * Artist Radio.
-     */
-    if (
-        selectedTrackIndex >= 0
-    ) {
-
-        return uniqueRadioTracks;
-    }
-
-    /*
-     * CASO 2:
-     *
-     * Artist Radio no la incluyó.
-     *
-     * La ponemos al principio para que
-     * sea siempre el track actual de la cola.
-     */
-    return [
-        selectedTrack,
-        ...uniqueRadioTracks,
-    ];
-}
 
 function formatTime(
     seconds: number
@@ -1268,7 +911,7 @@ async function selectMusicTrack(
         isSameCurrentTrack &&
         (
             currentYouTubeVideoId !== null ||
-            resolveCache.has(
+            hasResolveInFlight(
                 track.id
             )
         )
@@ -1673,48 +1316,6 @@ async function playMusicQueueTrack(
     );
 }
 
-function getNextShuffleIndex():
-    number | null {
-
-    if (
-        musicQueue.length <= 1
-    ) {
-
-        return null;
-    }
-
-    const availableIndexes =
-        musicQueue
-            .map(
-                (_, index) =>
-                    index
-            )
-            .filter(
-                index =>
-                    index !==
-                    musicQueueCurrentIndex
-            );
-
-    if (
-        availableIndexes.length === 0
-    ) {
-
-        return null;
-    }
-
-    const randomPosition =
-        Math.floor(
-            Math.random() *
-            availableIndexes.length
-        );
-
-    return (
-        availableIndexes[
-            randomPosition
-        ] ?? null
-    );
-}
-
 
 async function playNextMusicQueueTrack():
     Promise<void> {
@@ -1784,7 +1385,10 @@ async function playNextMusicQueueTrack():
     ) {
 
         nextIndex =
-            getNextShuffleIndex();
+            getNextShuffleIndex(
+                musicQueue,
+                musicQueueCurrentIndex
+            );
 
         if (
             nextIndex === null
@@ -1959,69 +1563,6 @@ async function playPreviousMusicQueueTrack():
     );
 }
 
-type MusicPanelTab =
-    | 'home'
-    | 'results'
-    | 'queue';
-
-
-type HomeSection =
-    | 'trending'
-    | 'discover'
-    | 'playlist'
-    | 'genres'
-    | 'stations';
-
-type HomeLoadState =
-    | 'idle'
-    | 'loading'
-    | 'loaded'
-    | 'error';
-
-type HomeDetailRoute =
-    | {
-        type:
-            'album';
-
-        id:
-            number;
-
-        title:
-            string;
-
-        returnSection:
-            HomeSection;
-    }
-    | {
-        type:
-            'playlist';
-
-        id:
-            number;
-
-        title:
-            string;
-
-        returnSection:
-            HomeSection;
-    }
-    | {
-        type:
-            'genre';
-
-        id:
-            number;
-
-        title:
-            string;
-
-        returnSection:
-            HomeSection;
-    };
-
-let activeHomeDetail:
-    HomeDetailRoute | null =
-    null;
 
 function showHomeRoot(): void {
 
@@ -3891,7 +3432,7 @@ function updateTrackPlaybackIndicators(): void {
         currentTrackId !== null &&
         playbackIntent === 'play' &&
         currentYouTubeVideoId === null &&
-        resolveCache.has(
+        hasResolveInFlight(
             currentTrackId
         );
 
