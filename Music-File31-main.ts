@@ -33,11 +33,16 @@ import type {
     HomeDetailRoute,
     HomeLoadState,
     HomeSection,
+    MusicSearchController,
 } from '../../lib/MusicPlayer/types';
 
 import {
     createPanelController,
 } from '../../lib/MusicPlayer/panel';
+
+import {
+    createSearchController,
+} from '../../lib/MusicPlayer/search';
 
 function initializeMusicPlayer(): void {
 
@@ -742,38 +747,81 @@ const {
     playMusicQueueTrack,
     playNextMusicQueueTrack,
     playPreviousMusicQueueTrack,
-} = createPlaybackController({
+    } = createPlaybackController({
 
-    state:
-        playbackState,
+        state:
+            playbackState,
 
-    youtubePlayer,
+        youtubePlayer,
 
-    audioPlayer,
+        audioPlayer,
 
-    getActivePlaybackSource:
-        () =>
-            activePlaybackSource,
+        getActivePlaybackSource:
+            () =>
+                activePlaybackSource,
 
-    setActivePlaybackSource:
-        source => {
+        setActivePlaybackSource:
+            source => {
 
-            activePlaybackSource =
-                source;
-        },
+                activePlaybackSource =
+                    source;
+            },
 
-    updateTrackInfo,
+        updateTrackInfo,
 
-    updateUI,
+        updateUI,
 
-    updateTrackPlaybackIndicators,
+        updateTrackPlaybackIndicators,
 
-    renderQueuePanel,
+        renderQueuePanel,
 
-    scrollQueueTrackIntoView,
+        scrollQueueTrackIntoView,
 
-    activatePanelTab,
-});
+        activatePanelTab,
+    });
+
+const searchController:
+    MusicSearchController =
+    createSearchController({
+
+        resultsContainer:
+            youtubeResults,
+
+        loader:
+            searchLoader,
+
+        searchForm:
+            youtubeSearchForm,
+
+        searchInput:
+            youtubeSearchInput,
+
+        activateResultsTab:
+            () => {
+
+                activatePanelTab(
+                    'results'
+                );
+            },
+
+        onTrackSelected:
+            track => {
+
+                void selectMusicTrack(
+                    track,
+                    {
+                        queueAction:
+                            'generate',
+                    }
+                );
+            },
+
+        formatDuration:
+            formatTime,
+
+        maxPages:
+            3,
+    });
 
     /*
     * --------------------------------------------------
@@ -786,27 +834,6 @@ const {
     * El YouTube ID se resuelve cuando una pista
     * necesita reproducirse.
     */
-
-    let youtubeTracks:
-        MusicTrack[] = [];
-
-    const SEARCH_MAX_PAGES =
-    3;
-
-    let searchQuery = '';
-
-    let searchNext:
-        string | null = null;
-
-    let searchPageCount =
-        0;
-
-    let searchLoading =
-        false;
-
-    let searchObserver:
-        IntersectionObserver | null =
-        null;
 
     let youtubeProgressInterval:
     ReturnType<typeof setInterval> | null =
@@ -2580,14 +2607,6 @@ function scrollQueueTrackIntoView(
     );
 }
 
-
-    function clearYouTubeResults(): void {
-
-        youtubeResults.innerHTML = '';
-
-    }
-
-
 function updateTrackPlaybackIndicators(): void {
 
     const state =
@@ -2656,11 +2675,13 @@ function updateTrackPlaybackIndicators(): void {
             if (index) {
 
                 const resultIndex =
-                    youtubeTracks.findIndex(
-                        track =>
-                            track.id ===
-                            trackId
-                    );
+                    searchController
+                        .getTracks()
+                        .findIndex(
+                            track =>
+                                track.id ===
+                                trackId
+                        );
 
                 index.textContent =
                     isCurrent
@@ -2851,566 +2872,6 @@ function updateTrackPlaybackIndicators(): void {
     );
 }
 
-function updateSearchLoader(
-    visible: boolean
-): void {
-
-    if (
-        !(searchLoader instanceof HTMLElement)
-    ) {
-        return;
-    }
-
-    const spinner =
-        searchLoader.querySelector<HTMLElement>(
-            '.loading-spinner'
-        );
-
-    if (
-        !(spinner instanceof HTMLElement)
-    ) {
-        return;
-    }
-
-    spinner.classList.toggle(
-        'is-visible',
-        visible
-    );
-}
-
-
-function stopSearchInfiniteScroll(): void {
-
-    if (
-        searchObserver
-    ) {
-
-        searchObserver.disconnect();
-
-        searchObserver =
-            null;
-    }
-
-    updateSearchLoader(
-        false
-    );
-}
-
-
-function setupSearchInfiniteScroll():
-    void {
-
-    stopSearchInfiniteScroll();
-
-    searchObserver =
-        new IntersectionObserver(
-            entries => {
-
-                const entry =
-                    entries[0];
-
-                if (
-                    !entry?.isIntersecting
-                ) {
-                    return;
-                }
-
-                if (
-                    searchLoading
-                ) {
-                    return;
-                }
-
-                if (
-                    !searchNext
-                ) {
-                    stopSearchInfiniteScroll();
-                    return;
-                }
-
-                if (
-                    searchPageCount >=
-                    SEARCH_MAX_PAGES
-                ) {
-                    stopSearchInfiniteScroll();
-                    return;
-                }
-
-                void loadMoreSearchResults();
-            },
-            {
-                root:
-                    youtubeResults,
-
-                rootMargin:
-                    '0px 0px 250px 0px',
-
-                threshold:
-                    0,
-            }
-        );
-
-    searchObserver.observe(
-        searchLoader
-    );
-}
-
-function appendYouTubeResults(
-    results: MusicTrack[]
-): void {
-
-    results.forEach(
-        result => {
-
-            const item =
-                document.createElement(
-                    'button'
-                );
-
-            item.type =
-                'button';
-
-            item.className =
-                'music-player-youtube-result';
-
-            item.dataset.trackId =
-                String(result.id);
-
-
-            /*
-             * --------------------------------------------------
-             * COLUMNA #
-             * --------------------------------------------------
-             */
-
-            const number =
-                document.createElement(
-                    'span'
-                );
-
-            number.className =
-                'music-player-list-column-index';
-
-            number.textContent =
-                String(
-                    youtubeTracks.indexOf(
-                        result
-                    ) + 1
-                );
-
-
-             /* --------------------------------------------
-               COLUMNA COVER
-            -------------------------------------------- */
-
-                const thumbnail =
-                    document.createElement(
-                        'img'
-                    );
-
-                thumbnail.className =
-                    'music-player-youtube-result-thumbnail';
-
-                thumbnail.src =
-                    result.album.cover;
-
-                thumbnail.alt =
-                    `${result.title} - portada`;
-
-
-            /*
-             * --------------------------------------------------
-             * COLUMNA TÍTULO
-             * --------------------------------------------------
-             */
-
-            const info =
-                document.createElement(
-                    'span'
-                );
-
-            info.className =
-                'music-player-youtube-result-info';
-
-
-            const title =
-                document.createElement(
-                    'span'
-                );
-
-            title.className =
-                'music-player-youtube-result-title';
-
-            title.textContent =
-                result.title;
-
-
-            const artist =
-                document.createElement(
-                    'span'
-                );
-
-            artist.className =
-                'music-player-youtube-result-channel';
-
-            artist.textContent =
-                result.artist.name ||
-                'ARTISTA DESCONOCIDO';
-
-            info.appendChild(
-                title
-            );
-
-            info.appendChild(
-                artist
-            );
-
-
-            /*
-             * --------------------------------------------------
-             * COLUMNA DURACIÓN
-             * --------------------------------------------------
-             */
-
-            const duration =
-                document.createElement(
-                    'span'
-                );
-
-            duration.className =
-                'music-player-list-column-duration';
-
-            duration.textContent =
-                formatTime(
-                    result.duration
-                );
-
-
-            item.appendChild(
-                number
-            );
-
-            item.appendChild(
-                thumbnail
-            );
-
-            item.appendChild(
-                info
-            );
-
-            item.appendChild(
-                duration
-            );
-
-
-            /*
-             * --------------------------------------------------
-             * SELECCIÓN
-             * --------------------------------------------------
-             */
-            item.addEventListener(
-                'click',
-                () => {
-
-                    void selectMusicTrack(
-                        result,
-                        {
-                            queueAction:
-                                'generate',
-                        }
-                    );
-                }
-            );
-
-            youtubeResults.insertBefore(
-                item,
-                searchLoader
-            );
-        }
-    );
-}
-
-async function searchYouTube(
-    query: string
-): Promise<void> {
-
-    const normalizedQuery =
-        query.trim();
-
-    if (
-        !normalizedQuery
-    ) {
-        return;
-    }
-
-    /*
-     * Nueva búsqueda:
-     * reiniciamos toda la paginación.
-     */
-    searchQuery =
-        normalizedQuery;
-
-    searchNext =
-        null;
-
-    searchPageCount =
-        0;
-
-    youtubeTracks =
-        [];
-
-    searchLoading =
-        false;
-
-    setupSearchInfiniteScroll();
-
-    /*
-     * Estado inicial visual.
-     */
-    youtubeResults.innerHTML =
-        `
-            <div class="music-player-youtube-loading">
-                BUSCANDO...
-            </div>
-        `;
-
-    /*
-     * Volvemos a insertar el loader
-     * después del mensaje inicial.
-     */
-    youtubeResults.appendChild(
-        searchLoader
-    );
-
-    youtubeSearchInput.disabled =
-        true;
-
-    await loadSearchPage(
-        true
-    );
-
-    youtubeSearchInput.disabled =
-        false;
-}
-
-
-async function loadSearchPage(
-    isInitialPage = false
-): Promise<void> {
-
-    if (
-        searchLoading
-    ) {
-        return;
-    }
-
-    /*
-     * No hacemos más peticiones
-     * cuando alcanzamos el límite.
-     */
-    if (
-        !isInitialPage &&
-        (
-            !searchNext ||
-            searchPageCount >=
-                SEARCH_MAX_PAGES
-        )
-    ) {
-
-        stopSearchInfiniteScroll();
-
-        return;
-    }
-
-    searchLoading =
-        true;
-
-    updateSearchLoader(
-        true
-    );
-
-    try {
-
-        const response =
-            isInitialPage
-
-                ? await searchTracks(
-                    searchQuery
-                )
-
-                : await getMusicApiNext<
-                    MusicSearchResponse<MusicTrack>
-                >(
-                    searchNext as string
-                );
-
-        if (
-            response.status !==
-            'success'
-        ) {
-
-            throw new Error(
-                `Music search failed: ${response.status}`
-            );
-        }
-
-        const newTracks =
-            response.data ??
-            [];
-
-        /*
-         * Para la primera página
-         * eliminamos BUSCANDO...
-         */
-        if (
-            isInitialPage
-        ) {
-
-            youtubeResults
-                .querySelector(
-                    '.music-player-youtube-loading'
-                )
-                ?.remove();
-        }
-
-        /*
-         * Evitamos duplicados por Deezer ID.
-         */
-        const existingIds =
-            new Set(
-                youtubeTracks.map(
-                    track =>
-                        track.id
-                )
-            );
-
-        const uniqueTracks =
-            newTracks.filter(
-                track =>
-                    !existingIds.has(
-                        track.id
-                    )
-            );
-
-        youtubeTracks.push(
-            ...uniqueTracks
-        );
-
-        appendYouTubeResults(
-            uniqueTracks
-        );
-
-        searchNext =
-            response.next;
-
-        searchPageCount +=
-            1;
-
-        console.log(
-            '[MusicPlayer] Search page loaded:',
-            {
-                query:
-                    searchQuery,
-
-                page:
-                    searchPageCount,
-
-                added:
-                    uniqueTracks.length,
-
-                total:
-                    youtubeTracks.length,
-
-                next:
-                    searchNext,
-            }
-        );
-
-        /*
-         * Si ya no hay siguiente página
-         * o alcanzamos el máximo, paramos.
-         */
-        if (
-            !searchNext ||
-            searchPageCount >=
-                SEARCH_MAX_PAGES
-        ) {
-
-            stopSearchInfiniteScroll();
-        }
-
-    } catch (error) {
-
-        console.error(
-            '[MusicPlayer] Music search failed:',
-            error
-        );
-
-        if (
-            isInitialPage
-        ) {
-
-            youtubeResults.innerHTML =
-                `
-                    <div class="music-player-youtube-error">
-                        NO SE PUDO REALIZAR LA BÚSQUEDA
-                    </div>
-                `;
-
-            /*
-             * Volvemos a colocar el loader
-             * al final del contenedor.
-             */
-            youtubeResults.appendChild(
-                searchLoader
-            );
-
-        } else {
-
-            /*
-             * Una página posterior puede fallar
-             * sin destruir los resultados que
-             * ya tenemos.
-             */
-            console.error(
-                '[MusicPlayer] Additional search page failed.'
-            );
-        }
-
-        stopSearchInfiniteScroll();
-
-    } finally {
-
-        searchLoading =
-            false;
-
-        updateSearchLoader(
-            false
-        );
-    }
-}
-
-
-async function loadMoreSearchResults():
-    Promise<void> {
-
-    if (
-        !searchNext ||
-        searchPageCount >=
-            SEARCH_MAX_PAGES
-    ) {
-
-        stopSearchInfiniteScroll();
-
-        return;
-    }
-
-    await loadSearchPage(
-        false
-    );
-}
-
-
     youtubeButton.addEventListener(
         'click',
         () => {
@@ -3418,31 +2879,6 @@ async function loadMoreSearchResults():
             showSearchPanel();
         }
     );
-
-
-    youtubeSearchForm.addEventListener(
-        'submit',
-        event => {
-
-            event.preventDefault();
-
-            const query =
-                youtubeSearchInput.value.trim();
-
-            if (!query) {
-                return;
-            }
-
-            activatePanelTab(
-                'results'
-            );
-
-            searchYouTube(
-                query
-            );
-        }
-    );
-
 
 const initialStation =
     audioStations[0];
