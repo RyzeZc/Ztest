@@ -1,5 +1,8 @@
 ---
 import './MusicPlayer.css';
+
+import LoadingSpinner
+    from '../common/LoadingSpinner/LoadingSpinner.astro';
 ---
 
 <div
@@ -530,18 +533,18 @@ import './MusicPlayer.css';
         </div>
 
           <div
-            class="music-player-youtube-results"
-            aria-live="polite"
+              class="music-player-youtube-results"
+              aria-live="polite"
           >
+              <div
+                  class="music-player-search-infinite-loader"
+                  data-music-search-loader
+              >
+                  <LoadingSpinner
+                      size="small"
+                  />
+              </div>
           </div>
-
-
-          <button
-            class="music-player-youtube-load-more"
-            type="button"
-          >
-            CARGAR MÁS
-          </button>
 
         </section>
 
