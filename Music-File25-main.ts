@@ -2,10 +2,13 @@ import { audioPlayer } from '../../lib/audio/audio-player';
 import { audioStations } from '../../lib/audio/audio-stations';
 import { YouTubePlayer } from '../../lib/youtube/youtube-player';
 import {
+    getAlbumTracks,
     getArtistRadio,
     getChart,
+    getGenreChart,
     getGenres,
     getMusicApiNext,
+    getPlaylistTracks,
     resolveTrack,
     searchTracks,
 } from '../../lib/music/music-service';
@@ -1434,12 +1437,12 @@ async function selectMusicTrack(
         );
 
     const queuePromise =
-        options.generateQueue
+        options.queueAction ===
+            'generate'
             ? getArtistRadioTracks(
                 track.artist.id
             )
             : null;
-
     /*
      * --------------------------------------------------
      * RESOLVE
@@ -2519,6 +2522,7 @@ function activateHomeSection(
             break;
 
         case 'playlist':
+            void loadPlaylist();
             break;
 
         case 'stations':
@@ -3352,30 +3356,29 @@ function renderDiscover(
                 date
             );
 
+            card.addEventListener(
+                'click',
+                () => {
+
+                    openHomeDetail({
+                        type:
+                            'album',
+
+                        id:
+                            album.id,
+
+                        title:
+                            album.title,
+
+                        returnSection:
+                            'discover',
+                    });
+                }
+            );
 
             grid.appendChild(
                 card
             );
-        }
-    );
-
-    card.addEventListener(
-        'click',
-        () => {
-
-            openHomeDetail({
-                type:
-                    'album',
-
-                id:
-                    album.id,
-
-                title:
-                    album.title,
-
-                returnSection:
-                    'discover',
-            });
         }
     );
 }
@@ -3549,30 +3552,29 @@ function renderGenres(
                 name
             );
 
+            card.addEventListener(
+                'click',
+                () => {
+
+                    openHomeDetail({
+                        type:
+                            'genre',
+
+                        id:
+                            genre.id,
+
+                        title:
+                            genre.name,
+
+                        returnSection:
+                            'genres',
+                    });
+                }
+            );
 
             grid.appendChild(
                 card
             );
-        }
-    );
-
-    card.addEventListener(
-        'click',
-        () => {
-
-            openHomeDetail({
-                type:
-                    'genre',
-
-                id:
-                    genre.id,
-
-                title:
-                    genre.name,
-
-                returnSection:
-                    'genres',
-            });
         }
     );
 }
