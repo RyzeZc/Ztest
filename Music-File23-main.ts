@@ -5,6 +5,7 @@ import {
     getArtistRadio,
     getChart,
     getGenres,
+    getMusicApiNext,
     resolveTrack,
     searchTracks,
 } from '../../lib/music/music-service';
@@ -193,6 +194,11 @@ const homeSections =
         player.querySelector(
             '.music-player-youtube-results'
         );
+    
+    const searchLoader =
+    player.querySelector<HTMLElement>(
+        '[data-music-search-loader]'
+    );
 
     const artworkImage =
         player.querySelector(
@@ -646,7 +652,7 @@ function selectStation(
         MusicTrack[] = [];
 
     const SEARCH_MAX_PAGES =
-    4;
+    3;
 
     let searchQuery = '';
 
@@ -662,11 +668,6 @@ function selectStation(
     let searchObserver:
         IntersectionObserver | null =
         null;
-
-    const searchLoader =
-        player.querySelector<HTMLElement>(
-            '[data-music-search-loader]'
-        );
 
     let youtubeRepeat = false;
     let youtubeShuffle = false;
