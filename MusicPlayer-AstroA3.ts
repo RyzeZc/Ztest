@@ -227,6 +227,25 @@ import LoadingSpinner
           A CONTINUACIÓN
         </button>
 
+        <button
+          class="music-player-panel-close"
+          type="button"
+          data-panel-close
+          aria-label="Cerrar panel"
+      >
+          <svg
+              viewBox="0 0 16 16"
+              aria-hidden="true"
+          >
+              <path
+                  d="M3 3L13 13"
+              />
+              <path
+                  d="M13 3L3 13"
+              />
+          </svg>
+      </button>
+
       </nav>
 
 
@@ -445,6 +464,46 @@ import LoadingSpinner
 </section>
 
           </div>
+
+          <div
+              class="music-player-home-detail"
+              data-home-detail
+          >
+              <div class="music-player-home-detail-header">
+
+                  <button
+                      class="music-player-home-detail-back"
+                      type="button"
+                      data-home-detail-back
+                      aria-label="Volver"
+                  >
+                      <svg
+                          viewBox="0 0 16 16"
+                          aria-hidden="true"
+                      >
+                          <path
+                              d="M10.5 2.5L5 8l5.5 5.5"
+                          />
+                      </svg>
+
+                      <span>
+                          VOLVER
+                      </span>
+                  </button>
+
+                  <div
+                      class="music-player-home-detail-title"
+                      data-home-detail-title
+                  ></div>
+
+              </div>
+
+              <div
+                  class="music-player-home-detail-content"
+                  data-home-detail-content
+              ></div>
+          </div>
+
 
         </section>
 
