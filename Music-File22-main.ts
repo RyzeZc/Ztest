@@ -14,6 +14,7 @@ import type {
     MusicChart,
     MusicGenre,
     MusicRadioTrack,
+    MusicSearchResponse,
     MusicTrack,
 } from '../../lib/music/music-types';
 
@@ -272,7 +273,8 @@ const homeSections =
         !(videoToggle instanceof HTMLButtonElement) ||
         !(videoPanel instanceof HTMLElement) ||
         !(queuePanel instanceof HTMLElement) ||
-        !(queueList instanceof HTMLElement)
+        !(queueList instanceof HTMLElement) ||
+        !(searchLoader instanceof HTMLElement)
     ) {
         console.error(
             '[MusicPlayer] Required elements not found.'
@@ -642,6 +644,29 @@ function selectStation(
 
     let youtubeTracks:
         MusicTrack[] = [];
+
+    const SEARCH_MAX_PAGES =
+    4;
+
+    let searchQuery = '';
+
+    let searchNext:
+        string | null = null;
+
+    let searchPageCount =
+        0;
+
+    let searchLoading =
+        false;
+
+    let searchObserver:
+        IntersectionObserver | null =
+        null;
+
+    const searchLoader =
+        player.querySelector<HTMLElement>(
+            '[data-music-search-loader]'
+        );
 
     let youtubeRepeat = false;
     let youtubeShuffle = false;
@@ -3343,6 +3368,110 @@ function updateTrackPlaybackIndicators(): void {
     );
 }
 
+function updateSearchLoader(
+    visible: boolean
+): void {
+
+    if (
+        !(searchLoader instanceof HTMLElement)
+    ) {
+        return;
+    }
+
+    const spinner =
+        searchLoader.querySelector<HTMLElement>(
+            '.loading-spinner'
+        );
+
+    if (
+        !(spinner instanceof HTMLElement)
+    ) {
+        return;
+    }
+
+    spinner.classList.toggle(
+        'is-visible',
+        visible
+    );
+}
+
+
+function stopSearchInfiniteScroll(): void {
+
+    if (
+        searchObserver
+    ) {
+
+        searchObserver.disconnect();
+
+        searchObserver =
+            null;
+    }
+
+    updateSearchLoader(
+        false
+    );
+}
+
+
+function setupSearchInfiniteScroll():
+    void {
+
+    stopSearchInfiniteScroll();
+
+    searchObserver =
+        new IntersectionObserver(
+            entries => {
+
+                const entry =
+                    entries[0];
+
+                if (
+                    !entry?.isIntersecting
+                ) {
+                    return;
+                }
+
+                if (
+                    searchLoading
+                ) {
+                    return;
+                }
+
+                if (
+                    !searchNext
+                ) {
+                    stopSearchInfiniteScroll();
+                    return;
+                }
+
+                if (
+                    searchPageCount >=
+                    SEARCH_MAX_PAGES
+                ) {
+                    stopSearchInfiniteScroll();
+                    return;
+                }
+
+                void loadMoreSearchResults();
+            },
+            {
+                root:
+                    youtubeResults,
+
+                rootMargin:
+                    '0px 0px 250px 0px',
+
+                threshold:
+                    0,
+            }
+        );
+
+    searchObserver.observe(
+        searchLoader
+    );
+}
+
 function appendYouTubeResults(
     results: MusicTrack[]
 ): void {
@@ -3510,8 +3639,9 @@ function appendYouTubeResults(
                 }
             );
 
-            youtubeResults.appendChild(
-                item
+            youtubeResults.insertBefore(
+                item,
+                searchLoader
             );
         }
     );
@@ -3524,17 +3654,36 @@ async function searchYouTube(
     const normalizedQuery =
         query.trim();
 
-    if (!normalizedQuery) {
+    if (
+        !normalizedQuery
+    ) {
         return;
     }
 
     /*
      * Nueva búsqueda:
-     * comenzamos con resultados limpios.
+     * reiniciamos toda la paginación.
      */
+    searchQuery =
+        normalizedQuery;
+
+    searchNext =
+        null;
+
+    searchPageCount =
+        0;
+
     youtubeTracks =
         [];
 
+    searchLoading =
+        false;
+
+    setupSearchInfiniteScroll();
+
+    /*
+     * Estado inicial visual.
+     */
     youtubeResults.innerHTML =
         `
             <div class="music-player-youtube-loading">
@@ -3542,15 +3691,75 @@ async function searchYouTube(
             </div>
         `;
 
+    /*
+     * Volvemos a insertar el loader
+     * después del mensaje inicial.
+     */
+    youtubeResults.appendChild(
+        searchLoader
+    );
+
     youtubeSearchInput.disabled =
         true;
+
+    await loadSearchPage(
+        true
+    );
+
+    youtubeSearchInput.disabled =
+        false;
+}
+
+
+async function loadSearchPage(
+    isInitialPage = false
+): Promise<void> {
+
+    if (
+        searchLoading
+    ) {
+        return;
+    }
+
+    /*
+     * No hacemos más peticiones
+     * cuando alcanzamos el límite.
+     */
+    if (
+        !isInitialPage &&
+        (
+            !searchNext ||
+            searchPageCount >=
+                SEARCH_MAX_PAGES
+        )
+    ) {
+
+        stopSearchInfiniteScroll();
+
+        return;
+    }
+
+    searchLoading =
+        true;
+
+    updateSearchLoader(
+        true
+    );
 
     try {
 
         const response =
-            await searchTracks(
-                normalizedQuery
-            );
+            isInitialPage
+
+                ? await searchTracks(
+                    searchQuery
+                )
+
+                : await getMusicApiNext<
+                    MusicSearchResponse<MusicTrack>
+                >(
+                    searchNext as string
+                );
 
         if (
             response.status !==
@@ -3562,25 +3771,90 @@ async function searchYouTube(
             );
         }
 
-        const newTracks:
-            MusicTrack[] =
-            response.data ?? [];
+        const newTracks =
+            response.data ??
+            [];
 
         /*
-         * Elimina BUSCANDO...
-         * y deja el contenedor listo
-         * para los resultados.
+         * Para la primera página
+         * eliminamos BUSCANDO...
          */
-        youtubeResults.innerHTML =
-            '';
+        if (
+            isInitialPage
+        ) {
+
+            youtubeResults
+                .querySelector(
+                    '.music-player-youtube-loading'
+                )
+                ?.remove();
+        }
+
+        /*
+         * Evitamos duplicados por Deezer ID.
+         */
+        const existingIds =
+            new Set(
+                youtubeTracks.map(
+                    track =>
+                        track.id
+                )
+            );
+
+        const uniqueTracks =
+            newTracks.filter(
+                track =>
+                    !existingIds.has(
+                        track.id
+                    )
+            );
 
         youtubeTracks.push(
-            ...newTracks
+            ...uniqueTracks
         );
 
         appendYouTubeResults(
-            newTracks
+            uniqueTracks
         );
+
+        searchNext =
+            response.next;
+
+        searchPageCount +=
+            1;
+
+        console.log(
+            '[MusicPlayer] Search page loaded:',
+            {
+                query:
+                    searchQuery,
+
+                page:
+                    searchPageCount,
+
+                added:
+                    uniqueTracks.length,
+
+                total:
+                    youtubeTracks.length,
+
+                next:
+                    searchNext,
+            }
+        );
+
+        /*
+         * Si ya no hay siguiente página
+         * o alcanzamos el máximo, paramos.
+         */
+        if (
+            !searchNext ||
+            searchPageCount >=
+                SEARCH_MAX_PAGES
+        ) {
+
+            stopSearchInfiniteScroll();
+        }
 
     } catch (error) {
 
@@ -3589,18 +3863,68 @@ async function searchYouTube(
             error
         );
 
-        youtubeResults.innerHTML =
-            `
-                <div class="music-player-youtube-error">
-                    NO SE PUDO REALIZAR LA BÚSQUEDA
-                </div>
-            `;
+        if (
+            isInitialPage
+        ) {
+
+            youtubeResults.innerHTML =
+                `
+                    <div class="music-player-youtube-error">
+                        NO SE PUDO REALIZAR LA BÚSQUEDA
+                    </div>
+                `;
+
+            /*
+             * Volvemos a colocar el loader
+             * al final del contenedor.
+             */
+            youtubeResults.appendChild(
+                searchLoader
+            );
+
+        } else {
+
+            /*
+             * Una página posterior puede fallar
+             * sin destruir los resultados que
+             * ya tenemos.
+             */
+            console.error(
+                '[MusicPlayer] Additional search page failed.'
+            );
+        }
+
+        stopSearchInfiniteScroll();
 
     } finally {
 
-        youtubeSearchInput.disabled =
+        searchLoading =
             false;
+
+        updateSearchLoader(
+            false
+        );
     }
+}
+
+
+async function loadMoreSearchResults():
+    Promise<void> {
+
+    if (
+        !searchNext ||
+        searchPageCount >=
+            SEARCH_MAX_PAGES
+    ) {
+
+        stopSearchInfiniteScroll();
+
+        return;
+    }
+
+    await loadSearchPage(
+        false
+    );
 }
 
 
