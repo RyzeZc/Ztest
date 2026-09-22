@@ -1,23 +1,25 @@
 import {
     getArtistRadio,
+    getMusicApiNext,
     resolveTrack,
 } from '../music/music-service';
 
 import type {
     MusicRadioTrack,
     MusicTrack,
+    MusicApiCollection,
 } from '../music/music-types';
 
 import type {
     MusicPanelTab,
     PlaybackAudioAdapter,
     PlaybackController,
+    PlaybackListSource,
     PlaybackSelectionOptions,
     PlaybackSource,
     PlaybackState,
     PlaybackYouTubeAdapter,
 } from './types';
-
 
 /* ============================================================
  * RESOLVE CACHE
@@ -65,9 +67,12 @@ export function createPlaybackState():
     return {
         playbackList: [],
         playbackListCurrentIndex: -1,
-
         playbackListMode: 'context',
         playbackListSource: null,
+
+        playbackListNext: null,
+        playbackListTotal: null,
+        playbackListLoadingMore: false,
 
         currentMusicTrack: null,
         currentYouTubeVideoId: null,
@@ -84,6 +89,16 @@ export function createPlaybackState():
     };
 }
 
+export function isPlaybackPanelSource(
+    source: PlaybackListSource
+): boolean {
+
+    return (
+        source !== null &&
+        source !== 'home-trending' &&
+        source !== 'search-all'
+    );
+}
 
 /* ============================================================
  * RESOLVE HELPERS
@@ -580,6 +595,190 @@ export function createPlaybackController(
         );
     }
 
+
+    let playbackListLoadPromise:
+    Promise<boolean> | null =
+    null;
+
+
+    async function loadMorePlaybackList():
+        Promise<boolean> {
+
+        if (
+            !state.playbackListNext
+        ) {
+            return false;
+        }
+
+
+        if (
+            playbackListLoadPromise
+        ) {
+            return playbackListLoadPromise;
+        }
+
+
+        const requestId =
+            state.playbackRequestId;
+
+        const queueRequestId =
+            state.queueRequestId;
+
+
+        const loadPromise =
+            (async () => {
+
+                state.playbackListLoadingMore =
+                    true;
+
+
+                try {
+
+                    const response =
+                        await getMusicApiNext<
+                            MusicApiCollection<
+                                MusicTrack
+                            >
+                        >(
+                            state.playbackListNext!
+                        );
+
+
+                    /*
+                    * El usuario pudo haber cambiado
+                    * de contexto mientras llegaba
+                    * la petición.
+                    */
+                    if (
+                        requestId !==
+                            state.playbackRequestId ||
+                        queueRequestId !==
+                            state.queueRequestId
+                    ) {
+
+                        return false;
+                    }
+
+
+                    if (
+                        response.status !==
+                        'success'
+                    ) {
+
+                        throw new Error(
+                            'Playback pagination request failed.'
+                        );
+                    }
+
+
+                    const existingIds =
+                        new Set(
+                            state.playbackList.map(
+                                currentTrack =>
+                                    currentTrack.id
+                            )
+                        );
+
+
+                    const newTracks =
+                        (
+                            response.data ??
+                            []
+                        ).filter(
+                            currentTrack =>
+                                !existingIds.has(
+                                    currentTrack.id
+                                )
+                        );
+
+
+                    state.playbackList.push(
+                        ...newTracks
+                    );
+
+
+                    state.playbackListNext =
+                        response.next ??
+                        null;
+
+
+                    state.playbackListTotal =
+                        response.total ??
+                        state.playbackListTotal ??
+                        state.playbackList.length;
+
+
+                    renderQueuePanel();
+
+                    updateTrackPlaybackIndicators();
+
+
+                    return (
+                        newTracks.length >
+                        0
+                    );
+
+                } catch (
+                    error
+                ) {
+
+                    console.error(
+                        '[MusicPlayer] Playback pagination failed:',
+                        error
+                    );
+
+
+                    if (
+                        requestId ===
+                        state.playbackRequestId &&
+                        queueRequestId ===
+                        state.queueRequestId
+                    ) {
+
+                        state.playbackListNext =
+                            null;
+                    }
+
+
+                    return false;
+
+                } finally {
+
+                    if (
+                        requestId ===
+                            state.playbackRequestId &&
+                        queueRequestId ===
+                            state.queueRequestId
+                    ) {
+
+                        state.playbackListLoadingMore =
+                            false;
+                    }
+                }
+            })();
+
+
+        playbackListLoadPromise =
+            loadPromise;
+
+
+        try {
+
+            return await loadPromise;
+
+        } finally {
+
+            if (
+                playbackListLoadPromise ===
+                loadPromise
+            ) {
+
+                playbackListLoadPromise =
+                    null;
+            }
+        }
+    }
+
     async function selectMusicTrack(
         track: MusicTrack,
         selectionOptions:
@@ -701,99 +900,68 @@ export function createPlaybackController(
         * --------------------------------------------------
         */
 
-        if (
-            selectionOptions.playbackListMode !==
-            undefined
-        ) {
-            state.playbackListMode =
-                selectionOptions.playbackListMode;
-        }
+if (
+    selectionOptions.playbackList !==
+    undefined
+) {
 
-        if (
-            selectionOptions.playbackListSource !==
-            undefined
-        ) {
-            state.playbackListSource =
-                selectionOptions.playbackListSource;
-        }
+    state.playbackList = [
+        ...selectionOptions.playbackList,
+    ];
 
-        /*
-        * Compatibilidad con la lógica actual
-        */
+    state.playbackListNext =
+        selectionOptions.playbackListNext ??
+        null;
 
-        if (
-            selectionOptions.playbackListMode ===
-            undefined &&
-            selectionOptions.queueAction ===
-            'generate'
-        ) {
-            state.playbackListMode =
-                'queue';
-        }
+    state.playbackListTotal =
+        selectionOptions.playbackListTotal ??
+        state.playbackList.length;
 
-        if (
-            selectionOptions.playbackListSource ===
-            undefined &&
-            selectionOptions.queueAction ===
-            'generate'
-        ) {
-            state.playbackListSource =
-                'search-tracks-queue';
-        }
+    state.playbackListLoadingMore =
+        false;
 
-        if (
-            selectionOptions.playbackListMode ===
-            undefined &&
-            selectionOptions.queueAction ===
-            'clear'
-        ) {
-            state.playbackListMode =
-                'context';
-        }
+    state.playbackListCurrentIndex =
+        state.playbackList.findIndex(
+            currentTrack =>
+                currentTrack.id ===
+                track.id
+        );
 
-        if (
-            selectionOptions.playbackListSource ===
-            undefined &&
-            selectionOptions.queueAction ===
-            'clear'
-        ) {
-            state.playbackListSource =
-                null;
-        }
+    state.youtubeShuffleHistory =
+        [];
 
-        /*
-        * A CONTINUACIÓN
-        */
+    state.youtubeShuffleHistoryPosition =
+        -1;
 
-        if (
-            selectionOptions.playbackList !==
-            undefined
-        ) {
+    renderQueuePanel();
 
-            state.playbackList = [
-                ...selectionOptions.playbackList,
-            ];
+    if (
+        isPlaybackPanelSource(
+            state.playbackListSource
+        )
+    ) {
 
-            state.playbackListCurrentIndex =
-                state.playbackList.findIndex(
-                    currentTrack =>
-                        currentTrack.id ===
-                        track.id
-                );
+        activatePanelTab(
+            'playback'
+        );
 
-            state.youtubeShuffleHistory =
-                [];
+    } else if (
+        state.playbackListSource ===
+        'search-all'
+    ) {
 
-            state.youtubeShuffleHistoryPosition =
-                -1;
+        activatePanelTab(
+            'search'
+        );
 
-            renderQueuePanel();
+    } else {
 
-            activatePanelTab(
-                'playback'
-            );
+        activatePanelTab(
+            'home'
+        );
+    }
 
-        } else if (
+} else if (
             selectionOptions.queueIndex !==
             undefined
         ) {
@@ -817,6 +985,9 @@ export function createPlaybackController(
 
             state.playbackListCurrentIndex =
                 -1;
+            state.playbackListNext = null;
+            state.playbackListTotal = null;
+            state.playbackListLoadingMore = false;
 
             renderQueuePanel();
 
@@ -830,6 +1001,9 @@ export function createPlaybackController(
 
             state.playbackListCurrentIndex =
                 -1;
+            state.playbackListNext = null;
+            state.playbackListTotal = null;
+            state.playbackListLoadingMore = false;
 
             renderQueuePanel();
         }
@@ -1061,6 +1235,14 @@ export function createPlaybackController(
                     radioTracks
                 );
 
+            state.playbackListNext =
+                null;
+
+            state.playbackListTotal =
+                state.playbackList.length;
+
+            state.playbackListLoadingMore =
+                false;
 
             state.playbackListCurrentIndex =
                 state.playbackList.findIndex(
@@ -1153,6 +1335,18 @@ export function createPlaybackController(
                     'keep',
             }
         );
+
+        if (
+            state.playbackListNext &&
+            !state.playbackListLoadingMore &&
+            (
+                state.playbackList.length -
+                index
+            ) <= 3
+        ) {
+
+            void loadMorePlaybackList();
+        }
     }
 
 
@@ -1275,27 +1469,84 @@ export function createPlaybackController(
 
         } else {
 
-            const sequentialIndex =
-                state.playbackListCurrentIndex +
-                1;
+        let sequentialIndex =
+            state.playbackListCurrentIndex +
+            1;
+
+
+        /*
+        * Si llegamos al final de la página
+        * pero existe otra página disponible,
+        * la cargamos ahora.
+        *
+        * Este es el único caso donde Next
+        * puede tener que esperar una petición.
+        */
+        if (
+            sequentialIndex >=
+            state.playbackList.length &&
+            state.playbackListNext
+        ) {
+
+            const previousLength =
+                state.playbackList.length;
+
+
+            await loadMorePlaybackList();
 
 
             if (
-                sequentialIndex >=
-                state.playbackList.length
+                state.playbackList.length <=
+                previousLength
             ) {
 
                 console.log(
-                    '[MusicPlayer] Music queue reached the end.'
+                    '[MusicPlayer] Playback list reached the end.'
                 );
-
 
                 return;
             }
 
 
-            nextIndex =
-                sequentialIndex;
+            sequentialIndex =
+                state.playbackListCurrentIndex +
+                1;
+        }
+
+
+        if (
+            sequentialIndex >=
+            state.playbackList.length
+        ) {
+
+            console.log(
+                '[MusicPlayer] Playback list reached the end.'
+            );
+
+            return;
+        }
+
+
+        /*
+        * Si quedan aproximadamente tres
+        * canciones, precargamos la siguiente
+        * página sin bloquear la reproducción.
+        */
+        if (
+            state.playbackListNext &&
+            !state.playbackListLoadingMore &&
+            (
+                state.playbackList.length -
+                state.playbackListCurrentIndex
+            ) <= 3
+        ) {
+
+            void loadMorePlaybackList();
+        }
+
+
+        nextIndex =
+            sequentialIndex;
         }
 
 
@@ -1457,13 +1708,10 @@ export function createPlaybackController(
 
 
     return {
-
         selectMusicTrack,
-
         playMusicQueueTrack,
-
         playNextMusicQueueTrack,
-
         playPreviousMusicQueueTrack,
+        loadMorePlaybackList,
     };
 }
