@@ -558,6 +558,28 @@ export function createPlaybackController(
     } = options;
 
 
+    function arePlaybackListsEqual(
+        first: MusicTrack[],
+        second: MusicTrack[]
+    ): boolean {
+
+        if (
+            first.length !==
+            second.length
+        ) {
+            return false;
+        }
+
+        return first.every(
+            (
+                track,
+                index
+            ) =>
+                track.id ===
+                second[index]?.id
+        );
+    }
+
     async function selectMusicTrack(
         track: MusicTrack,
         selectionOptions:
@@ -570,15 +592,40 @@ export function createPlaybackController(
             state.currentMusicTrack?.id ===
                 track.id;
 
+        const hasPlaybackListSelection =
+            selectionOptions.playbackList !==
+            undefined;
+
+        const isSamePlaybackContext =
+            !hasPlaybackListSelection ||
+            (
+                (
+                    selectionOptions.playbackListMode ??
+                    state.playbackListMode
+                ) ===
+                    state.playbackListMode &&
+
+                (
+                    selectionOptions.playbackListSource ??
+                    state.playbackListSource
+                ) ===
+                    state.playbackListSource &&
+
+                arePlaybackListsEqual(
+                    selectionOptions.playbackList ?? [],
+                    state.playbackList
+                )
+            );
+
 
         /*
-         * --------------------------------------------------
-         * MISMA CANCIÓN
-         * --------------------------------------------------
-         */
-
+        * --------------------------------------------------
+        * MISMA CANCIÓN
+        * --------------------------------------------------
+        */
         if (
             isSameCurrentTrack &&
+            isSamePlaybackContext &&
             (
                 state.currentYouTubeVideoId !==
                     null ||
@@ -649,10 +696,104 @@ export function createPlaybackController(
 
 
         /*
-         * A CONTINUACIÓN
-         */
+        * --------------------------------------------------
+        * PLAYBACK LIST MODE / SOURCE
+        * --------------------------------------------------
+        */
 
         if (
+            selectionOptions.playbackListMode !==
+            undefined
+        ) {
+            state.playbackListMode =
+                selectionOptions.playbackListMode;
+        }
+
+        if (
+            selectionOptions.playbackListSource !==
+            undefined
+        ) {
+            state.playbackListSource =
+                selectionOptions.playbackListSource;
+        }
+
+        /*
+        * Compatibilidad con la lógica actual
+        */
+
+        if (
+            selectionOptions.playbackListMode ===
+            undefined &&
+            selectionOptions.queueAction ===
+            'generate'
+        ) {
+            state.playbackListMode =
+                'queue';
+        }
+
+        if (
+            selectionOptions.playbackListSource ===
+            undefined &&
+            selectionOptions.queueAction ===
+            'generate'
+        ) {
+            state.playbackListSource =
+                'search-tracks-queue';
+        }
+
+        if (
+            selectionOptions.playbackListMode ===
+            undefined &&
+            selectionOptions.queueAction ===
+            'clear'
+        ) {
+            state.playbackListMode =
+                'context';
+        }
+
+        if (
+            selectionOptions.playbackListSource ===
+            undefined &&
+            selectionOptions.queueAction ===
+            'clear'
+        ) {
+            state.playbackListSource =
+                null;
+        }
+
+        /*
+        * A CONTINUACIÓN
+        */
+
+        if (
+            selectionOptions.playbackList !==
+            undefined
+        ) {
+
+            state.playbackList = [
+                ...selectionOptions.playbackList,
+            ];
+
+            state.playbackListCurrentIndex =
+                state.playbackList.findIndex(
+                    currentTrack =>
+                        currentTrack.id ===
+                        track.id
+                );
+
+            state.youtubeShuffleHistory =
+                [];
+
+            state.youtubeShuffleHistoryPosition =
+                -1;
+
+            renderQueuePanel();
+
+            activatePanelTab(
+                'playback'
+            );
+
+        } else if (
             selectionOptions.queueIndex !==
             undefined
         ) {
@@ -660,14 +801,11 @@ export function createPlaybackController(
             state.playbackListCurrentIndex =
                 selectionOptions.queueIndex;
 
-
             renderQueuePanel();
-
 
             scrollQueueTrackIntoView(
                 selectionOptions.queueIndex
             );
-
 
         } else if (
             selectionOptions.queueAction ===
@@ -677,13 +815,10 @@ export function createPlaybackController(
             state.playbackList =
                 [];
 
-
             state.playbackListCurrentIndex =
                 -1;
 
-
             renderQueuePanel();
-
 
         } else if (
             selectionOptions.queueAction ===
@@ -693,10 +828,8 @@ export function createPlaybackController(
             state.playbackList =
                 [];
 
-
             state.playbackListCurrentIndex =
                 -1;
-
 
             renderQueuePanel();
         }
