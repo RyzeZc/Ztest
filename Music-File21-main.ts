@@ -3206,8 +3206,8 @@ function updateTrackPlaybackIndicators(): void {
                     isCurrent
                         ? (
                             isVisuallyPlaying
-                                ? '▶'
-                                : '⏸'
+                                ? '⏸'
+                                : '▶'
                         )
                         : String(
                             resultIndex + 1
@@ -3277,8 +3277,8 @@ function updateTrackPlaybackIndicators(): void {
                     isCurrent
                         ? (
                             isVisuallyPlaying
-                                ? '▶'
-                                : '⏸'
+                                ? '⏸'
+                                : '▶'
                         )
                         : String(
                             queueIndex + 1
@@ -3332,8 +3332,8 @@ function updateTrackPlaybackIndicators(): void {
                     isCurrent
                         ? (
                             isVisuallyPlaying
-                                ? '▶'
-                                : '⏸'
+                                ? '⏸'
+                                : '▶'
                         )
                         : String(
                             trendingIndex + 1
@@ -3363,11 +3363,6 @@ function appendYouTubeResults(
 
             item.dataset.trackId =
                 String(result.id);
-
-                item.classList.add(
-                    'is-selected'
-                );
-            }
 
 
             /*
@@ -3539,9 +3534,6 @@ async function searchYouTube(
      */
     youtubeTracks =
         [];
-
-    youtubeSelectedTrackId =
-        null;
 
     youtubeResults.innerHTML =
         `
