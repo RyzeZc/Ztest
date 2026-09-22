@@ -158,7 +158,7 @@ function initializeMusicPlayer(): void {
 
     const youtubePanel =
         player.querySelector(
-            '[data-panel="results"]'
+            '[data-panel="search"]'
         );
 
     const queuePanel =
@@ -807,7 +807,7 @@ const searchController:
             () => {
 
                 activatePanelTab(
-                    'playback'
+                    'search'
                 );
             },
 
