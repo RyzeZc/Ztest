@@ -198,33 +198,33 @@ import LoadingSpinner
       >
 
         <button
-          class="music-player-panel-tab is-active"
-          type="button"
-          data-panel-tab="home"
-          role="tab"
-          aria-selected="true"
+            class="music-player-panel-tab is-active"
+            type="button"
+            data-panel-tab="home"
+            role="tab"
+            aria-selected="true"
         >
-          HOME
+            HOME
         </button>
 
         <button
-          class="music-player-panel-tab"
-          type="button"
-          data-panel-tab="results"
-          role="tab"
-          aria-selected="false"
+            class="music-player-panel-tab"
+            type="button"
+            data-panel-tab="search"
+            role="tab"
+            aria-selected="false"
         >
-          RESULTADOS
+            BUSCAR
         </button>
 
         <button
-          class="music-player-panel-tab"
-          type="button"
-          data-panel-tab="queue"
-          role="tab"
-          aria-selected="false"
+            class="music-player-panel-tab"
+            type="button"
+            data-panel-tab="playback"
+            role="tab"
+            aria-selected="false"
         >
-          A CONTINUACIÓN
+            REPRODUCIENDO
         </button>
 
         <button
@@ -512,11 +512,11 @@ import LoadingSpinner
              RESULTADOS
         ================================================== -->
 
-        <section
-          class="music-player-station-panel music-player-panel-view"
-          data-panel="results"
-          data-panel-view="results"
-        >
+          <section
+              class="music-player-station-panel music-player-panel-view"
+              data-panel="search"
+              data-panel-view="search"
+          >
 
           <!--div class="music-player-results-header">
 
@@ -613,9 +613,9 @@ import LoadingSpinner
         ================================================== -->
 
         <section
-          class="music-player-station-panel music-player-panel-view"
-          data-panel="queue"
-          data-panel-view="queue"
+            class="music-player-station-panel music-player-panel-view"
+            data-panel="playback"
+            data-panel-view="playback"
         >
 
           <div class="music-player-list-header music-player-queue-list-header">
