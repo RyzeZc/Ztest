@@ -1344,12 +1344,28 @@ async function openHomeDetail(
                     response.total ??
                     tracks.length;
 
-
                 const album =
                     metadataResult.status ===
                     'fulfilled'
                         ? metadataResult.value
                         : null;
+
+                if (album?.cover) {
+                    tracks =
+                        tracks.map(
+                            track => ({
+                                ...track,
+
+                                album: {
+                                    ...track.album,
+
+                                    cover:
+                                        track.album?.cover ??
+                                        album.cover,
+                                },
+                            })
+                        );
+                }
 
 
                 currentPlaybackContextInfo = {
