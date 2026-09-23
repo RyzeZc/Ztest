@@ -166,6 +166,31 @@ function initializeMusicPlayer(): void {
             '.music-player-queue-list'
         );
 
+    const playbackContext =
+        player.querySelector<HTMLElement>(
+            '[data-playback-context]'
+        );
+
+    const playbackContextImage =
+        player.querySelector<HTMLImageElement>(
+            '[data-playback-context-image]'
+        );
+
+    const playbackContextLabel =
+        player.querySelector<HTMLElement>(
+            '[data-playback-context-label]'
+        );
+
+    const playbackContextTitle =
+        player.querySelector<HTMLElement>(
+            '[data-playback-context-title]'
+        );
+
+    const playbackContextSubtitle =
+        player.querySelector<HTMLElement>(
+            '[data-playback-context-subtitle]'
+        );        
+
     const playbackListLoader =
         document.createElement(
             'div'
@@ -330,7 +355,12 @@ function initializeMusicPlayer(): void {
         !(queueList instanceof HTMLElement) ||
         !(searchLoader instanceof HTMLElement) ||
         !(homeSectionsContainer instanceof HTMLElement) ||
-        !(panelCloseButton instanceof HTMLButtonElement)
+        !(panelCloseButton instanceof HTMLButtonElement) ||
+        !(playbackContext instanceof HTMLElement) ||
+        !(playbackContextImage instanceof HTMLImageElement) ||
+        !(playbackContextLabel instanceof HTMLElement) ||
+        !(playbackContextTitle instanceof HTMLElement) ||
+        !(playbackContextSubtitle instanceof HTMLElement)
     ) {
         console.error(
             '[MusicPlayer] Required elements not found.'
@@ -844,6 +874,26 @@ const searchController:
                     'search-tracks-queue'
                 ) {
 
+                    currentPlaybackContextInfo = {
+
+                        type:
+                            'artist-radio',
+
+                        label:
+                            'ARTIST RADIO',
+
+                        title:
+                            track.artist.name ??
+                            'ARTISTA',
+
+                        subtitle:
+                            'Radio basada en este artista',
+
+                        image:
+                            track.album.cover ??
+                            null,
+                    };
+
                     void selectMusicTrack(
                         track,
                         {
@@ -876,12 +926,13 @@ const searchController:
                 );
             },
 
-    onTrackListSelected:
+        onTrackListSelected:
         (
             tracks,
             source,
             next,
-            total
+            total,
+            context
         ) => {
 
             if (
@@ -890,6 +941,9 @@ const searchController:
             ) {
                 return;
             }
+
+            currentPlaybackContextInfo =
+                null;
 
             void selectMusicTrack(
                 tracks[0],
@@ -944,6 +998,33 @@ const searchController:
     number | null = null;
 
     let currentTrackInfoKey = '';
+
+    interface PlaybackContextInfo {
+
+        type:
+            | 'artist'
+            | 'album'
+            | 'playlist'
+            | 'genre'
+            | 'artist-radio';
+
+        label:
+            string;
+
+        title:
+            string;
+
+        subtitle:
+            string;
+
+        image:
+            string | null;
+    }
+
+
+    let currentPlaybackContextInfo:
+        PlaybackContextInfo | null =
+        null;    
 
 function formatTime(
     seconds: number
@@ -1246,6 +1327,37 @@ async function openHomeDetail(
          * Toda la lista pasa a ser
          * el contexto actual.
          */
+
+        currentPlaybackContextInfo = {
+
+            type:
+                route.type,
+
+            label:
+                route.type === 'album'
+                    ? 'ÁLBUM'
+                    : route.type === 'playlist'
+                        ? 'PLAYLIST'
+                        : 'GÉNERO',
+
+            title:
+                route.title,
+
+            subtitle:
+                tracks[0]?.artist?.name ??
+                '',
+
+            /*
+            * Para Home usamos el artwork
+            * del primer track como fallback,
+            * evitando una petición adicional
+            * solo para obtener la portada.
+            */
+            image:
+                tracks[0]?.album?.cover ??
+                null,
+        };
+
         void selectMusicTrack(
             tracks[0],
             {
@@ -1330,7 +1442,66 @@ const playbackListObserver =
         playbackListLoader
     );
 
+function renderPlaybackContext(): void {
 
+    const shouldShow =
+        playbackState.playbackList.length > 0 &&
+        isPlaybackPanelSource(
+            playbackState.playbackListSource
+        ) &&
+        currentPlaybackContextInfo !== null;
+
+
+    playbackContext.hidden =
+        !shouldShow;
+
+
+    if (
+        !shouldShow ||
+        !currentPlaybackContextInfo
+    ) {
+        return;
+    }
+
+
+    playbackContextLabel.textContent =
+        currentPlaybackContextInfo.label;
+
+
+    playbackContextTitle.textContent =
+        currentPlaybackContextInfo.title;
+
+
+    playbackContextSubtitle.textContent =
+        currentPlaybackContextInfo.subtitle;
+
+
+    if (
+        currentPlaybackContextInfo.image
+    ) {
+
+        playbackContextImage.src =
+            currentPlaybackContextInfo.image;
+
+        playbackContextImage.alt =
+            currentPlaybackContextInfo.title;
+
+        playbackContextImage.hidden =
+            false;
+
+    } else {
+
+        playbackContextImage.removeAttribute(
+            'src'
+        );
+
+        playbackContextImage.alt =
+            '';
+
+        playbackContextImage.hidden =
+            true;
+    }
+}
 
 function renderQueuePanel(): void {
 
@@ -1357,6 +1528,8 @@ function renderQueuePanel(): void {
         !shouldShowPlaybackPanel;
 
     queueList.innerHTML = '';
+
+    renderPlaybackContext();
 
     if (
         !shouldShowPlaybackPanel
@@ -1686,54 +1859,6 @@ function updateTrackPlaybackIndicators(): void {
                         )
                         ?.textContent ?? ''}`
             );
-        }
-    );
-
-    const detailItems =
-        player.querySelectorAll<HTMLElement>(
-            '.music-player-home-detail-track'
-        );
-
-    detailItems.forEach(
-        item => {
-
-            const trackId =
-                Number(
-                    item.dataset.trackId
-                );
-
-            const isCurrent =
-                trackId ===
-                currentTrackId;
-
-            item.classList.toggle(
-                'is-current',
-                isCurrent
-            );
-
-            const index =
-                item.querySelector<HTMLElement>(
-                    '.music-player-list-column-index'
-                );
-
-            if (index) {
-
-                const detailIndex =
-                    Number(
-                        item.dataset.detailIndex
-                    );
-
-                index.textContent =
-                    isCurrent
-                        ? (
-                            isVisuallyPlaying
-                                ? '⏸'
-                                : '▶'
-                        )
-                        : String(
-                            detailIndex + 1
-                        );
-            }
         }
     );
 
