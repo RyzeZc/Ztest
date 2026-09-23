@@ -1,7 +1,10 @@
 import {
+    getAlbum,
     getAlbumTracks,
+    getArtist,
     getArtistTop,
     getMusicApiNext,
+    getPlaylist,
     getPlaylistTracks,
     searchAlbums,
     searchArtists,
@@ -37,6 +40,9 @@ type SearchCategory =
 
 interface CategoryState<T> {
 
+    preview:
+        T[];
+
     data:
         T[];
 
@@ -58,6 +64,9 @@ interface CategoryView {
     section:
         HTMLElement;
 
+    previewList:
+        HTMLElement;
+
     list:
         HTMLElement;
 
@@ -75,6 +84,9 @@ interface CategoryView {
 }
 
 interface SearchPlaybackContext {
+
+    key:
+        string;
 
     type:
         | 'artist'
@@ -136,6 +148,15 @@ interface SearchControllerOptions {
                 SearchPlaybackContext
         ) => void;
 
+    isPlaybackContextActive:
+        (
+            contextKey:
+                string
+        ) => boolean;
+
+    toggleActivePlaybackContext:
+        () => void;        
+
     formatDuration:
         (
             seconds:
@@ -181,6 +202,9 @@ function createCategoryState<T>():
 
     return {
 
+        preview:
+            [],
+
         data:
             [],
 
@@ -216,6 +240,8 @@ export function createSearchController(
         onTrackListSelected,
         formatDuration,
         maxPages,
+        isPlaybackContextActive,
+        toggleActivePlaybackContext,
     } =
         options;
 
@@ -762,6 +788,11 @@ export function createSearchController(
         item.dataset.searchEntity =
             'artist';
 
+        const contextKey =
+            `artist:${artist.id}`;
+
+        item.dataset.playbackContextKey =
+            contextKey;
 
         const number =
             document.createElement(
@@ -854,18 +885,15 @@ export function createSearchController(
             'click',
             () => {
 
-                const interactionSource =
-                    activeCategory ===
-                    'all'
-                        ? 'search-all'
-                        : source;
-
                 void selectEntity(
                     'artists',
                     artist.id,
-                    interactionSource,
+                    'search-artist',
                     item,
                     {
+                        key:
+                            contextKey,
+
                         type:
                             'artist',
 
@@ -876,7 +904,7 @@ export function createSearchController(
                             artist.name,
 
                         subtitle:
-                            'Lista principal del artista',
+                            'Cargando información del artista...',
 
                         image:
                             artist.picture ??
@@ -918,6 +946,11 @@ export function createSearchController(
         item.dataset.searchEntity =
             'album';
 
+        const contextKey =
+            `album:${album.id}`;
+
+        item.dataset.playbackContextKey =
+            contextKey;            
 
         const number =
             document.createElement(
@@ -1010,18 +1043,15 @@ export function createSearchController(
             'click',
             () => {
 
-                const interactionSource =
-                    activeCategory ===
-                    'all'
-                        ? 'search-all'
-                        : source;
-
                 void selectEntity(
                     'albums',
                     album.id,
-                    interactionSource,
+                    'search-album',
                     item,
                     {
+                        key:
+                            contextKey,
+
                         type:
                             'album',
 
@@ -1075,6 +1105,11 @@ export function createSearchController(
         item.dataset.searchEntity =
             'playlist';
 
+        const contextKey =
+            `playlist:${playlist.id}`;
+
+        item.dataset.playbackContextKey =
+            contextKey;            
 
         const number =
             document.createElement(
@@ -1169,18 +1204,15 @@ export function createSearchController(
             'click',
             () => {
 
-                const interactionSource =
-                    activeCategory ===
-                    'all'
-                        ? 'search-all'
-                        : source;
-
                 void selectEntity(
                     'playlists',
                     playlist.id,
-                    interactionSource,
+                    'search-playlist',
                     item,
                     {
+                        key:
+                            contextKey,
+
                         type:
                             'playlist',
 
@@ -1341,7 +1373,6 @@ function updateCategoryLoader(
     }
 }
 
-
 function ensureCategoryRows(
     category:
         MusicGlobalSearchCategory
@@ -1353,10 +1384,12 @@ function ensureCategoryRows(
             category
         );
 
+
     const view =
         categoryViews.get(
             category
         );
+
 
     if (
         !view
@@ -1393,7 +1426,6 @@ function ensureCategoryRows(
     view.renderedCount =
         state.data.length;
 }
-
 
 function createSearchSection(
     category:
@@ -1468,6 +1500,15 @@ function createSearchSection(
         );
 
 
+    header.appendChild(
+        title
+    );
+
+    header.appendChild(
+        count
+    );
+
+
     const viewAll =
         document.createElement(
             'button'
@@ -1485,38 +1526,45 @@ function createSearchSection(
     viewAll.textContent =
         'VER TODO';
 
-    viewAll.addEventListener(
-        'click',
-        () => {
-
-            activeCategory =
-                category;
-
-            categoryHasUserScrolled =
-                false;
-
-            resultsContainer.scrollTop =
-                0;
-
-            updateActiveTab();
-
-            renderActiveCategory();
-        }
-    );
-
-
-    header.appendChild(
-        title
-    );
-
-    header.appendChild(
-        count
-    );
 
     header.appendChild(
         viewAll
     );
 
+
+    /*
+     * --------------------------------------------
+     * PREVIEW — SOLO PARA TODOS
+     *
+     * Estos nodos nunca reciben las páginas
+     * adicionales del infinite scroll.
+     * --------------------------------------------
+     */
+
+    const previewList =
+        document.createElement(
+            'div'
+        );
+
+    previewList.className =
+        'music-player-search-preview-list';
+
+
+    appendCategoryRows(
+        category,
+        state.preview,
+        sourceForCategory(
+            category
+        ),
+        previewList
+    );
+
+
+    /*
+     * --------------------------------------------
+     * LISTA COMPLETA — PESTAÑA INDIVIDUAL
+     * --------------------------------------------
+     */
 
     const list =
         document.createElement(
@@ -1526,15 +1574,15 @@ function createSearchSection(
     list.className =
         'music-player-search-section-list';
 
-    if (
-        category !==
-        'tracks'
-    ) {
 
-        list.classList.add(
-            'music-player-search-entity-grid'
-        );
-    }
+    appendCategoryRows(
+        category,
+        state.data,
+        sourceForCategory(
+            category
+        ),
+        list
+    );
 
 
     const categoryLoader =
@@ -1543,6 +1591,10 @@ function createSearchSection(
 
     section.appendChild(
         header
+    );
+
+    section.appendChild(
+        previewList
     );
 
     section.appendChild(
@@ -1559,6 +1611,8 @@ function createSearchSection(
 
         section,
 
+        previewList,
+
         list,
 
         loader:
@@ -1569,7 +1623,7 @@ function createSearchSection(
         count,
 
         renderedCount:
-            0,
+            state.data.length,
     };
 
 
@@ -1579,14 +1633,8 @@ function createSearchSection(
     );
 
 
-    ensureCategoryRows(
-        category
-    );
-
-
     return view;
 }
-
 
 function updateSearchViews():
     void {
@@ -1658,26 +1706,11 @@ function updateSearchViews():
         view.section.hidden =
             !isVisible;
 
+        view.previewList.hidden =
+            activeCategory !== 'all';
 
-        const rows =
-            Array.from(
-                view.list.children
-            ) as HTMLElement[];
-
-
-        rows.forEach(
-            (
-                row,
-                index
-            ) => {
-
-                row.hidden =
-                    activeCategory ===
-                        'all' &&
-                    index >= 5;
-            }
-        );
-
+        view.list.hidden =
+            activeCategory === 'all';
 
         view.viewAll.hidden =
             activeCategory !==
@@ -1750,6 +1783,59 @@ function canLoadMore():
             state.data.length &&
         state.pageCount <
             maxPages
+    );
+}
+
+function getCategoryPreloadMargin():
+    number {
+
+    if (
+        activeCategory ===
+        'all'
+    ) {
+        return 0;
+    }
+
+
+    const view =
+        categoryViews.get(
+            activeCategory
+        );
+
+
+    if (
+        !view
+    ) {
+        return 0;
+    }
+
+
+    const rows =
+        Array.from(
+            view.list.children
+        ) as HTMLElement[];
+
+
+    const lastTwoRows =
+        rows.slice(
+            -2
+        );
+
+
+    const height =
+        lastTwoRows.reduce(
+            (
+                total,
+                row
+            ) =>
+                total +
+                row.getBoundingClientRect().height,
+            0
+        );
+
+
+    return Math.ceil(
+        height
     );
 }
 
@@ -1861,7 +1947,7 @@ function setupInfiniteScroll():
                     resultsContainer,
 
                 rootMargin:
-                    '0px',
+                    `0px 0px ${getCategoryPreloadMargin()}px 0px`,
 
                 threshold:
                     0,
@@ -2246,8 +2332,6 @@ function renderActiveCategory():
         }
     }
 
-
-
     async function selectEntity(
         category:
             'artists'
@@ -2263,6 +2347,26 @@ function renderActiveCategory():
             SearchPlaybackContext
     ):
         Promise<void> {
+
+        /*
+        * --------------------------------------------
+        * MISMO CONTEXTO
+        *
+        * No volvemos a pedir metadata ni tracks.
+        * --------------------------------------------
+        */
+
+        if (
+            isPlaybackContextActive(
+                context.key
+            )
+        ) {
+
+            toggleActivePlaybackContext();
+
+            return;
+        }
+
 
         if (
             button.disabled
@@ -2285,57 +2389,171 @@ function renderActiveCategory():
 
         try {
 
-            let response:
-                MusicApiCollection<
-                    MusicTrack
-                >;
+            let tracksResponse:
+                MusicApiCollection<MusicTrack>;
+
+            let metadata:
+                MusicArtist
+                | MusicAlbum
+                | MusicPlaylist
+                | null =
+                null;
 
 
             switch (
                 category
             ) {
 
-                case 'artists':
+                case 'artists': {
 
-                    response =
-                        await getArtistTop(
-                            id
-                        );
+                    const [
+                        tracksResult,
+                        metadataResult,
+                    ] =
+                        await Promise.allSettled([
+
+                            getArtistTop(
+                                id
+                            ),
+
+                            getArtist(
+                                id
+                            ),
+                        ]);
+
+
+                    if (
+                        tracksResult.status !==
+                        'fulfilled'
+                    ) {
+
+                        throw tracksResult.reason;
+                    }
+
+
+                    tracksResponse =
+                        tracksResult.value;
+
+
+                    if (
+                        metadataResult.status ===
+                        'fulfilled'
+                    ) {
+
+                        metadata =
+                            metadataResult.value;
+                    }
+
 
                     break;
+                }
 
 
-                case 'albums':
+                case 'albums': {
 
-                    response =
-                        await getAlbumTracks(
-                            id
-                        );
+                    const [
+                        tracksResult,
+                        metadataResult,
+                    ] =
+                        await Promise.allSettled([
+
+                            getAlbumTracks(
+                                id,
+                                0,
+                                10
+                            ),
+
+                            getAlbum(
+                                id
+                            ),
+                        ]);
+
+
+                    if (
+                        tracksResult.status !==
+                        'fulfilled'
+                    ) {
+
+                        throw tracksResult.reason;
+                    }
+
+
+                    tracksResponse =
+                        tracksResult.value;
+
+
+                    if (
+                        metadataResult.status ===
+                        'fulfilled'
+                    ) {
+
+                        metadata =
+                            metadataResult.value;
+                    }
+
 
                     break;
+                }
 
 
-                case 'playlists':
+                case 'playlists': {
 
-                    response =
-                        await getPlaylistTracks(
-                            id
-                        );
+                    const [
+                        tracksResult,
+                        metadataResult,
+                    ] =
+                        await Promise.allSettled([
+
+                            getPlaylistTracks(
+                                id,
+                                0,
+                                10
+                            ),
+
+                            getPlaylist(
+                                id
+                            ),
+                        ]);
+
+
+                    if (
+                        tracksResult.status !==
+                        'fulfilled'
+                    ) {
+
+                        throw tracksResult.reason;
+                    }
+
+
+                    tracksResponse =
+                        tracksResult.value;
+
+
+                    if (
+                        metadataResult.status ===
+                        'fulfilled'
+                    ) {
+
+                        metadata =
+                            metadataResult.value;
+                    }
+
 
                     break;
+                }
             }
 
 
             if (
                 requestId !==
-                    contextRequestId
+                contextRequestId
             ) {
                 return;
             }
 
 
             if (
-                response.status !==
+                tracksResponse.status !==
                 'success'
             ) {
 
@@ -2346,7 +2564,7 @@ function renderActiveCategory():
 
 
             const tracks =
-                response.data ??
+                tracksResponse.data ??
                 [];
 
 
@@ -2361,9 +2579,161 @@ function renderActiveCategory():
             }
 
 
+            /*
+            * --------------------------------------------
+            * ENRIQUECER CONTEXTO
+            * --------------------------------------------
+            */
+
+            let enrichedContext:
+                SearchPlaybackContext =
+                {
+                    ...context,
+                };
+
+
+            if (
+                category ===
+                    'artists' &&
+                metadata
+            ) {
+
+                const artist =
+                    metadata as
+                    MusicArtist & {
+                        nb_album?:
+                            number;
+
+                        nb_fan?:
+                            number;
+
+                        picture?:
+                            string;
+                    };
+
+
+                const info:
+                    string[] = [];
+
+
+                if (
+                    Number.isFinite(
+                        artist.nb_album
+                    )
+                ) {
+
+                    info.push(
+                        `${artist.nb_album} álbumes`
+                    );
+                }
+
+
+                if (
+                    Number.isFinite(
+                        artist.nb_fan
+                    )
+                ) {
+
+                    info.push(
+                        `${Intl.NumberFormat(
+                            'es-PE',
+                            {
+                                notation:
+                                    'compact',
+
+                                maximumFractionDigits:
+                                    1,
+                            }
+                        ).format(
+                            artist.nb_fan
+                        )} fans`
+                    );
+                }
+
+
+                enrichedContext = {
+
+                    ...context,
+
+                    title:
+                        artist.name ??
+                        context.title,
+
+                    subtitle:
+                        info.join(
+                            ' · '
+                        ) ||
+                        context.subtitle,
+
+                    image:
+                        artist.picture ??
+                        context.image,
+                };
+            }
+
+
+            if (
+                category ===
+                    'albums' &&
+                metadata
+            ) {
+
+                const album =
+                    metadata as MusicAlbum;
+
+
+                enrichedContext = {
+
+                    ...context,
+
+                    title:
+                        album.title ??
+                        context.title,
+
+                    subtitle:
+                        album.artist?.name ??
+                        context.subtitle,
+
+                    image:
+                        album.cover ??
+                        context.image,
+                };
+            }
+
+
+            if (
+                category ===
+                    'playlists' &&
+                metadata
+            ) {
+
+                const playlist =
+                    metadata as MusicPlaylist;
+
+
+                enrichedContext = {
+
+                    ...context,
+
+                    title:
+                        playlist.title ??
+                        context.title,
+
+                    subtitle:
+                        playlist.user?.name
+                            ? `Por ${playlist.user.name} · ${playlist.nb_tracks ?? tracks.length} pistas`
+                            : `${playlist.nb_tracks ?? tracks.length} pistas`,
+
+                    image:
+                        playlist.picture ??
+                        context.image,
+                };
+            }
+
+
             if (
                 requestId !==
-                    contextRequestId
+                contextRequestId
             ) {
                 return;
             }
@@ -2372,11 +2742,11 @@ function renderActiveCategory():
             onTrackListSelected(
                 tracks,
                 source,
-                response.next ??
+                tracksResponse.next ??
                     null,
-                response.total ??
+                tracksResponse.total ??
                     tracks.length,
-                context
+                enrichedContext
             );
 
         } catch (
@@ -2398,7 +2768,6 @@ function renderActiveCategory():
             );
         }
     }
-
 
     async function search(
         query:
