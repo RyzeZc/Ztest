@@ -3937,6 +3937,147 @@ YOUTUBE VIDEO
         ellipsis;
 }
 
+.music-player-search-category-loader[hidden],
+.music-player-search-preview-list[hidden],
+.music-player-search-section-list[hidden] {
+    display: none !important;
+}
+
+/* =========================================================
+   ESTADOS VISUALES — SIN BORDES NI ANIMACIONES
+   ========================================================= */
+
+/* Sidebar HOME */
+.music-player-panel-nav-item {
+    transition: none !important;
+}
+
+.music-player-panel-nav-item:hover {
+    color: #c0c0c0;
+    background: #181818;
+}
+
+.music-player-panel-nav-item.is-active {
+    color: #e48a48;
+    background:
+        rgba(
+            217,
+            120,
+            50,
+            0.10
+        );
+    border: 0;
+    box-shadow: none;
+}
+
+.music-player-panel-nav-item.is-active:hover {
+    color: #e48a48;
+    background:
+        rgba(
+            217,
+            120,
+            50,
+            0.14
+        );
+}
+
+
+/* Resultados ARTISTAS / ÁLBUMES / PLAYLISTS */
+.music-player-search-entity-card {
+    transition: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.music-player-search-entity-card:hover {
+    background: #181818 !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.music-player-search-entity-card.is-selected {
+    background:
+        rgba(
+            217,
+            120,
+            50,
+            0.09
+        ) !important;
+
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+
+/* HOME — DESCUBRE / PLAYLIST */
+.music-player-discover-card,
+.music-player-playlist-card {
+    transition: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.music-player-discover-card:hover,
+.music-player-playlist-card:hover {
+    background: #181818 !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.music-player-discover-card.is-selected,
+.music-player-playlist-card.is-selected {
+    background:
+        rgba(
+            217,
+            120,
+            50,
+            0.09
+        ) !important;
+
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+
+/* HOME — GÉNEROS */
+.music-player-genre-card {
+    transition: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.music-player-genre-card:hover {
+    background: #181818 !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.music-player-genre-card:hover img {
+    opacity: 0.62;
+}
+
+.music-player-genre-card.is-selected {
+    background:
+        rgba(
+            217,
+            120,
+            50,
+            0.09
+        ) !important;
+
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
 /* =========================================================
    RESPONSIVE
    ========================================================= */
