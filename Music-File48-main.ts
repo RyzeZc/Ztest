@@ -2326,39 +2326,39 @@ function updateTrackPlaybackIndicators(): void {
         }
     );
 
-const initialStation =
-    audioStations[0];
+    const initialStation =
+        audioStations[0];
 
-if (initialStation) {
+    if (initialStation) {
 
-    currentStationId =
-        initialStation.id;
+        currentStationId =
+            initialStation.id;
 
-    stationName.textContent =
-        initialStation.name;
+        stationName.textContent =
+            initialStation.name;
 
-    audioPlayer.setSource(
-        initialStation
-    );
+        audioPlayer.setSource(
+            initialStation
+        );
 
-    updateTrackInfo();
+        updateTrackInfo();
 
-    activatePanelTab(
-        'home'
-    );
+        activatePanelTab(
+            'home'
+        );
 
-    activateHomeSection(
-        'trending'
-    );
+        activateHomeSection(
+            'trending'
+        );
 
-    renderQueuePanel();
+        renderQueuePanel();
 
-    updateStationMenu();
+        updateStationMenu();
 
-} else {
+    } else {
 
-    finishInitialInfoLoading();
-}
+        finishInitialInfoLoading();
+    }
 
 
     /* --------------------------------------------------
