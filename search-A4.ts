@@ -74,6 +74,25 @@ interface CategoryView {
         number;
 }
 
+interface SearchPlaybackContext {
+
+    type:
+        | 'artist'
+        | 'album'
+        | 'playlist';
+
+    label:
+        string;
+
+    title:
+        string;
+
+    subtitle:
+        string;
+
+    image:
+        string | null;
+}
 
 interface SearchControllerOptions {
 
@@ -112,7 +131,9 @@ interface SearchControllerOptions {
             next:
                 string | null,
             total:
-                number
+                number,
+            context:
+                SearchPlaybackContext
         ) => void;
 
     formatDuration:
@@ -224,6 +245,12 @@ export function createSearchController(
         IntersectionObserver | null =
         null;
 
+    let categoryHasUserScrolled =
+        false;
+
+    let categoryScrollHandler:
+        (() => void) | null =
+        null;
 
     const states = {
 
@@ -326,6 +353,34 @@ export function createSearchController(
 
             searchObserver =
                 null;
+        }
+
+        if (
+            categoryScrollHandler
+        ) {
+
+            resultsContainer.removeEventListener(
+                'scroll',
+                categoryScrollHandler
+            );
+
+            categoryScrollHandler =
+                null;
+        }
+
+        const activeView =
+            categoryViews.get(
+                activeCategory
+            );
+
+        if (
+            activeView
+        ) {
+
+            updateCategoryLoader(
+                activeView,
+                false
+            );
         }
 
         updateLoader(
@@ -702,7 +757,7 @@ export function createSearchController(
             'button';
 
         item.className =
-            'music-player-search-entity';
+            'music-player-search-entity-card music-player-search-entity-card--artist';
 
         item.dataset.searchEntity =
             'artist';
@@ -809,7 +864,24 @@ export function createSearchController(
                     'artists',
                     artist.id,
                     interactionSource,
-                    item
+                    item,
+                    {
+                        type:
+                            'artist',
+
+                        label:
+                            'ARTISTA',
+
+                        title:
+                            artist.name,
+
+                        subtitle:
+                            'Lista principal del artista',
+
+                        image:
+                            artist.picture ??
+                            null,
+                    }
                 );
             }
         );
@@ -841,7 +913,7 @@ export function createSearchController(
             'button';
 
         item.className =
-            'music-player-search-entity';
+            'music-player-search-entity-card music-player-search-entity-card--album';
 
         item.dataset.searchEntity =
             'album';
@@ -948,7 +1020,25 @@ export function createSearchController(
                     'albums',
                     album.id,
                     interactionSource,
-                    item
+                    item,
+                    {
+                        type:
+                            'album',
+
+                        label:
+                            'ÁLBUM',
+
+                        title:
+                            album.title,
+
+                        subtitle:
+                            album.artist?.name ??
+                            'ARTISTA DESCONOCIDO',
+
+                        image:
+                            album.cover ??
+                            null,
+                    }
                 );
             }
         );
@@ -980,7 +1070,7 @@ export function createSearchController(
             'button';
 
         item.className =
-            'music-player-search-entity';
+            'music-player-search-entity-card music-player-search-entity-card--playlist';
 
         item.dataset.searchEntity =
             'playlist';
@@ -1089,7 +1179,26 @@ export function createSearchController(
                     'playlists',
                     playlist.id,
                     interactionSource,
-                    item
+                    item,
+                    {
+                        type:
+                            'playlist',
+
+                        label:
+                            'PLAYLIST',
+
+                        title:
+                            playlist.title,
+
+                        subtitle:
+                            playlist.user?.name
+                                ? `Por ${playlist.user.name}`
+                                : `${playlist.nb_tracks ?? 0} pistas`,
+
+                        image:
+                            playlist.picture ??
+                            null,
+                    }
                 );
             }
         );
@@ -1383,6 +1492,12 @@ function createSearchSection(
             activeCategory =
                 category;
 
+            categoryHasUserScrolled =
+                false;
+
+            resultsContainer.scrollTop =
+                0;
+
             updateActiveTab();
 
             renderActiveCategory();
@@ -1410,6 +1525,16 @@ function createSearchSection(
 
     list.className =
         'music-player-search-section-list';
+
+    if (
+        category !==
+        'tracks'
+    ) {
+
+        list.classList.add(
+            'music-player-search-entity-grid'
+        );
+    }
 
 
     const categoryLoader =
@@ -1577,7 +1702,7 @@ function updateSearchViews():
     }
 
 
-    setupInfiniteScroll();
+    armInfiniteScrollAfterUserScroll();
 }
 
 
@@ -1628,7 +1753,6 @@ function canLoadMore():
     );
 }
 
-
 function setupInfiniteScroll():
     void {
 
@@ -1636,9 +1760,15 @@ function setupInfiniteScroll():
 
 
     if (
+        !categoryHasUserScrolled
+    ) {
+        return;
+    }
+
+
+    if (
         !canLoadMore()
     ) {
-
         return;
     }
 
@@ -1652,13 +1782,48 @@ function setupInfiniteScroll():
     if (
         !view
     ) {
-
         return;
     }
 
 
-    view.loader.hidden =
-        false;
+    const rows =
+        Array.from(
+            view.list.children
+        ) as HTMLElement[];
+
+
+    if (
+        rows.length === 0
+    ) {
+        return;
+    }
+
+
+    /*
+     * Observamos el tercer elemento desde
+     * el final.
+     *
+     * Cuando entra en viewport quedan
+     * aproximadamente dos resultados.
+     */
+    const triggerIndex =
+        Math.max(
+            0,
+            rows.length - 3
+        );
+
+
+    const trigger =
+        rows[
+            triggerIndex
+        ];
+
+
+    if (
+        !trigger
+    ) {
+        return;
+    }
 
 
     searchObserver =
@@ -1671,7 +1836,6 @@ function setupInfiniteScroll():
                             entry.isIntersecting
                     )
                 ) {
-
                     return;
                 }
 
@@ -1685,7 +1849,6 @@ function setupInfiniteScroll():
                 if (
                     state.loading
                 ) {
-
                     return;
                 }
 
@@ -1698,7 +1861,7 @@ function setupInfiniteScroll():
                     resultsContainer,
 
                 rootMargin:
-                    '0px 0px 250px 0px',
+                    '0px',
 
                 threshold:
                     0,
@@ -1707,10 +1870,70 @@ function setupInfiniteScroll():
 
 
     searchObserver.observe(
-        view.loader
+        trigger
     );
 }
 
+function armInfiniteScrollAfterUserScroll():
+    void {
+
+    if (
+        activeCategory ===
+        'all'
+    ) {
+        return;
+    }
+
+
+    if (
+        categoryHasUserScrolled
+    ) {
+        return;
+    }
+
+
+    const handleScroll =
+        () => {
+
+            if (
+                resultsContainer.scrollTop <=
+                0
+            ) {
+                return;
+            }
+
+
+            categoryHasUserScrolled =
+                true;
+
+
+            resultsContainer.removeEventListener(
+                'scroll',
+                handleScroll
+            );
+
+
+            categoryScrollHandler =
+                null;
+
+
+            setupInfiniteScroll();
+        };
+
+
+    categoryScrollHandler =
+        handleScroll;
+
+
+    resultsContainer.addEventListener(
+        'scroll',
+        handleScroll,
+        {
+            passive:
+                true,
+        }
+    );
+}
 
 function renderAll():
     void {
@@ -1739,6 +1962,17 @@ function renderActiveCategory():
         const category =
             activeCategory;
 
+        const view =
+            categoryViews.get(
+                category
+            );
+
+        if (
+            !view
+        ) {
+            return;
+        }        
+
         const state =
             getState(
                 category
@@ -1764,6 +1998,11 @@ function renderActiveCategory():
 
         searchLoading =
             true;
+
+        updateCategoryLoader(
+            view,
+            true
+        );
 
         updateLoader(
             true
@@ -1928,11 +2167,6 @@ function renderActiveCategory():
                 1;
 
 
-            const view =
-                categoryViews.get(
-                    category
-                );
-
             if (
                 view
             ) {
@@ -2001,6 +2235,11 @@ function renderActiveCategory():
             searchLoading =
                 false;
 
+            updateCategoryLoader(
+                view,
+                false
+            );                
+
             updateLoader(
                 false
             );
@@ -2019,7 +2258,9 @@ function renderActiveCategory():
         source:
             PlaybackListSource,
         button:
-            HTMLButtonElement
+            HTMLButtonElement,
+        context:
+            SearchPlaybackContext
     ):
         Promise<void> {
 
@@ -2134,7 +2375,8 @@ function renderActiveCategory():
                 response.next ??
                     null,
                 response.total ??
-                    tracks.length
+                    tracks.length,
+                context
             );
 
         } catch (
@@ -2290,16 +2532,13 @@ function renderActiveCategory():
                         : 0;
             }
 
-            resultsContainer.innerHTML = '';
+                resultsContainer.innerHTML = '';
 
-            resultsContainer.appendChild(
-                loader
-            );
+                loader.remove();
 
-            renderCategoryTabs(
-                response.available
-            );
-
+                renderCategoryTabs(
+                    response.available
+                );
 
             if (
                 response.available.length ===
@@ -2313,9 +2552,7 @@ function renderActiveCategory():
                         </div>
                     `;
 
-                resultsContainer.appendChild(
-                    loader
-                );
+                loader.remove();
 
                 updateLoader(
                     false
@@ -2418,9 +2655,7 @@ function renderActiveCategory():
                 </div>
             `;
 
-        resultsContainer.appendChild(
-            loader
-        );
+        loader.remove();
 
 
         updateLoader(
@@ -2477,9 +2712,13 @@ function renderActiveCategory():
             activeCategory =
                 category;
 
+            categoryHasUserScrolled =
+                false;
+
+            resultsContainer.scrollTop =
+                0;
 
             updateActiveTab();
-
 
             renderActiveCategory();
         }
