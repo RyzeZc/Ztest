@@ -900,68 +900,129 @@ export function createPlaybackController(
         * --------------------------------------------------
         */
 
-if (
-    selectionOptions.playbackList !==
-    undefined
-) {
+        if (
+            selectionOptions.playbackListMode !==
+            undefined
+        ) {
 
-    state.playbackList = [
-        ...selectionOptions.playbackList,
-    ];
+            state.playbackListMode =
+                selectionOptions.playbackListMode;
+        }
 
-    state.playbackListNext =
-        selectionOptions.playbackListNext ??
-        null;
 
-    state.playbackListTotal =
-        selectionOptions.playbackListTotal ??
-        state.playbackList.length;
+        if (
+            selectionOptions.playbackListSource !==
+            undefined
+        ) {
 
-    state.playbackListLoadingMore =
-        false;
+            state.playbackListSource =
+                selectionOptions.playbackListSource;
+        }
 
-    state.playbackListCurrentIndex =
-        state.playbackList.findIndex(
-            currentTrack =>
-                currentTrack.id ===
-                track.id
-        );
 
-    state.youtubeShuffleHistory =
-        [];
+        /*
+        * BUSCAR → CANCIONES
+        *
+        * Artist Radio es una queue real.
+        */
+        if (
+            selectionOptions.queueAction ===
+            'generate'
+        ) {
 
-    state.youtubeShuffleHistoryPosition =
-        -1;
+            state.playbackListMode =
+                'queue';
 
-    renderQueuePanel();
+            state.playbackListSource =
+                'search-tracks-queue';
+        }
 
-    if (
-        isPlaybackPanelSource(
-            state.playbackListSource
-        )
-    ) {
 
-        activatePanelTab(
-            'playback'
-        );
+        /*
+        * Si se limpia una selección que no
+        * proporciona una nueva playbackList,
+        * no debemos conservar el source anterior.
+        *
+        * Cuando sí se proporciona playbackList,
+        * el source ya fue establecido arriba.
+        */
+        if (
+            selectionOptions.queueAction ===
+                'clear' &&
+            selectionOptions.playbackList ===
+                undefined
+        ) {
 
-    } else if (
-        state.playbackListSource ===
-        'search-all'
-    ) {
+            state.playbackListMode =
+                'context';
 
-        activatePanelTab(
-            'search'
-        );
+            state.playbackListSource =
+                null;
+        }
 
-    } else {
 
-        activatePanelTab(
-            'home'
-        );
-    }
+        if (
+            selectionOptions.playbackList !==
+            undefined
+        ) {
 
-} else if (
+            state.playbackList = [
+                ...selectionOptions.playbackList,
+            ];
+
+            state.playbackListNext =
+                selectionOptions.playbackListNext ??
+                null;
+
+            state.playbackListTotal =
+                selectionOptions.playbackListTotal ??
+                state.playbackList.length;
+
+            state.playbackListLoadingMore =
+                false;
+
+            state.playbackListCurrentIndex =
+                state.playbackList.findIndex(
+                    currentTrack =>
+                        currentTrack.id ===
+                        track.id
+                );
+
+            state.youtubeShuffleHistory =
+                [];
+
+            state.youtubeShuffleHistoryPosition =
+                -1;
+
+            renderQueuePanel();
+
+            if (
+                isPlaybackPanelSource(
+                    state.playbackListSource
+                )
+            ) {
+
+                activatePanelTab(
+                    'playback'
+                );
+
+            } else if (
+                state.playbackListSource ===
+                'search-all'
+            ) {
+
+                activatePanelTab(
+                    'search'
+                );
+
+            } else {
+
+                activatePanelTab(
+                    'home'
+                );
+            }
+
+        } else if (
             selectionOptions.queueIndex !==
             undefined
         ) {
