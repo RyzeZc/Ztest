@@ -568,6 +568,37 @@ import LoadingSpinner
             hidden
         >
 
+<div
+    class="music-player-playback-context"
+    data-playback-context
+    hidden
+>
+    <img
+        class="music-player-playback-context-image"
+        data-playback-context-image
+        alt=""
+    />
+
+    <div class="music-player-playback-context-info">
+
+        <span
+            class="music-player-playback-context-label"
+            data-playback-context-label
+        ></span>
+
+        <div
+            class="music-player-playback-context-title"
+            data-playback-context-title
+        ></div>
+
+        <div
+            class="music-player-playback-context-subtitle"
+            data-playback-context-subtitle
+        ></div>
+
+    </div>
+</div>
+        
           <div class="music-player-list-header music-player-queue-list-header">
 
             <span class="music-player-list-column-index">
