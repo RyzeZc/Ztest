@@ -3430,9 +3430,9 @@ YOUTUBE VIDEO
 
     grid-template-columns:
         repeat(
-            auto-fit,
+            4,
             minmax(
-                170px,
+                0,
                 1fr
             )
         );
@@ -3630,6 +3630,95 @@ YOUTUBE VIDEO
         default;
 }
 
+.music-player-search-entity-card--artist {
+    border-color:
+        transparent;
+
+    background:
+        transparent;
+}
+
+
+.music-player-search-entity-card--artist:hover {
+    border-color:
+        #303030;
+
+    background:
+        #181818;
+}
+
+.music-player-search-entity-card--artist {
+    border-color:
+        transparent;
+
+    background:
+        transparent;
+}
+
+
+.music-player-search-entity-card--artist:hover {
+    border-color:
+        #303030;
+
+    background:
+        #181818;
+}
+
+.music-player-search-entity-card.is-selected {
+    border-color:
+        #d97832;
+
+    background:
+        rgba(
+            217,
+            120,
+            50,
+            0.08
+        );
+}
+
+
+.music-player-discover-card {
+    cursor:
+        pointer;
+}
+
+
+.music-player-discover-card.is-selected {
+    transform:
+        translateY(
+            -1px
+        );
+}
+
+
+.music-player-discover-card.is-selected img {
+    box-shadow:
+        0 0 0 2px
+        #d97832;
+}
+
+
+.music-player-genre-card.is-selected {
+    border-color:
+        #d97832;
+}
+
+.music-player-playback-context[data-context-type="artist"]
+.music-player-playback-context-image {
+    border-radius:
+        50%;
+}
+
+
+.music-player-playback-context[data-context-type="album"]
+.music-player-playback-context-image,
+.music-player-playback-context[data-context-type="playlist"]
+.music-player-playback-context-image {
+    border-radius:
+        6px;
+}
+
 .music-player-search-tabs[hidden] {
     display: none !important;
 }
@@ -3705,78 +3794,6 @@ YOUTUBE VIDEO
             rotate(360deg);
     }
 }
-.music-player-playback-list-loader {
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    min-height: 34px;
-
-    margin:
-        4px 0 8px;
-
-    pointer-events: none;
-}
-
-
-.music-player-playback-list-loader[hidden] {
-    display: none;
-}
-
-
-.music-player-playback-list-loader-spinner {
-    width: 14px;
-
-    height: 14px;
-
-    border:
-        2px solid rgba(
-            255,
-            255,
-            255,
-            0.12
-        );
-
-    border-top-color:
-        #d97832;
-
-    border-radius:
-        50%;
-
-    opacity:
-        0;
-
-    transition:
-        opacity
-        0.15s
-        ease;
-}
-
-
-.music-player-playback-list-loader.is-loading
-.music-player-playback-list-loader-spinner {
-    opacity:
-        1;
-
-    animation:
-        music-player-playback-loader-spin
-        0.75s
-        linear
-        infinite;
-}
-
-
-@keyframes music-player-playback-loader-spin {
-
-    to {
-        transform:
-            rotate(360deg);
-    }
-}
-
-
 
 .music-player-playback-context {
     display:
@@ -3923,6 +3940,35 @@ YOUTUBE VIDEO
 /* =========================================================
    RESPONSIVE
    ========================================================= */
+
+@media (max-width: 700px) {
+
+    .music-player-search-entity-grid {
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    .music-player-search-entity-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+    }
+}
 
 @media (max-width: 600px) {
 
