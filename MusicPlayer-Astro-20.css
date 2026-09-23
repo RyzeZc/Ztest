@@ -3118,156 +3118,6 @@ YOUTUBE VIDEO
     display: none;
 }
 
-.music-player-home-detail {
-    display: none;
-
-    flex: 1 1 auto;
-
-    min-width: 0;
-    min-height: 0;
-
-    overflow: hidden;
-
-    flex-direction: column;
-}
-
-.music-player-home-detail.is-active {
-    display: flex;
-}
-
-.music-player-home-detail-header {
-    display: flex;
-
-    align-items: center;
-
-    flex-shrink: 0;
-
-    height: 48px;
-
-    padding:
-        0 16px;
-
-    box-sizing: border-box;
-
-    border-bottom:
-        1px solid #262626;
-
-    background:
-        #111;
-}
-
-.music-player-home-detail-back {
-    display: flex;
-
-    align-items: center;
-
-    gap: 7px;
-
-    height: 30px;
-
-    padding:
-        0 8px;
-
-    border: 0;
-
-    border-radius: 3px;
-
-    background:
-        transparent;
-
-    color:
-        #777;
-
-    font-family:
-        inherit;
-
-    font-size:
-        8px;
-
-    font-weight:
-        800;
-
-    letter-spacing:
-        0.1em;
-
-    cursor:
-        pointer;
-}
-
-.music-player-home-detail-back:hover {
-    color:
-        #d97832;
-
-    background:
-        #181818;
-}
-
-.music-player-home-detail-back svg {
-    width:
-        14px;
-
-    height:
-        14px;
-
-    fill:
-        none;
-
-    stroke:
-        currentColor;
-
-    stroke-width:
-        1.7;
-
-    stroke-linecap:
-        round;
-
-    stroke-linejoin:
-        round;
-}
-
-.music-player-home-detail-title {
-    min-width:
-        0;
-
-    margin-left:
-        12px;
-
-    overflow:
-        hidden;
-
-    color:
-        #d2d2d2;
-
-    font-size:
-        11px;
-
-    font-weight:
-        800;
-
-    white-space:
-        nowrap;
-
-    text-overflow:
-        ellipsis;
-}
-
-.music-player-home-detail-content {
-    flex:
-        1 1 auto;
-
-    min-width:
-        0;
-
-    min-height:
-        0;
-
-    overflow-y:
-        auto;
-
-    overflow-x:
-        hidden;
-}
-
 .music-player-trending-item.is-current {
     background:
         rgba(
@@ -3574,41 +3424,52 @@ YOUTUBE VIDEO
    BUSCAR — ARTISTAS / ÁLBUMES / PLAYLISTS
    ========================================================= */
 
-.music-player-search-entity {
+.music-player-search-entity-grid {
     display:
         grid;
 
     grid-template-columns:
-        34px
-        44px
-        minmax(0, 1fr);
+        repeat(
+            auto-fit,
+            minmax(
+                170px,
+                1fr
+            )
+        );
 
-    column-gap:
+    gap:
         10px;
 
-    align-items:
-        center;
-
-    width:
-        100%;
-
-    min-height:
-        58px;
-
     padding:
-        7px 10px;
+        12px 0;
+}
 
-    border:
+
+.music-player-search-entity-card {
+    position:
+        relative;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    min-width:
         0;
 
-    border-bottom:
-        1px solid #202020;
+    padding:
+        10px;
+
+    border:
+        1px solid
+        #202020;
 
     border-radius:
-        4px;
+        6px;
 
     background:
-        transparent;
+        #111;
 
     color:
         inherit;
@@ -3623,37 +3484,79 @@ YOUTUBE VIDEO
         pointer;
 
     transition:
-        background-color 0.12s ease;
+        background-color
+        0.15s ease,
+        border-color
+        0.15s ease,
+        transform
+        0.15s ease;
 }
 
 
-.music-player-search-entity:hover {
+.music-player-search-entity-card:hover {
     background:
         #181818;
+
+    border-color:
+        #303030;
+
+    transform:
+        translateY(-1px);
 }
 
 
+.music-player-search-entity-card
+.music-player-list-column-index {
+    display:
+        none;
+}
+
+
+.music-player-search-entity-card
 .music-player-search-entity-image {
     display:
         block;
 
     width:
-        44px;
+        100%;
 
-    height:
-        44px;
+    aspect-ratio:
+        1;
 
     object-fit:
         cover;
 
-    border-radius:
-        4px;
-
     background:
         #151515;
+
+    border-radius:
+        5px;
+
+    margin-bottom:
+        9px;
 }
 
 
+.music-player-search-entity-card--artist
+.music-player-search-entity-image {
+    width:
+        76px;
+
+    height:
+        76px;
+
+    aspect-ratio:
+        1;
+
+    margin:
+        2px auto 10px;
+
+    border-radius:
+        50%;
+}
+
+
+.music-player-search-entity-card
 .music-player-search-entity-info {
     display:
         flex;
@@ -3666,10 +3569,8 @@ YOUTUBE VIDEO
 }
 
 
+.music-player-search-entity-card
 .music-player-search-entity-title {
-    min-width:
-        0;
-
     overflow:
         hidden;
 
@@ -3680,7 +3581,7 @@ YOUTUBE VIDEO
         10px;
 
     line-height:
-        1.3;
+        1.25;
 
     font-weight:
         700;
@@ -3693,10 +3594,8 @@ YOUTUBE VIDEO
 }
 
 
+.music-player-search-entity-card
 .music-player-search-entity-meta {
-    min-width:
-        0;
-
     margin-top:
         4px;
 
@@ -3704,13 +3603,13 @@ YOUTUBE VIDEO
         hidden;
 
     color:
-        #5d5d5d;
+        #666;
 
     font-size:
         8px;
 
     line-height:
-        1;
+        1.2;
 
     font-weight:
         700;
@@ -3723,7 +3622,7 @@ YOUTUBE VIDEO
 }
 
 
-.music-player-search-entity.is-loading {
+.music-player-search-entity-card.is-loading {
     opacity:
         0.55;
 
@@ -3875,6 +3774,150 @@ YOUTUBE VIDEO
         transform:
             rotate(360deg);
     }
+}
+
+
+
+.music-player-playback-context {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        14px;
+
+    margin:
+        14px 24px 12px;
+
+    padding:
+        12px;
+
+    border:
+        1px solid
+        #202020;
+
+    border-radius:
+        6px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #171717,
+            #111
+        );
+
+    flex-shrink:
+        0;
+}
+
+
+.music-player-playback-context[hidden] {
+    display:
+        none;
+}
+
+
+.music-player-playback-context-image {
+    width:
+        72px;
+
+    height:
+        72px;
+
+    flex:
+        0 0 72px;
+
+    object-fit:
+        cover;
+
+    border-radius:
+        5px;
+
+    background:
+        #151515;
+}
+
+
+.music-player-playback-context-info {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    min-width:
+        0;
+}
+
+
+.music-player-playback-context-label {
+    color:
+        #d97832;
+
+    font-size:
+        7px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        0.14em;
+}
+
+
+.music-player-playback-context-title {
+    margin-top:
+        5px;
+
+    overflow:
+        hidden;
+
+    color:
+        #d0d0d0;
+
+    font-size:
+        15px;
+
+    font-weight:
+        800;
+
+    line-height:
+        1.2;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+.music-player-playback-context-subtitle {
+    margin-top:
+        5px;
+
+    overflow:
+        hidden;
+
+    color:
+        #666;
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    line-height:
+        1.2;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
 }
 
 /* =========================================================
