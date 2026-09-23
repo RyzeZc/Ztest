@@ -53,6 +53,27 @@ interface CategoryState<T> {
         boolean;
 }
 
+interface CategoryView {
+
+    section:
+        HTMLElement;
+
+    list:
+        HTMLElement;
+
+    loader:
+        HTMLElement;
+
+    viewAll:
+        HTMLButtonElement;
+
+    count:
+        HTMLElement;
+
+    renderedCount:
+        number;
+}
+
 
 interface SearchControllerOptions {
 
@@ -227,6 +248,11 @@ export function createSearchController(
             >(),
     };
 
+    const categoryViews =
+        new Map<
+            MusicGlobalSearchCategory,
+            CategoryView
+        >();
 
     function getState(
         category:
@@ -636,13 +662,18 @@ export function createSearchController(
             'click',
             () => {
 
+                const interactionSource =
+                    activeCategory ===
+                    'all'
+                        ? 'search-all'
+                        : source;
+
                 onTrackSelected(
                     track,
-                    source
+                    interactionSource
                 );
             }
         );
-
 
         parent.appendChild(
             item
@@ -769,11 +800,15 @@ export function createSearchController(
             'click',
             () => {
 
-                void selectEntity(
-                    'artists',
-                    artist.id,
-                    source,
-                    item
+                const interactionSource =
+                    activeCategory ===
+                    'all'
+                        ? 'search-all'
+                        : source;
+
+                onTrackSelected(
+                    artist,
+                    interactionSource
                 );
             }
         );
@@ -904,11 +939,15 @@ export function createSearchController(
             'click',
             () => {
 
-                void selectEntity(
-                    'albums',
-                    album.id,
-                    source,
-                    item
+                const interactionSource =
+                    activeCategory ===
+                    'all'
+                        ? 'search-all'
+                        : source;
+
+                onTrackSelected(
+                    album,
+                    interactionSource
                 );
             }
         );
@@ -1041,11 +1080,15 @@ export function createSearchController(
             'click',
             () => {
 
-                void selectEntity(
-                    'playlists',
-                    playlist.id,
-                    source,
-                    item
+                const interactionSource =
+                    activeCategory ===
+                    'all'
+                        ? 'search-all'
+                        : source;
+
+                onTrackSelected(
+                    playlist,
+                    interactionSource
                 );
             }
         );
@@ -1136,434 +1179,551 @@ export function createSearchController(
         );
     }
 
+function createCategoryLoader():
+    HTMLElement {
 
-    function createSearchSection(
-        category:
-            MusicGlobalSearchCategory,
-        parent:
-            HTMLElement
-    ):
-        void {
+    const categoryLoader =
+        loader.cloneNode(
+            true
+        ) as HTMLElement;
 
-        const state =
+    categoryLoader.removeAttribute(
+        'data-music-search-loader'
+    );
+
+    categoryLoader.classList.add(
+        'music-player-search-category-loader'
+    );
+
+    categoryLoader.hidden =
+        true;
+
+    return categoryLoader;
+}
+
+
+function updateCategoryLoader(
+    view:
+        CategoryView,
+    visible:
+        boolean
+):
+    void {
+
+    view.loader.hidden =
+        !visible;
+
+    const spinner =
+        view.loader.querySelector<HTMLElement>(
+            '.loading-spinner'
+        );
+
+    if (
+        spinner instanceof HTMLElement
+    ) {
+
+        spinner.classList.toggle(
+            'is-visible',
+            visible &&
             getState(
-                category
-            );
+                activeCategory
+            ).loading
+        );
+    }
+}
 
 
-        const section =
-            document.createElement(
-                'section'
-            );
+function ensureCategoryRows(
+    category:
+        MusicGlobalSearchCategory
+):
+    void {
 
-        section.className =
-            'music-player-search-section';
-
-        section.dataset.searchCategory =
-            category;
-
-
-        const header =
-            document.createElement(
-                'div'
-            );
-
-        header.className =
-            'music-player-search-section-header';
-
-
-        const title =
-            document.createElement(
-                'span'
-            );
-
-        title.className =
-            'music-player-search-section-title';
-
-        title.textContent =
-            CATEGORY_LABELS[
-                category
-            ];
-
-
-        const count =
-            document.createElement(
-                'span'
-            );
-
-        count.className =
-            'music-player-search-section-count';
-
-        count.textContent =
-            String(
-                state.total
-            );
-
-
-        header.appendChild(
-            title
+    const state =
+        getState(
+            category
         );
 
-        header.appendChild(
-            count
+    const view =
+        categoryViews.get(
+            category
+        );
+
+    if (
+        !view
+    ) {
+        return;
+    }
+
+
+    if (
+        view.renderedCount >=
+        state.data.length
+    ) {
+        return;
+    }
+
+
+    const newItems =
+        state.data.slice(
+            view.renderedCount
         );
 
 
-        if (
-            state.total >
-            state.data.length
-        ) {
+    appendCategoryRows(
+        category,
+        newItems,
+        sourceForCategory(
+            category
+        ),
+        view.list,
+        view.renderedCount
+    );
 
-            const viewAll =
-                document.createElement(
-                    'button'
-                );
 
-            viewAll.type =
-                'button';
+    view.renderedCount =
+        state.data.length;
+}
 
-            viewAll.className =
-                'music-player-search-view-all';
 
-            viewAll.dataset.searchViewAll =
+function createSearchSection(
+    category:
+        MusicGlobalSearchCategory
+):
+    CategoryView {
+
+    const existing =
+        categoryViews.get(
+            category
+        );
+
+    if (
+        existing
+    ) {
+        return existing;
+    }
+
+
+    const state =
+        getState(
+            category
+        );
+
+
+    const section =
+        document.createElement(
+            'section'
+        );
+
+    section.className =
+        'music-player-search-section';
+
+    section.dataset.searchCategory =
+        category;
+
+
+    const header =
+        document.createElement(
+            'div'
+        );
+
+    header.className =
+        'music-player-search-section-header';
+
+
+    const title =
+        document.createElement(
+            'span'
+        );
+
+    title.className =
+        'music-player-search-section-title';
+
+    title.textContent =
+        CATEGORY_LABELS[
+            category
+        ];
+
+
+    const count =
+        document.createElement(
+            'span'
+        );
+
+    count.className =
+        'music-player-search-section-count';
+
+    count.textContent =
+        String(
+            state.total
+        );
+
+
+    const viewAll =
+        document.createElement(
+            'button'
+        );
+
+    viewAll.type =
+        'button';
+
+    viewAll.className =
+        'music-player-search-view-all';
+
+    viewAll.dataset.searchViewAll =
+        category;
+
+    viewAll.textContent =
+        'VER TODO';
+
+    viewAll.addEventListener(
+        'click',
+        () => {
+
+            activeCategory =
                 category;
 
-            viewAll.textContent =
-                'VER TODO';
+            updateActiveTab();
 
-            header.appendChild(
-                viewAll
-            );
+            renderActiveCategory();
         }
+    );
 
 
-        const list =
-            document.createElement(
-                'div'
-            );
+    header.appendChild(
+        title
+    );
 
-        list.className =
-            'music-player-search-section-list';
+    header.appendChild(
+        count
+    );
+
+    header.appendChild(
+        viewAll
+    );
 
 
-        appendCategoryRows(
-            category,
-            state.data.slice(
-                0,
-                5
-            ),
-            'search-all',
-            list
+    const list =
+        document.createElement(
+            'div'
         );
 
-
-        section.appendChild(
-            header
-        );
-
-        section.appendChild(
-            list
-        );
+    list.className =
+        'music-player-search-section-list';
 
 
-        parent.appendChild(
-            section
-        );
-    }
+    const categoryLoader =
+        createCategoryLoader();
 
 
-    function renderAll():
-        void {
+    section.appendChild(
+        header
+    );
 
-        stopInfiniteScroll();
+    section.appendChild(
+        list
+    );
 
-        resultsContainer.innerHTML =
-            '';
-
-
-        for (
-            const category
-            of CATEGORY_ORDER
-        ) {
-
-            const buttons =
-                categoryTabs.querySelector(
-                    `[data-music-search-tab="${category}"]`
-                );
-
-            if (
-                !buttons
-            ) {
-                continue;
-            }
+    section.appendChild(
+        categoryLoader
+    );
 
 
-            if (
-                getState(
-                    category
-                ).data.length ===
-                0
-            ) {
-                continue;
-            }
+    const view:
+        CategoryView = {
+
+        section,
+
+        list,
+
+        loader:
+            categoryLoader,
+
+        viewAll,
+
+        count,
+
+        renderedCount:
+            0,
+    };
 
 
-            createSearchSection(
-                category,
-                resultsContainer
-            );
-        }
+    categoryViews.set(
+        category,
+        view
+    );
 
 
-        resultsContainer.appendChild(
-            loader
-        );
+    ensureCategoryRows(
+        category
+    );
 
 
-        updateLoader(
-            false
-        );
-    }
+    return view;
+}
 
 
-    function getActiveSectionList():
-        HTMLElement | null {
+function updateSearchViews():
+    void {
 
-        if (
-            activeCategory ===
-            'all'
-        ) {
-
-            return null;
-        }
+    stopInfiniteScroll();
 
 
-        const section =
-            resultsContainer.querySelector<HTMLElement>(
-                `[data-search-category="${activeCategory}"]`
+    for (
+        const category
+        of CATEGORY_ORDER
+    ) {
+
+        const tab =
+            categoryTabs.querySelector(
+                `[data-music-search-tab="${category}"]`
             );
 
         if (
-            !section
+            !tab
         ) {
-            return null;
-        }
-
-
-        return section.querySelector<HTMLElement>(
-            '.music-player-search-section-list'
-        );
-    }
-
-
-    function renderActiveCategory():
-        void {
-
-        stopInfiniteScroll();
-
-        resultsContainer.innerHTML =
-            '';
-
-
-        if (
-            activeCategory ===
-            'all'
-        ) {
-
-            renderAll();
-
-            return;
+            continue;
         }
 
 
         const state =
             getState(
-                activeCategory
+                category
             );
 
 
-        const section =
-            document.createElement(
-                'section'
+        if (
+            state.data.length ===
+            0
+        ) {
+            continue;
+        }
+
+
+        const view =
+            createSearchSection(
+                category
             );
 
-        section.className =
-            'music-player-search-section';
 
-        section.dataset.searchCategory =
-            activeCategory;
+        if (
+            !resultsContainer.contains(
+                view.section
+            )
+        ) {
 
-
-        const header =
-            document.createElement(
-                'div'
+            resultsContainer.appendChild(
+                view.section
             );
-
-        header.className =
-            'music-player-search-section-header';
+        }
 
 
-        const title =
-            document.createElement(
-                'span'
-            );
-
-        title.className =
-            'music-player-search-section-title';
-
-        title.textContent =
-            CATEGORY_LABELS[
-                activeCategory
-            ];
+        ensureCategoryRows(
+            category
+        );
 
 
-        const count =
-            document.createElement(
-                'span'
-            );
+        const isVisible =
+            activeCategory ===
+                'all' ||
+            activeCategory ===
+                category;
 
-        count.className =
-            'music-player-search-section-count';
 
-        count.textContent =
+        view.section.hidden =
+            !isVisible;
+
+
+        const rows =
+            Array.from(
+                view.list.children
+            ) as HTMLElement[];
+
+
+        rows.forEach(
+            (
+                row,
+                index
+            ) => {
+
+                row.hidden =
+                    activeCategory ===
+                        'all' &&
+                    index >= 5;
+            }
+        );
+
+
+        view.viewAll.hidden =
+            activeCategory !==
+                'all' ||
+            state.total <=
+                5;
+
+
+        view.count.textContent =
             String(
                 state.total
             );
-
-
-        header.appendChild(
-            title
-        );
-
-        header.appendChild(
-            count
-        );
-
-
-        const list =
-            document.createElement(
-                'div'
-            );
-
-        list.className =
-            'music-player-search-section-list';
-
-
-        appendCategoryRows(
-            activeCategory,
-            state.data,
-            sourceForCategory(
-                activeCategory
-            ),
-            list
-        );
-
-
-        section.appendChild(
-            header
-        );
-
-        section.appendChild(
-            list
-        );
-
-
-        resultsContainer.appendChild(
-            section
-        );
-
-        resultsContainer.appendChild(
-            loader
-        );
-
-
-        setupInfiniteScroll();
     }
 
 
-    function canLoadMore():
-        boolean {
+    if (
+        activeCategory ===
+        'all'
+    ) {
 
-        if (
-            activeCategory ===
-            'all'
-        ) {
-            return false;
-        }
-
-
-        const state =
-            getState(
-                activeCategory
-            );
-
-
-        return (
-            state.total >
-                state.data.length &&
-            state.pageCount <
-                maxPages &&
-            state.next !==
-                ''
-        );
+        return;
     }
 
 
-    function setupInfiniteScroll():
-        void {
-
-        stopInfiniteScroll();
+    setupInfiniteScroll();
+}
 
 
-        if (
-            !canLoadMore()
-        ) {
+function getActiveSectionList():
+    HTMLElement | null {
 
-            return;
-        }
+    if (
+        activeCategory ===
+        'all'
+    ) {
 
-
-        searchObserver =
-            new IntersectionObserver(
-                entries => {
-
-                    if (
-                        !entries.some(
-                            entry =>
-                                entry.isIntersecting
-                        )
-                    ) {
-                        return;
-                    }
+        return null;
+    }
 
 
-                    if (
-                        searchLoading
-                    ) {
-                        return;
-                    }
+    return (
+        categoryViews.get(
+            activeCategory
+        )?.list ??
+        null
+    );
+}
 
 
-                    void loadMoreCategory();
-                },
-                {
-                    root:
-                        resultsContainer,
+function canLoadMore():
+    boolean {
 
-                    rootMargin:
-                        '0px 0px 250px 0px',
+    if (
+        activeCategory ===
+        'all'
+    ) {
 
-                    threshold:
-                        0,
+        return false;
+    }
+
+
+    const state =
+        getState(
+            activeCategory
+        );
+
+
+    return (
+        state.total >
+            state.data.length &&
+        state.pageCount <
+            maxPages
+    );
+}
+
+
+function setupInfiniteScroll():
+    void {
+
+    stopInfiniteScroll();
+
+
+    if (
+        !canLoadMore()
+    ) {
+
+        return;
+    }
+
+
+    const view =
+        categoryViews.get(
+            activeCategory
+        );
+
+
+    if (
+        !view
+    ) {
+
+        return;
+    }
+
+
+    view.loader.hidden =
+        false;
+
+
+    searchObserver =
+        new IntersectionObserver(
+            entries => {
+
+                if (
+                    !entries.some(
+                        entry =>
+                            entry.isIntersecting
+                    )
+                ) {
+
+                    return;
                 }
-            );
 
 
-        searchObserver.observe(
-            loader
+                const state =
+                    getState(
+                        activeCategory
+                    );
+
+
+                if (
+                    state.loading
+                ) {
+
+                    return;
+                }
+
+
+                void loadMoreCategory();
+
+            },
+            {
+                root:
+                    resultsContainer,
+
+                rootMargin:
+                    '0px 0px 250px 0px',
+
+                threshold:
+                    0,
+            }
         );
-    }
 
+
+    searchObserver.observe(
+        view.loader
+    );
+}
+
+
+function renderAll():
+    void {
+
+    updateSearchViews();
+}
+
+
+function renderActiveCategory():
+    void {
+
+    updateSearchViews();
+}
 
     async function loadMoreCategory():
         Promise<void> {
@@ -1768,6 +1928,24 @@ export function createSearchController(
                 1;
 
 
+            const view =
+                categoryViews.get(
+                    category
+                );
+
+            if (
+                view
+            ) {
+
+                view.renderedCount =
+                    state.data.length;
+
+                view.count.textContent =
+                    String(
+                        state.total
+                    );
+            }
+                            
             const list =
                 getActiveSectionList();
 
@@ -2023,6 +2201,8 @@ export function createSearchController(
 
         resetStates();
 
+        categoryViews.clear();
+
         clearCategoryTabs();
 
         updateLoader(
@@ -2207,6 +2387,8 @@ export function createSearchController(
 
         resetStates();
 
+        categoryViews.clear();
+
         searchQuery =
             '';
 
@@ -2282,65 +2464,6 @@ export function createSearchController(
 
             if (
                 !category
-            ) {
-                return;
-            }
-
-
-            activeCategory =
-                category;
-
-
-            updateActiveTab();
-
-
-            renderActiveCategory();
-        }
-    );
-
-
-    resultsContainer.addEventListener(
-        'click',
-        event => {
-
-            const target =
-                event.target;
-
-
-            if (
-                !(
-                    target instanceof
-                    HTMLElement
-                )
-            ) {
-                return;
-            }
-
-
-            const viewAll =
-                target.closest<HTMLButtonElement>(
-                    '[data-search-view-all]'
-                );
-
-
-            if (
-                !viewAll
-            ) {
-                return;
-            }
-
-
-            const category =
-                viewAll.dataset
-                    .searchViewAll as
-                    SearchCategory
-                    | undefined;
-
-
-            if (
-                !category ||
-                category ===
-                    'all'
             ) {
                 return;
             }
