@@ -223,6 +223,7 @@ import LoadingSpinner
             data-panel-tab="playback"
             role="tab"
             aria-selected="false"
+            hidden
         >
             REPRODUCIENDO
         </button>
@@ -465,46 +466,6 @@ import LoadingSpinner
 
           </div>
 
-          <div
-              class="music-player-home-detail"
-              data-home-detail
-          >
-              <div class="music-player-home-detail-header">
-
-                  <button
-                      class="music-player-home-detail-back"
-                      type="button"
-                      data-home-detail-back
-                      aria-label="Volver"
-                  >
-                      <svg
-                          viewBox="0 0 16 16"
-                          aria-hidden="true"
-                      >
-                          <path
-                              d="M10.5 2.5L5 8l5.5 5.5"
-                          />
-                      </svg>
-
-                      <span>
-                          VOLVER
-                      </span>
-                  </button>
-
-                  <div
-                      class="music-player-home-detail-title"
-                      data-home-detail-title
-                  ></div>
-
-              </div>
-
-              <div
-                  class="music-player-home-detail-content"
-                  data-home-detail-content
-              ></div>
-          </div>
-
-
         </section>
 
 
@@ -569,27 +530,15 @@ import LoadingSpinner
 
           </form>
 
+<nav
+    class="music-player-search-tabs"
+    data-music-search-tabs
+    role="tablist"
+    aria-label="Categorías de búsqueda"
+    hidden
+></nav>
 
-        <div class="music-player-list-header music-player-results-list-header">
 
-          <span class="music-player-list-column-index">
-            #
-          </span>
-
-          <span
-            class="music-player-list-column-cover"
-            aria-hidden="true"
-          ></span>
-
-          <span class="music-player-list-column-title">
-            TÍTULO
-          </span>
-
-          <span class="music-player-list-column-duration">
-            DURACIÓN
-          </span>
-
-        </div>
 
           <div
               class="music-player-youtube-results"
@@ -616,6 +565,7 @@ import LoadingSpinner
             class="music-player-station-panel music-player-panel-view"
             data-panel="playback"
             data-panel-view="playback"
+            hidden
         >
 
           <div class="music-player-list-header music-player-queue-list-header">
@@ -640,13 +590,7 @@ import LoadingSpinner
           </div>
 
 
-          <div class="music-player-queue-list">
-
-            <div class="music-player-queue-empty">
-              LA COLA SE GENERARÁ AL REPRODUCIR UNA CANCIÓN
-            </div>
-
-          </div>
+          <div class="music-player-queue-list"></div>
 
         </section>
 
