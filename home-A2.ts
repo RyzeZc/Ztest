@@ -765,6 +765,8 @@ export function createHomeController(
                 card.className =
                     'music-player-discover-card';
 
+                card.dataset.playbackContextKey =
+                    `album:${album.id}`;
 
                 const image =
                     document.createElement(
@@ -1023,6 +1025,8 @@ export function createHomeController(
                 card.className =
                     'music-player-discover-card music-player-playlist-card';
 
+                card.dataset.playbackContextKey =
+                    `playlist:${playlist.id}`;
 
                 const image =
                     document.createElement(
@@ -1272,7 +1276,9 @@ export function createHomeController(
                 card.className =
                     'music-player-genre-card';
 
-
+                card.dataset.playbackContextKey =
+                    `genre:${genre.id}`;
+                                    
                 const image =
                     document.createElement(
                         'img'
