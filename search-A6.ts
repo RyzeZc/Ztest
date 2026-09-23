@@ -1332,6 +1332,10 @@ function createCategoryLoader():
         'data-music-search-loader'
     );
 
+    categoryLoader.classList.remove(
+        'music-player-search-infinite-loader'
+    );
+
     categoryLoader.classList.add(
         'music-player-search-category-loader'
     );
@@ -1547,7 +1551,9 @@ function createSearchSection(
         );
 
     previewList.className =
-        'music-player-search-preview-list';
+        category === 'tracks'
+            ? 'music-player-search-preview-list'
+            : 'music-player-search-preview-list music-player-search-entity-grid';
 
 
     appendCategoryRows(
@@ -1572,7 +1578,9 @@ function createSearchSection(
         );
 
     list.className =
-        'music-player-search-section-list';
+        category === 'tracks'
+            ? 'music-player-search-section-list'
+            : 'music-player-search-section-list music-player-search-entity-grid';
 
 
     appendCategoryRows(
@@ -2883,14 +2891,26 @@ function renderActiveCategory():
                         category
                     ];
 
+                const previewItems =
+                    (
+                        preview.data ??
+                        []
+                    ).slice(
+                        0,
+                        5
+                    );
+
+                state.preview =
+                    previewItems;
 
                 state.data =
-                    preview.data ??
-                    [];
+                    [
+                        ...previewItems,
+                    ];
 
                 state.total =
                     preview.total ??
-                    0;
+                    previewItems.length;
 
                 state.next =
                     null;
