@@ -2,8 +2,11 @@ import { audioPlayer } from '../../lib/audio/audio-player';
 import { audioStations } from '../../lib/audio/audio-stations';
 import { YouTubePlayer } from '../../lib/youtube/youtube-player';
 import {
+    getAlbum,
     getAlbumTracks,
+    getGenre,
     getGenreChart,
+    getPlaylist,
     getPlaylistTracks,
 } from '../../lib/music/music-service';
 
@@ -721,6 +724,9 @@ const homeController:
                 playbackList
             ) => {
 
+                currentPlaybackContextInfo =
+                    null;
+
                 void selectMusicTrack(
                     track,
                     {
@@ -876,6 +882,9 @@ const searchController:
 
                     currentPlaybackContextInfo = {
 
+                        key:
+                            `artist-radio:${track.artist.id}`,
+
                         type:
                             'artist-radio',
 
@@ -906,12 +915,14 @@ const searchController:
                 }
 
 
+                currentPlaybackContextInfo =
+                    null;
+
                 void selectMusicTrack(
                     track,
                     {
                         queueAction:
                             'clear',
-
                         playbackList:
                             [
                                 track,
@@ -924,6 +935,13 @@ const searchController:
                             'search-all',
                     }
                 );
+            },
+
+        isPlaybackContextActive,
+            
+        toggleActivePlaybackContext:
+            () => {
+                toggleActivePlaybackContext();
             },
 
         onTrackListSelected:
@@ -942,8 +960,26 @@ const searchController:
                 return;
             }
 
-            currentPlaybackContextInfo =
-                null;
+            currentPlaybackContextInfo = {
+
+                key:
+                    context.key,
+
+                type:
+                    context.type,
+
+                label:
+                    context.label,
+
+                title:
+                    context.title,
+
+                subtitle:
+                    context.subtitle,
+
+                image:
+                    context.image,
+            };
 
             void selectMusicTrack(
                 tracks[0],
@@ -1001,6 +1037,9 @@ const searchController:
 
     interface PlaybackContextInfo {
 
+        key:
+            string;
+
         type:
             | 'artist'
             | 'album'
@@ -1026,6 +1065,47 @@ const searchController:
         PlaybackContextInfo | null =
         null;    
 
+    function isPlaybackContextActive(
+        contextKey:
+            string
+    ):
+        boolean {
+
+        return (
+            currentPlaybackContextInfo?.key ===
+                contextKey &&
+
+            playbackState.currentMusicTrack !==
+                null &&
+
+            playbackState.playbackList.length >
+                0
+        );
+    }
+
+
+    function toggleActivePlaybackContext():
+        void {
+
+        const currentTrack =
+            playbackState.currentMusicTrack;
+
+        if (
+            !currentTrack
+        ) {
+            return;
+        }
+
+
+        void selectMusicTrack(
+            currentTrack,
+            {
+                queueAction:
+                    'keep',
+            }
+        );
+    }
+            
 function formatTime(
     seconds: number
 ): string {
@@ -1179,6 +1259,21 @@ async function openHomeDetail(
     const requestId =
         ++homePlaybackRequestId;
 
+    const contextKey =
+        `${route.type}:${route.id}`;
+
+
+    if (
+        isPlaybackContextActive(
+            contextKey
+        )
+    ) {
+
+        toggleActivePlaybackContext();
+
+        return;
+    }
+            
     try {
 
         let tracks:
@@ -1196,22 +1291,48 @@ async function openHomeDetail(
 
             case 'album': {
 
+                const [
+                    tracksResult,
+                    metadataResult,
+                ] =
+                    await Promise.allSettled([
+
+                        getAlbumTracks(
+                            route.id,
+                            0,
+                            10
+                        ),
+
+                        getAlbum(
+                            route.id
+                        ),
+                    ]);
+
+
+                if (
+                    tracksResult.status !==
+                    'fulfilled'
+                ) {
+
+                    throw tracksResult.reason;
+                }
+
+
                 const response =
-                    await getAlbumTracks(
-                        route.id,
-                        0,
-                        10
-                    );
+                    tracksResult.value;
+
 
                 if (
                     response.status !==
                     'success'
                 ) {
+
                     throw new Error(
                         'Album tracks request failed.'
                     );
                 }
 
+
                 tracks =
                     response.data ?? [];
 
@@ -1223,28 +1344,88 @@ async function openHomeDetail(
                     response.total ??
                     tracks.length;
 
+
+                const album =
+                    metadataResult.status ===
+                    'fulfilled'
+                        ? metadataResult.value
+                        : null;
+
+
+                currentPlaybackContextInfo = {
+
+                    key:
+                        contextKey,
+
+                    type:
+                        'album',
+
+                    label:
+                        'ÁLBUM',
+
+                    title:
+                        album?.title ??
+                        route.title,
+
+                    subtitle:
+                        album?.artist?.name ??
+                        tracks[0]?.artist?.name ??
+                        'ARTISTA DESCONOCIDO',
+
+                    image:
+                        album?.cover ??
+                        tracks[0]?.album?.cover ??
+                        null,
+                };
+
+
                 break;
             }
 
-
             case 'playlist': {
 
+                const [
+                    tracksResult,
+                    metadataResult,
+                ] =
+                    await Promise.allSettled([
+
+                        getPlaylistTracks(
+                            route.id,
+                            0,
+                            10
+                        ),
+
+                        getPlaylist(
+                            route.id
+                        ),
+                    ]);
+
+
+                if (
+                    tracksResult.status !==
+                    'fulfilled'
+                ) {
+
+                    throw tracksResult.reason;
+                }
+
+
                 const response =
-                    await getPlaylistTracks(
-                        route.id,
-                        0,
-                        10
-                    );
+                    tracksResult.value;
+
 
                 if (
                     response.status !==
                     'success'
                 ) {
+
                     throw new Error(
                         'Playlist tracks request failed.'
                     );
                 }
 
+
                 tracks =
                     response.data ?? [];
 
@@ -1256,25 +1437,84 @@ async function openHomeDetail(
                     response.total ??
                     tracks.length;
 
+
+                const playlist =
+                    metadataResult.status ===
+                    'fulfilled'
+                        ? metadataResult.value
+                        : null;
+
+
+                currentPlaybackContextInfo = {
+
+                    key:
+                        contextKey,
+
+                    type:
+                        'playlist',
+
+                    label:
+                        'PLAYLIST',
+
+                    title:
+                        playlist?.title ??
+                        route.title,
+
+                    subtitle:
+                        playlist?.user?.name
+                            ? `Por ${playlist.user.name} · ${playlist.nb_tracks ?? total} pistas`
+                            : `${playlist?.nb_tracks ?? total} pistas`,
+
+                    image:
+                        playlist?.picture ??
+                        null,
+                };
+
+
                 break;
             }
 
-
             case 'genre': {
 
+                const [
+                    chartResult,
+                    metadataResult,
+                ] =
+                    await Promise.allSettled([
+
+                        getGenreChart(
+                            route.id
+                        ),
+
+                        getGenre(
+                            route.id
+                        ),
+                    ]);
+
+
+                if (
+                    chartResult.status !==
+                    'fulfilled'
+                ) {
+
+                    throw chartResult.reason;
+                }
+
+
                 const response =
-                    await getGenreChart(
-                        route.id
-                    );
+                    chartResult.value;
+
 
                 if (
                     response.status !==
                     'success'
                 ) {
+
                     throw new Error(
                         'Genre chart request failed.'
                     );
                 }
+
 
                 tracks =
                     response.tracks?.data ??
@@ -1287,6 +1527,39 @@ async function openHomeDetail(
                 total =
                     response.tracks?.total ??
                     tracks.length;
+
+
+                const genre =
+                    metadataResult.status ===
+                    'fulfilled'
+                        ? metadataResult.value
+                        : null;
+
+
+                currentPlaybackContextInfo = {
+
+                    key:
+                        contextKey,
+
+                    type:
+                        'genre',
+
+                    label:
+                        'GÉNERO',
+
+                    title:
+                        genre?.name ??
+                        route.title,
+
+                    subtitle:
+                        `${total} pistas`,
+
+                    image:
+                        genre?.picture ??
+                        tracks[0]?.album?.cover ??
+                        null,
+                };
+
 
                 break;
             }
@@ -1455,14 +1728,23 @@ function renderPlaybackContext(): void {
     playbackContext.hidden =
         !shouldShow;
 
-
     if (
         !shouldShow ||
         !currentPlaybackContextInfo
     ) {
+
+        playbackContext.hidden =
+            true;
+
+        playbackContext.removeAttribute(
+            'data-context-type'
+        );
+
         return;
     }
 
+    playbackContext.dataset.contextType =
+    currentPlaybackContextInfo.type;
 
     playbackContextLabel.textContent =
         currentPlaybackContextInfo.label;
@@ -1972,6 +2254,37 @@ function updateTrackPlaybackIndicators(): void {
                             trendingIndex + 1
                         );
             }
+        }
+    );
+
+        /*
+    * --------------------------------------------------
+    * CONTEXTOS
+    * --------------------------------------------------
+    */
+
+    const activeContextKey =
+        currentPlaybackContextInfo?.key ??
+        null;
+
+
+    const contextItems =
+        player.querySelectorAll<HTMLElement>(
+            '[data-playback-context-key]'
+        );
+
+
+    contextItems.forEach(
+        item => {
+
+            item.classList.toggle(
+                'is-selected',
+                activeContextKey !==
+                    null &&
+                item.dataset
+                    .playbackContextKey ===
+                    activeContextKey
+            );
         }
     );
 }
