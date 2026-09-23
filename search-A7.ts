@@ -1,11 +1,9 @@
 import {
     getAlbum,
-    getAlbumTracks,
     getArtist,
     getArtistTop,
     getMusicApiNext,
     getPlaylist,
-    getPlaylistTracks,
     searchAlbums,
     searchArtists,
     searchGlobal,
@@ -126,6 +124,9 @@ interface SearchControllerOptions {
     activateSearchTab:
         () => void;
 
+    updateTrackPlaybackIndicators:
+        () => void;
+
     onTrackSelected:
         (
             track:
@@ -242,6 +243,7 @@ export function createSearchController(
         maxPages,
         isPlaybackContextActive,
         toggleActivePlaybackContext,
+        updateTrackPlaybackIndicators,
     } =
         options;
 
@@ -761,6 +763,27 @@ export function createSearchController(
         );
     }
 
+    function createCardPlaybackIndicator():
+        HTMLSpanElement {
+
+        const indicator =
+            document.createElement(
+                'span'
+            );
+
+        indicator.className =
+            'music-player-card-play-indicator';
+
+        indicator.setAttribute(
+            'aria-hidden',
+            'true'
+        );
+
+        indicator.textContent =
+            '▶';
+
+        return indicator;
+    }    
 
     function appendArtistRow(
         artist:
@@ -876,6 +899,10 @@ export function createSearchController(
         item.appendChild(
             image
         );
+
+        item.appendChild(
+            createCardPlaybackIndicator()
+        );        
 
         item.appendChild(
             info
@@ -1036,6 +1063,10 @@ export function createSearchController(
         );
 
         item.appendChild(
+            createCardPlaybackIndicator()
+        );        
+
+        item.appendChild(
             info
         );
 
@@ -1194,6 +1225,10 @@ export function createSearchController(
 
         item.appendChild(
             image
+        );
+
+        item.appendChild(
+            createCardPlaybackIndicator()
         );
 
         item.appendChild(
@@ -1530,6 +1565,24 @@ function createSearchSection(
     viewAll.textContent =
         'VER TODO';
 
+    viewAll.addEventListener(
+        'click',
+        () => {
+
+            activeCategory =
+                category;
+
+            categoryHasUserScrolled =
+                false;
+
+            resultsContainer.scrollTop =
+                0;
+
+            updateActiveTab();
+
+            renderActiveCategory();
+        }
+    );        
 
     header.appendChild(
         viewAll
@@ -1739,11 +1792,15 @@ function updateSearchViews():
         'all'
     ) {
 
+        updateTrackPlaybackIndicators();
+
         return;
     }
 
 
     armInfiniteScrollAfterUserScroll();
+
+    updateTrackPlaybackIndicators();
 }
 
 
@@ -2459,45 +2516,26 @@ function renderActiveCategory():
 
                 case 'albums': {
 
-                    const [
-                        tracksResult,
-                        metadataResult,
-                    ] =
-                        await Promise.allSettled([
-
-                            getAlbumTracks(
-                                id,
-                                0,
-                                10
-                            ),
-
-                            getAlbum(
-                                id
-                            ),
-                        ]);
+                    const album =
+                        await getAlbum(
+                            id
+                        ) as MusicAlbum & {
+                            tracks?: MusicApiCollection<MusicTrack>;
+                        };
 
 
-                    if (
-                        tracksResult.status !==
-                        'fulfilled'
-                    ) {
-
-                        throw tracksResult.reason;
-                    }
+                    metadata =
+                        album;
 
 
-                    tracksResponse =
-                        tracksResult.value;
+                    tracksResponse = {
 
+                        ...album.tracks,
 
-                    if (
-                        metadataResult.status ===
-                        'fulfilled'
-                    ) {
+                        status:
+                            'success',
 
-                        metadata =
-                            metadataResult.value;
-                    }
+                    } as MusicApiCollection<MusicTrack>;
 
 
                     break;
@@ -2506,45 +2544,26 @@ function renderActiveCategory():
 
                 case 'playlists': {
 
-                    const [
-                        tracksResult,
-                        metadataResult,
-                    ] =
-                        await Promise.allSettled([
-
-                            getPlaylistTracks(
-                                id,
-                                0,
-                                10
-                            ),
-
-                            getPlaylist(
-                                id
-                            ),
-                        ]);
+                    const playlist =
+                        await getPlaylist(
+                            id
+                        ) as MusicPlaylist & {
+                            tracks?: MusicApiCollection<MusicTrack>;
+                        };
 
 
-                    if (
-                        tracksResult.status !==
-                        'fulfilled'
-                    ) {
-
-                        throw tracksResult.reason;
-                    }
+                    metadata =
+                        playlist;
 
 
-                    tracksResponse =
-                        tracksResult.value;
+                    tracksResponse = {
 
+                        ...playlist.tracks,
 
-                    if (
-                        metadataResult.status ===
-                        'fulfilled'
-                    ) {
+                        status:
+                            'success',
 
-                        metadata =
-                            metadataResult.value;
-                    }
+                    } as MusicApiCollection<MusicTrack>;
 
 
                     break;
