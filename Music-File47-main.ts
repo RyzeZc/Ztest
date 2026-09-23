@@ -3,11 +3,8 @@ import { audioStations } from '../../lib/audio/audio-stations';
 import { YouTubePlayer } from '../../lib/youtube/youtube-player';
 import {
     getAlbum,
-    getAlbumTracks,
-    getGenre,
     getGenreChart,
     getPlaylist,
-    getPlaylistTracks,
 } from '../../lib/music/music-service';
 
 
@@ -869,6 +866,8 @@ const searchController:
                 );
             },
 
+        updateTrackPlaybackIndicators,
+
         onTrackSelected:
             (
                 track,
@@ -918,21 +917,57 @@ const searchController:
                 currentPlaybackContextInfo =
                     null;
 
+
+                const searchAllTracks =
+                    searchController
+                        .getTracks()
+                        .slice(
+                            0,
+                            5
+                        );
+
+
+                const searchAllPlaybackList =
+                    searchAllTracks.some(
+                        currentTrack =>
+                            currentTrack.id ===
+                            track.id
+                    )
+                        ? searchAllTracks
+                        : [
+                            track,
+                            ...searchAllTracks
+                                .filter(
+                                    currentTrack =>
+                                        currentTrack.id !==
+                                        track.id
+                                ),
+                        ].slice(
+                            0,
+                            5
+                        );
+
+
                 void selectMusicTrack(
                     track,
                     {
                         queueAction:
                             'clear',
+
                         playbackList:
-                            [
-                                track,
-                            ],
+                            searchAllPlaybackList,
 
                         playbackListMode:
                             'context',
 
                         playbackListSource:
                             'search-all',
+
+                        playbackListNext:
+                            null,
+
+                        playbackListTotal:
+                            searchAllPlaybackList.length,
                     }
                 );
             },
@@ -1060,6 +1095,31 @@ const searchController:
             string | null;
     }
 
+    type MusicEntityWithEmbeddedTracks = {
+        title?: string;
+
+        cover?: string | null;
+
+        picture?: string | null;
+
+        artist?: {
+            name?: string | null;
+        } | null;
+
+        user?: {
+            name?: string | null;
+        } | null;
+
+        nb_tracks?: number | null;
+
+        tracks?: {
+            data?: MusicTrack[];
+
+            next?: string | null;
+
+            total?: number;
+        };
+    };    
 
     let currentPlaybackContextInfo:
         PlaybackContextInfo | null =
@@ -1227,6 +1287,10 @@ function stopYouTubeProgress(): void {
 
 let homePlaybackRequestId = 0;
 
+let homePlaybackLoadingContextKey:
+    string | null =
+    null;
+
 
 function getHomePlaybackSource(
     route:
@@ -1268,12 +1332,24 @@ async function openHomeDetail(
             contextKey
         )
     ) {
-
         toggleActivePlaybackContext();
 
         return;
     }
-            
+
+
+    if (
+        homePlaybackLoadingContextKey ===
+        contextKey
+    ) {
+        return;
+    }
+
+
+    homePlaybackLoadingContextKey =
+        contextKey;
+
+
     try {
 
         let tracks:
@@ -1285,300 +1361,193 @@ async function openHomeDetail(
         let total =
             0;
 
+        let resolvedContextInfo:
+            PlaybackContextInfo | null =
+            null;
+
         switch (
             route.type
         ) {
 
-            case 'album': {
+        case 'album': {
 
-                const [
-                    tracksResult,
-                    metadataResult,
-                ] =
-                    await Promise.allSettled([
-
-                        getAlbumTracks(
-                            route.id,
-                            0,
-                            10
-                        ),
-
-                        getAlbum(
-                            route.id
-                        ),
-                    ]);
+            const album =
+                await getAlbum(
+                    route.id
+                ) as MusicEntityWithEmbeddedTracks;
 
 
-                if (
-                    tracksResult.status !==
-                    'fulfilled'
-                ) {
+            tracks =
+                album.tracks?.data ??
+                [];
 
-                    throw tracksResult.reason;
-                }
+            next =
+                album.tracks?.next ??
+                null;
+
+            total =
+                album.tracks?.total ??
+                tracks.length;
 
 
-                const response =
-                    tracksResult.value;
-
-
-                if (
-                    response.status !==
-                    'success'
-                ) {
-
-                    throw new Error(
-                        'Album tracks request failed.'
-                    );
-                }
-
+            if (
+                album.cover
+            ) {
 
                 tracks =
-                    response.data ?? [];
+                    tracks.map(
+                        track => ({
+                            ...track,
 
-                next =
-                    response.next ??
-                    null;
+                            album: {
+                                ...track.album,
 
-                total =
-                    response.total ??
-                    tracks.length;
-
-                const album =
-                    metadataResult.status ===
-                    'fulfilled'
-                        ? metadataResult.value
-                        : null;
-
-                if (album?.cover) {
-                    tracks =
-                        tracks.map(
-                            track => ({
-                                ...track,
-
-                                album: {
-                                    ...track.album,
-
-                                    cover:
-                                        track.album?.cover ??
-                                        album.cover,
-                                },
-                            })
-                        );
-                }
-
-
-                currentPlaybackContextInfo = {
-
-                    key:
-                        contextKey,
-
-                    type:
-                        'album',
-
-                    label:
-                        'ÁLBUM',
-
-                    title:
-                        album?.title ??
-                        route.title,
-
-                    subtitle:
-                        album?.artist?.name ??
-                        tracks[0]?.artist?.name ??
-                        'ARTISTA DESCONOCIDO',
-
-                    image:
-                        album?.cover ??
-                        tracks[0]?.album?.cover ??
-                        null,
-                };
-
-
-                break;
-            }
-
-            case 'playlist': {
-
-                const [
-                    tracksResult,
-                    metadataResult,
-                ] =
-                    await Promise.allSettled([
-
-                        getPlaylistTracks(
-                            route.id,
-                            0,
-                            10
-                        ),
-
-                        getPlaylist(
-                            route.id
-                        ),
-                    ]);
-
-
-                if (
-                    tracksResult.status !==
-                    'fulfilled'
-                ) {
-
-                    throw tracksResult.reason;
-                }
-
-
-                const response =
-                    tracksResult.value;
-
-
-                if (
-                    response.status !==
-                    'success'
-                ) {
-
-                    throw new Error(
-                        'Playlist tracks request failed.'
+                                cover:
+                                    track.album?.cover ??
+                                    album.cover,
+                            },
+                        })
                     );
-                }
-
-
-                tracks =
-                    response.data ?? [];
-
-                next =
-                    response.next ??
-                    null;
-
-                total =
-                    response.total ??
-                    tracks.length;
-
-
-                const playlist =
-                    metadataResult.status ===
-                    'fulfilled'
-                        ? metadataResult.value
-                        : null;
-
-
-                currentPlaybackContextInfo = {
-
-                    key:
-                        contextKey,
-
-                    type:
-                        'playlist',
-
-                    label:
-                        'PLAYLIST',
-
-                    title:
-                        playlist?.title ??
-                        route.title,
-
-                    subtitle:
-                        playlist?.user?.name
-                            ? `Por ${playlist.user.name} · ${playlist.nb_tracks ?? total} pistas`
-                            : `${playlist?.nb_tracks ?? total} pistas`,
-
-                    image:
-                        playlist?.picture ??
-                        null,
-                };
-
-
-                break;
             }
 
-            case 'genre': {
 
-                const [
-                    chartResult,
-                    metadataResult,
-                ] =
-                    await Promise.allSettled([
+            resolvedContextInfo = {
 
-                        getGenreChart(
-                            route.id
-                        ),
+                key:
+                    contextKey,
 
-                        getGenre(
-                            route.id
-                        ),
-                    ]);
+                type:
+                    'album',
 
+                label:
+                    'ÁLBUM',
 
-                if (
-                    chartResult.status !==
-                    'fulfilled'
-                ) {
+                title:
+                    album.title ??
+                    route.title,
 
-                    throw chartResult.reason;
-                }
+                subtitle:
+                    album.artist?.name ??
+                    tracks[0]?.artist?.name ??
+                    'ARTISTA DESCONOCIDO',
 
-
-                const response =
-                    chartResult.value;
+                image:
+                    album.cover ??
+                    tracks[0]?.album?.cover ??
+                    null,
+            };
 
 
-                if (
-                    response.status !==
-                    'success'
-                ) {
+            break;
+        }
 
-                    throw new Error(
-                        'Genre chart request failed.'
-                    );
-                }
+        case 'playlist': {
 
-
-                tracks =
-                    response.tracks?.data ??
-                    [];
-
-                next =
-                    response.tracks?.next ??
-                    null;
-
-                total =
-                    response.tracks?.total ??
-                    tracks.length;
+            const playlist =
+                await getPlaylist(
+                    route.id
+                ) as MusicEntityWithEmbeddedTracks;
 
 
-                const genre =
-                    metadataResult.status ===
-                    'fulfilled'
-                        ? metadataResult.value
-                        : null;
+            tracks =
+                playlist.tracks?.data ??
+                [];
+
+            next =
+                playlist.tracks?.next ??
+                null;
+
+            total =
+                playlist.tracks?.total ??
+                tracks.length;
 
 
-                currentPlaybackContextInfo = {
+            resolvedContextInfo = {
 
-                    key:
-                        contextKey,
+                key:
+                    contextKey,
 
-                    type:
-                        'genre',
+                type:
+                    'playlist',
 
-                    label:
-                        'GÉNERO',
+                label:
+                    'PLAYLIST',
 
-                    title:
-                        genre?.name ??
-                        route.title,
+                title:
+                    playlist.title ??
+                    route.title,
 
-                    subtitle:
-                        `${total} pistas`,
+                subtitle:
+                    playlist.user?.name
+                        ? `Por ${playlist.user.name} · ${playlist.nb_tracks ?? total} pistas`
+                        : `${playlist.nb_tracks ?? total} pistas`,
 
-                    image:
-                        genre?.picture ??
-                        tracks[0]?.album?.cover ??
-                        null,
-                };
+                image:
+                    playlist.picture ??
+                    tracks[0]?.album?.cover ??
+                    null,
+            };
 
 
-                break;
+            break;
+        }
+
+        case 'genre': {
+
+            const response =
+                await getGenreChart(
+                    route.id
+                );
+
+
+            if (
+                response.status !==
+                'success'
+            ) {
+                throw new Error(
+                    'Genre chart request failed.'
+                );
             }
+
+
+            tracks =
+                response.tracks?.data ??
+                [];
+
+            next =
+                response.tracks?.next ??
+                null;
+
+            total =
+                response.tracks?.total ??
+                tracks.length;
+
+
+            resolvedContextInfo = {
+
+                key:
+                    contextKey,
+
+                type:
+                    'genre',
+
+                label:
+                    'GÉNERO',
+
+                title:
+                    route.title,
+
+                subtitle:
+                    `${total} pistas`,
+
+                image:
+                    tracks[0]?.album?.cover ??
+                    null,
+            };
+
+
+            break;
+        }
         }
 
 
@@ -1608,6 +1577,20 @@ async function openHomeDetail(
             return;
         }
 
+        if (
+            !resolvedContextInfo
+        ) {
+            console.warn(
+                '[MusicPlayer] Home context information is unavailable:',
+                route
+            );
+
+            return;
+        }
+
+
+        currentPlaybackContextInfo =
+            resolvedContextInfo;        
 
         /*
          * El primer track comienza
@@ -1617,35 +1600,6 @@ async function openHomeDetail(
          * el contexto actual.
          */
 
-        currentPlaybackContextInfo = {
-
-            type:
-                route.type,
-
-            label:
-                route.type === 'album'
-                    ? 'ÁLBUM'
-                    : route.type === 'playlist'
-                        ? 'PLAYLIST'
-                        : 'GÉNERO',
-
-            title:
-                route.title,
-
-            subtitle:
-                tracks[0]?.artist?.name ??
-                '',
-
-            /*
-            * Para Home usamos el artwork
-            * del primer track como fallback,
-            * evitando una petición adicional
-            * solo para obtener la portada.
-            */
-            image:
-                tracks[0]?.album?.cover ??
-                null,
-        };
 
         void selectMusicTrack(
             tracks[0],
@@ -1680,6 +1634,16 @@ async function openHomeDetail(
             '[MusicPlayer] Home playback context failed:',
             error
         );
+
+    } finally {
+
+        if (
+            requestId ===
+            homePlaybackRequestId
+        ) {
+            homePlaybackLoadingContextKey =
+                null;
+        }
     }
 }
 
@@ -2105,9 +2069,17 @@ function updateTrackPlaybackIndicators(): void {
                     item.dataset.trackId
                 );
 
+            const isSearchAllPlayback =
+                activePlaybackSource ===
+                    'youtube' &&
+                playbackState.playbackListSource ===
+                    'search-all';
+
+
             const isCurrent =
+                isSearchAllPlayback &&
                 trackId ===
-                currentTrackId;
+                    currentTrackId;
 
             item.classList.toggle(
                 'is-selected',
@@ -2280,8 +2252,11 @@ function updateTrackPlaybackIndicators(): void {
     */
 
     const activeContextKey =
-        currentPlaybackContextInfo?.key ??
-        null;
+        activePlaybackSource ===
+            'youtube'
+            ? currentPlaybackContextInfo?.key ??
+            null
+            : null;
 
 
     const contextItems =
@@ -2293,14 +2268,52 @@ function updateTrackPlaybackIndicators(): void {
     contextItems.forEach(
         item => {
 
-            item.classList.toggle(
-                'is-selected',
+            const isSelected =
                 activeContextKey !==
                     null &&
                 item.dataset
                     .playbackContextKey ===
-                    activeContextKey
+                    activeContextKey;
+
+
+            const isPlaying =
+                isSelected &&
+                isVisuallyPlaying;
+
+
+            item.classList.toggle(
+                'is-selected',
+                isSelected
             );
+
+
+            item.classList.toggle(
+                'is-playing',
+                isPlaying
+            );
+
+
+            item.classList.toggle(
+                'is-paused',
+                isSelected &&
+                !isPlaying
+            );
+
+
+            const indicator =
+                item.querySelector<HTMLElement>(
+                    '.music-player-card-play-indicator'
+                );
+
+
+            if (
+                indicator
+            ) {
+                indicator.textContent =
+                    isPlaying
+                        ? '⏸'
+                        : '▶';
+            }
         }
     );
 }
