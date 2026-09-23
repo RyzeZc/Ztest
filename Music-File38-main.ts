@@ -4,9 +4,7 @@ import { YouTubePlayer } from '../../lib/youtube/youtube-player';
 import {
     getAlbumTracks,
     getGenreChart,
-    getMusicApiNext,
     getPlaylistTracks,
-    searchTracks,
 } from '../../lib/music/music-service';
 
 
@@ -19,15 +17,11 @@ import {
 
 
 import type {
-    MusicApiCollection,
-    MusicSearchResponse,
     MusicTrack,
 } from '../../lib/music/music-types';
 
 import type {
     HomeDetailRoute,
-    HomeLoadState,
-    HomeSection,
     MusicHomeController,
     MusicSearchController,
 } from '../../lib/MusicPlayer/types';
@@ -761,7 +755,8 @@ const {
     playMusicQueueTrack,
     playNextMusicQueueTrack,
     playPreviousMusicQueueTrack,
-    } = createPlaybackController({
+    loadMorePlaybackList,
+} = createPlaybackController({
 
         state:
             playbackState,
@@ -1070,50 +1065,6 @@ function stopYouTubeProgress(): void {
  */
 
 let homePlaybackRequestId = 0;
-
-async function loadAllHomeTracks(
-    firstResponse:
-        MusicApiCollection<MusicTrack>
-): Promise<MusicTrack[]> {
-
-    const tracks: MusicTrack[] = [
-        ...firstResponse.data,
-    ];
-
-    let next =
-        firstResponse.next ?? null;
-
-    while (
-        typeof next === 'string' &&
-        next.length > 0
-    ) {
-
-        const response =
-            await getMusicApiNext<
-                MusicApiCollection<MusicTrack>
-            >(
-                next
-            );
-
-        if (
-            response.status !==
-            'success'
-        ) {
-            throw new Error(
-                'Additional tracks request failed.'
-            );
-        }
-
-        tracks.push(
-            ...response.data
-        );
-
-        next =
-            response.next ?? null;
-    }
-
-    return tracks;
-}
 
 
 function getHomePlaybackSource(
