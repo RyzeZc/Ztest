@@ -795,7 +795,6 @@ export function createSearchController(
             info
         );
 
-
         item.addEventListener(
             'click',
             () => {
@@ -806,13 +805,14 @@ export function createSearchController(
                         ? 'search-all'
                         : source;
 
-                onTrackSelected(
-                    artist,
-                    interactionSource
+                void selectEntity(
+                    'artists',
+                    artist.id,
+                    interactionSource,
+                    item
                 );
             }
         );
-
 
         parent.appendChild(
             item
@@ -934,7 +934,6 @@ export function createSearchController(
             info
         );
 
-
         item.addEventListener(
             'click',
             () => {
@@ -945,13 +944,14 @@ export function createSearchController(
                         ? 'search-all'
                         : source;
 
-                onTrackSelected(
-                    album,
-                    interactionSource
+                void selectEntity(
+                    'albums',
+                    album.id,
+                    interactionSource,
+                    item
                 );
             }
         );
-
 
         parent.appendChild(
             item
@@ -1075,7 +1075,6 @@ export function createSearchController(
             info
         );
 
-
         item.addEventListener(
             'click',
             () => {
@@ -1086,13 +1085,14 @@ export function createSearchController(
                         ? 'search-all'
                         : source;
 
-                onTrackSelected(
-                    playlist,
-                    interactionSource
+                void selectEntity(
+                    'playlists',
+                    playlist.id,
+                    interactionSource,
+                    item
                 );
             }
         );
-
 
         parent.appendChild(
             item
@@ -2290,6 +2290,11 @@ function renderActiveCategory():
                         : 0;
             }
 
+            resultsContainer.innerHTML = '';
+
+            resultsContainer.appendChild(
+                loader
+            );
 
             renderCategoryTabs(
                 response.available
