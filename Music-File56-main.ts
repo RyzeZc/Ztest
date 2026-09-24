@@ -706,13 +706,71 @@ function selectStation(
         /* --------------------------------------------------
        YOUTUBE SEARCH
     -------------------------------------------------- */
-let activePlaybackSource:
-    'radio' | 'youtube' =
-    'radio';
+    let activePlaybackSource:
+        'radio' | 'youtube' =
+        'radio';
 
-const homeController:
-    MusicHomeController =
-    createHomeController({
+
+    /*
+    * --------------------------------------------------
+    * ESTADO DE REPRODUCCIÓN
+    * --------------------------------------------------
+    *
+    * Debe existir antes de crear controladores que
+    * pueden ejecutar callbacks durante su inicialización.
+    */
+
+    const playbackState =
+        createPlaybackState();
+
+
+    interface PlaybackContextInfo {
+
+        key:
+            string;
+
+        type:
+            | 'artist'
+            | 'album'
+            | 'playlist'
+            | 'genre'
+            | 'artist-radio';
+
+        label:
+            string;
+
+        title:
+            string;
+
+        subtitle:
+            string;
+
+        image:
+            string | null;
+    }
+
+
+    let currentPlaybackContextInfo:
+        PlaybackContextInfo | null =
+        null;
+
+
+    /*
+    * MI MÚSICA se inicializa más adelante,
+    * pero la referencia debe existir desde ahora
+    * porque updateTrackPlaybackIndicators()
+    * puede ejecutarse antes de esa inicialización.
+    */
+
+    let localLibraryController:
+        LocalLibraryController |
+        null =
+        null;
+
+
+    const homeController:
+        MusicHomeController =
+        createHomeController({
 
         homeSections,
 
@@ -782,9 +840,6 @@ const {
             );
         },
 });
-
-const playbackState =
-    createPlaybackState();
 
 const {
     selectMusicTrack,
@@ -1116,36 +1171,6 @@ const searchController:
 
     let currentTrackInfoKey = '';
 
-    let localLibraryController:
-        LocalLibraryController |
-        null =
-        null;    
-
-    interface PlaybackContextInfo {
-
-        key:
-            string;
-
-        type:
-            | 'artist'
-            | 'album'
-            | 'playlist'
-            | 'genre'
-            | 'artist-radio';
-
-        label:
-            string;
-
-        title:
-            string;
-
-        subtitle:
-            string;
-
-        image:
-            string | null;
-    }
-
     type MusicEntityWithEmbeddedTracks = {
         title?: string;
 
@@ -1171,10 +1196,6 @@ const searchController:
             total?: number;
         };
     };    
-
-    let currentPlaybackContextInfo:
-        PlaybackContextInfo | null =
-        null;    
 
     function isPlaybackContextActive(
         contextKey:
@@ -2640,15 +2661,6 @@ function updateArtwork(
         '1';
 }
 
-
-localSaveButton.addEventListener(
-    'click',
-    () => {
-
-        void toggleLocalSave();
-    }
-);
-
 function updateTrackInfo(): void {
 
     const source =
@@ -2705,8 +2717,6 @@ function updateTrackInfo(): void {
             track.album.cover,
             `${track.title} - portada`
         );
-
-        void updateLocalSaveButton();
 
         requestAnimationFrame(
             updateTrackMarquee
