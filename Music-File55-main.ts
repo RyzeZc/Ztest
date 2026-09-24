@@ -12,7 +12,6 @@ import {
     createPlaybackState,
     hasResolveInFlight,
     isPlaybackPanelSource,
-    resolveYouTubeTrack,
 } from '../../lib/MusicPlayer/playback';
 
 import type {
@@ -38,14 +37,9 @@ import {
 } from '../../lib/MusicPlayer/home';
 
 import {
-    exportLocalLibrary,
-    getLocalLibrary,
-    hasLocalTrack,
-    importLocalLibrary,
-    removeLocalTrack,
-    saveLocalTrack,
-    type LocalLibraryTrack,
-} from '../../lib/MusicPlayer/local-library';
+    createLocalLibraryController,
+    type LocalLibraryController,
+} from '../../lib/MusicPlayer/local-library-controller';
 
 function initializeMusicPlayer(): void {
 
@@ -246,37 +240,7 @@ function initializeMusicPlayer(): void {
                 '[data-home-section]'
             )
         );
-
-    const localLibraryNavButton =
-        player.querySelector<HTMLButtonElement>(
-            '.music-player-local-library-nav'
-        );
-
-    const localLibrarySection =
-        player.querySelector<HTMLElement>(
-            '[data-local-library-section]'
-        );
-
-    const localLibraryContent =
-        player.querySelector<HTMLElement>(
-            '[data-local-library-content]'
-        );    
-
-    const localLibraryImportButton =
-        player.querySelector<HTMLButtonElement>(
-            '[data-local-library-import]'
-        );
-
-    const localLibraryExportButton =
-        player.querySelector<HTMLButtonElement>(
-            '[data-local-library-export]'
-        );
-
-    const localLibraryFileInput =
-        player.querySelector<HTMLInputElement>(
-            '[data-local-library-file-input]'
-        );        
-
+     
     const panelCloseButton =
     player.querySelector<HTMLButtonElement>(
         '[data-panel-close]'
@@ -337,11 +301,6 @@ function initializeMusicPlayer(): void {
             '.music-player-track-title'
         );
         
-    const localSaveButton =
-        player.querySelector<HTMLButtonElement>(
-            '.music-player-local-save'
-        );
-
     const progressSeek =
     player.querySelector(
         '.music-player-seek'
@@ -397,14 +356,7 @@ function initializeMusicPlayer(): void {
         !(videoPanel instanceof HTMLElement) ||
         !(queuePanel instanceof HTMLElement) ||
         !(queueList instanceof HTMLElement) ||
-        !(searchLoader instanceof HTMLElement) ||
-        !(localLibraryNavButton instanceof HTMLButtonElement) ||
-        !(localLibrarySection instanceof HTMLElement) ||
-        !(localLibraryContent instanceof HTMLElement) ||
-        !(localSaveButton instanceof HTMLButtonElement) ||
-        !(localLibraryImportButton instanceof HTMLButtonElement) ||
-        !(localLibraryExportButton instanceof HTMLButtonElement) ||
-        !(localLibraryFileInput instanceof HTMLInputElement) ||        
+        !(searchLoader instanceof HTMLElement) ||      
         !(panelCloseButton instanceof HTMLButtonElement) ||
         !(playbackContext instanceof HTMLElement) ||
         !(playbackContextImage instanceof HTMLImageElement) ||
@@ -831,19 +783,6 @@ const {
         },
 });
 
-homeNavItems.forEach(
-    item => {
-
-        item.addEventListener(
-            'click',
-            () => {
-
-                resetLocalLibraryNavigation();
-            }
-        );
-    }
-);
-
 const playbackState =
     createPlaybackState();
 
@@ -886,773 +825,47 @@ const {
         activatePanelTab,
     });
 
-/* ============================================================
- * MI MÚSICA
- * ============================================================ */
+localLibraryController =
+    createLocalLibraryController({
 
-function localLibraryTrackToMusicTrack(
-    track: LocalLibraryTrack
-): MusicTrack {
+        player,
 
-    return {
-        id:
-            track.id,
+        openPanel:
+            openStationMenu,
 
-        title:
-            track.title,
-
-        duration:
-            track.duration,
-
-        artist: {
-            id:
-                track.artist.id,
-
-            name:
-                track.artist.name,
-        },
-
-        album: {
-            id:
-                track.album.id,
-
-            title:
-                track.album.title,
-
-            cover:
-                track.album.cover,
-        },
-    };
-}
-
-async function playLocalLibraryTrack(
-    index: number
-): Promise<void> {
-
-    const localTrack =
-        localLibraryTracks[index];
-
-    if (!localTrack) {
-        return;
-    }
-
-
-    /*
-     * Convertimos toda la biblioteca
-     * a MusicTrack para reutilizar
-     * el sistema de reproducción existente.
-     */
-    const playbackList =
-        localLibraryTracks.map(
-            localLibraryTrackToMusicTrack
-        );
-
-
-    /*
-     * Introducimos todos los YouTube IDs
-     * almacenados en IndexedDB al caché
-     * de reproducción.
-     *
-     * Así Next / Previous tampoco
-     * necesitan resolverlos nuevamente.
-     */
-    primeResolvedYouTubeTracks(
-        localLibraryTracks.map(
-            track => ({
-                id:
-                    track.id,
-
-                youtubeVideoId:
-                    track.youtubeVideoId,
-            })
-        )
-    );
-
-
-    const track =
-        playbackList[index];
-
-    if (!track) {
-        return;
-    }
-
-
-    currentPlaybackContextInfo =
-        null;
-
-
-    await selectMusicTrack(
-        track,
-        {
-            queueAction:
-                'clear',
-
-            playbackList,
-
-            playbackListMode:
-                'context',
-
-            playbackListSource:
-                'local-list',
-        }
-    );
-}
-
-localLibraryContent.addEventListener(
-    'click',
-    event => {
-
-        const target =
-            event.target;
-
-        if (
-            !(target instanceof Element)
-        ) {
-            return;
-        }
-
-
-        /*
-         * Dejamos esta exclusión preparada
-         * para los futuros botones de cada fila
-         * (eliminar, ordenar, etc.).
-         */
-        if (
-            target.closest(
-                '[data-local-library-action]'
-            )
-        ) {
-            return;
-        }
-
-
-        const item =
-            target.closest<HTMLElement>(
-                '[data-local-library-index]'
-            );
-
-        if (!item) {
-            return;
-        }
-
-
-        const index =
-            Number(
-                item.dataset.localLibraryIndex
-            );
-
-        if (
-            !Number.isInteger(index) ||
-            index < 0
-        ) {
-            return;
-        }
-
-
-        void playLocalLibraryTrack(
-            index
-        );
-    }
-);
-
-
-localLibraryContent.addEventListener(
-    'keydown',
-    event => {
-
-        if (
-            event.key !== 'Enter' &&
-            event.key !== ' '
-        ) {
-            return;
-        }
-
-
-        const target =
-            event.target;
-
-        if (
-            !(target instanceof HTMLElement)
-        ) {
-            return;
-        }
-
-
-        const item =
-            target.closest<HTMLElement>(
-                '[data-local-library-index]'
-            );
-
-        if (!item) {
-            return;
-        }
-
-
-        event.preventDefault();
-
-
-        const index =
-            Number(
-                item.dataset.localLibraryIndex
-            );
-
-        if (
-            !Number.isInteger(index) ||
-            index < 0
-        ) {
-            return;
-        }
-
-
-        void playLocalLibraryTrack(
-            index
-        );
-    }
-);
-
-function resetLocalLibraryNavigation(): void {
-
-    localLibraryNavButton.classList.remove(
-        'is-active'
-    );
-
-    localLibraryNavButton.removeAttribute(
-        'aria-current'
-    );
-
-    localLibrarySection.classList.remove(
-        'is-active'
-    );
-}
-
-
-function formatLocalLibraryTime(
-    seconds: number
-): string {
-
-    if (
-        !Number.isFinite(seconds) ||
-        seconds < 0
-    ) {
-        return '0:00';
-    }
-
-    const totalSeconds =
-        Math.floor(
-            seconds
-        );
-
-    const minutes =
-        Math.floor(
-            totalSeconds / 60
-        );
-
-    const remainingSeconds =
-        totalSeconds % 60;
-
-    return `${minutes}:${remainingSeconds
-        .toString()
-        .padStart(2, '0')}`;
-}
-
-
-async function renderLocalLibrary(): Promise<void> {
-
-    const requestId =
-        ++localLibraryRenderRequestId;
-
-    try {
-
-        /*
-         * No limpiamos el contenido antes
-         * de terminar la lectura.
-         *
-         * Esto evita cualquier parpadeo.
-         */
-        const tracks =
-            await getLocalLibrary();
-
-        if (
-            requestId !==
-            localLibraryRenderRequestId
-        ) {
-            return;
-        }
-
-        localLibraryTracks =
-            tracks;
-
-        localLibraryLoaded =
-            true;
-
-
-        if (
-            tracks.length ===
-            0
-        ) {
-
-            localLibraryContent.innerHTML =
-                `
-                    <div class="music-player-local-library-empty">
-
-                        <div class="music-player-local-library-empty-title">
-                            TU LISTA ESTÁ VACÍA
-                        </div>
-
-                        <div class="music-player-local-library-empty-text">
-                            GUARDA TUS CANCIONES FAVORITAS PARA TENERLAS SIEMPRE AQUÍ
-                        </div>
-
-                    </div>
-                `;
-
-            return;
-        }
-
-
-        const list =
-            document.createElement(
-                'div'
-            );
-
-        list.className =
-            'music-player-local-library-list';
-
-
-        tracks.forEach(
-            (
-                track,
-                index
-            ) => {
-
-                const item =
-                    document.createElement(
-                        'div'
-                    );
-
-                item.className =
-                    'music-player-local-library-item';
-
-                item.dataset.trackId =
-                    String(
-                        track.id
-                    );
-
-                item.dataset.localLibraryIndex =
-                    String(
-                        index
-                    );
-
-                item.setAttribute(
-                    'role',
-                    'button'
-                );
-
-                item.tabIndex =
-                    0;
-
-
-                const number =
-                    document.createElement(
-                        'span'
-                    );
-
-                number.className =
-                    'music-player-list-column-index';
-
-                number.textContent =
-                    String(
-                        index + 1
-                    );
-
-
-                const cover =
-                    document.createElement(
-                        'img'
-                    );
-
-                cover.className =
-                    'music-player-queue-thumbnail';
-
-                cover.loading =
-                    'lazy';
-
-                cover.decoding =
-                    'async';
-
-                if (
-                    track.album.cover
-                ) {
-
-                    cover.src =
-                        track.album.cover;
-
-                    cover.alt =
-                        `${track.title} - portada`;
-
-                } else {
-
-                    cover.alt =
-                        '';
-                }
-
-
-                const info =
-                    document.createElement(
-                        'div'
-                    );
-
-                info.className =
-                    'music-player-queue-info';
-
-
-                const title =
-                    document.createElement(
-                        'div'
-                    );
-
-                title.className =
-                    'music-player-queue-track-title';
-
-                title.textContent =
-                    track.title;
-
-
-                const artist =
-                    document.createElement(
-                        'div'
-                    );
-
-                artist.className =
-                    'music-player-queue-track-artist';
-
-                artist.textContent =
-                    track.artist.name;
-
-
-                const duration =
-                    document.createElement(
-                        'span'
-                    );
-
-                duration.className =
-                    'music-player-list-column-duration';
-
-                duration.textContent =
-                    formatLocalLibraryTime(
-                        track.duration
-                    );
-
-
-                info.appendChild(
-                    title
-                );
-
-                info.appendChild(
-                    artist
-                );
-
-
-                item.appendChild(
-                    number
-                );
-
-                item.appendChild(
-                    cover
-                );
-
-                item.appendChild(
-                    info
-                );
-
-                item.appendChild(
-                    duration
-                );
-
-
-                list.appendChild(
-                    item
-                );
-            }
-        );
-
-
-        localLibraryContent.replaceChildren(
-            list
-        );
-
-        updateTrackPlaybackIndicators();
-
-    } catch (error) {
-
-        console.error(
-            '[MusicPlayer] Unable to load local library:',
-            error
-        );
-
-        localLibraryLoaded =
-            false;
-
-        localLibraryContent.innerHTML =
-            `
-                <div class="music-player-local-library-empty">
-
-                    <div class="music-player-local-library-empty-title">
-                        NO SE PUDO CARGAR MI MÚSICA
-                    </div>
-
-                </div>
-            `;
-    }
-}
-
-async function exportLocalLibraryFile(): Promise<void> {
-
-    try {
-
-        const data =
-            await exportLocalLibrary();
-
-        const blob =
-            new Blob(
-                [
-                    JSON.stringify(
-                        data,
-                        null,
-                        2
-                    )
-                ],
-                {
-                    type:
-                        'application/json'
-                }
-            );
-
-        const url =
-            URL.createObjectURL(
-                blob
-            );
-
-        const anchor =
-            document.createElement(
-                'a'
-            );
-
-        anchor.href =
-            url;
-
-        anchor.download =
-            'new-retro-mi-musica.json';
-
-        document.body.appendChild(
-            anchor
-        );
-
-        anchor.click();
-
-        anchor.remove();
-
-
-        window.setTimeout(
+        activateHomeTab:
             () => {
-                URL.revokeObjectURL(
-                    url
+                activatePanelTab(
+                    'home'
                 );
             },
-            0
-        );
 
-    } catch (error) {
+        getCurrentTrack:
+            () =>
+                playbackState.currentMusicTrack,
 
-        console.error(
-            '[MusicPlayer] Unable to export local library:',
-            error
-        );
-    }
-}
+        getActivePlaybackSource:
+            () =>
+                activePlaybackSource,
 
+        getCurrentYouTubeVideoId:
+            () =>
+                playbackState.currentYouTubeVideoId,
 
-async function importLocalLibraryFile(
-    file: File
-): Promise<void> {
+        getPlaybackListSource:
+            () =>
+                playbackState.playbackListSource,
 
-    try {
+        selectMusicTrack,
 
-        const text =
-            await file.text();
-
-        const data:
-            unknown =
-            JSON.parse(
-                text
-            );
-
-        await importLocalLibrary(
-            data
-        );
-
-
-        localLibraryLoaded =
-            false;
-
-        await renderLocalLibrary();
-
-    } catch (error) {
-
-        console.error(
-            '[MusicPlayer] Unable to import local library:',
-            error
-        );
-    }
-}
-
-
-localLibraryImportButton.addEventListener(
-    'click',
-    () => {
-
-        localLibraryFileInput.click();
-    }
-);
-
-
-localLibraryExportButton.addEventListener(
-    'click',
-    () => {
-
-        void exportLocalLibraryFile();
-    }
-);
-
-
-localLibraryFileInput.addEventListener(
-    'change',
-    () => {
-
-        const file =
-            localLibraryFileInput.files?.[0];
-
-        if (!file) {
-            return;
-        }
-
-        void importLocalLibraryFile(
-            file
-        ).finally(
+        clearPlaybackContext:
             () => {
 
-                localLibraryFileInput.value =
-                    '';
-            }
-        );
-    }
-);
+                currentPlaybackContextInfo =
+                    null;
+            },
 
-function openLocalLibrary(): void {
-
-    const isAlreadyOpen =
-        stationMenu.classList.contains(
-            'is-open'
-        ) &&
-        localLibrarySection.classList.contains(
-            'is-active'
-        );
-
-    /*
-     * Si MI MÚSICA ya está exactamente
-     * visible, no hacemos absolutamente nada.
-     *
-     * Esto evita cualquier parpadeo.
-     */
-    if (isAlreadyOpen) {
-        return;
-    }
-
-
-    openStationMenu();
-
-    activatePanelTab(
-        'home'
-    );
-
-
-    homeSections.forEach(
-        section => {
-
-            section.classList.remove(
-                'is-active'
-            );
-        }
-    );
-
-
-    localLibrarySection.classList.add(
-        'is-active'
-    );
-
-
-    homeNavItems.forEach(
-        item => {
-
-            item.classList.remove(
-                'is-active'
-            );
-
-            item.removeAttribute(
-                'aria-current'
-            );
-        }
-    );
-
-
-    localLibraryNavButton.classList.add(
-        'is-active'
-    );
-
-    localLibraryNavButton.setAttribute(
-        'aria-current',
-        'page'
-    );
-
-
-    if (
-        !localLibraryLoaded
-    ) {
-
-        void renderLocalLibrary();
-    }
-}
-
-customListButton.addEventListener(
-    'click',
-    () => {
-
-        openLocalLibrary();
-    }
-);
-
-
-localLibraryNavButton.addEventListener(
-    'click',
-    () => {
-
-        openLocalLibrary();
-    }
-);
-
-
-homeNavItems.forEach(
-    item => {
-
-        item.addEventListener(
-            'click',
-            () => {
-
-                resetLocalLibraryNavigation();
-            }
-        );
-    }
-);
+    });
 
 const searchCategoryTabs =
     player.querySelector<HTMLElement>(
@@ -1903,18 +1116,10 @@ const searchController:
 
     let currentTrackInfoKey = '';
 
-    let localLibraryLoaded =
-    false;
-
-    let localLibraryTracks:
-        LocalLibraryTrack[] =
-        [];
-
-    let localLibraryRenderRequestId =
-        0;
-        
-    let localSaveButtonRequestId =
-    0;
+    let localLibraryController:
+        LocalLibraryController |
+        null =
+        null;    
 
     interface PlaybackContextInfo {
 
@@ -3227,64 +2432,9 @@ function updateTrackPlaybackIndicators(): void {
         }
     );
     
-    const localLibraryItems =
-    localLibraryContent.querySelectorAll<HTMLElement>(
-        '.music-player-local-library-item'
-    );
-
-
-    localLibraryItems.forEach(
-        item => {
-
-            const trackId =
-                Number(
-                    item.dataset.trackId
-                );
-
-            const index =
-                Number(
-                    item.dataset.localLibraryIndex
-                );
-
-            const isCurrent =
-                activePlaybackSource ===
-                'youtube' &&
-                playbackState.playbackListSource ===
-                'local-list' &&
-                trackId ===
-                currentTrackId;
-
-
-            item.classList.toggle(
-                'is-current',
-                isCurrent
-            );
-
-
-            const indexElement =
-                item.querySelector<HTMLElement>(
-                    '.music-player-list-column-index'
-                );
-
-            if (
-                !indexElement
-            ) {
-                return;
-            }
-
-
-            indexElement.textContent =
-                isCurrent
-                    ? (
-                        isVisuallyPlaying
-                            ? '⏸'
-                            : '▶'
-                    )
-                    : String(
-                        index + 1
-                    );
-        }
-    );
+    localLibraryController?.updatePlaybackIndicators(
+        isVisuallyPlaying
+    );    
 }
 
     youtubeButton.addEventListener(
@@ -3490,297 +2640,6 @@ function updateArtwork(
         '1';
 }
 
-function setLocalSaveButtonState(
-    saved: boolean
-): void {
-
-    localSaveButton.classList.toggle(
-        'is-saved',
-        saved
-    );
-
-    localSaveButton.setAttribute(
-        'aria-pressed',
-        String(saved)
-    );
-
-    localSaveButton.setAttribute(
-        'aria-label',
-        saved
-            ? 'Quitar de Mi Música'
-            : 'Guardar en Mi Música'
-    );
-
-    localSaveButton.innerHTML =
-        saved
-            ? `
-                <svg
-                    class="music-player-local-save-icon"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
-                    <path
-                        d="M12 21S4 16.45 2.4 11.1C1.35 7.6 3.55 4.5 7 4.5c2.1 0 3.75 1.25 5 2.7 1.25-1.45 2.9-2.7 5-2.7 3.45 0 5.65 3.1 4.6 6.6C20 16.45 12 21 12 21Z"
-                    />
-                </svg>
-              `
-            : `
-                <svg
-                    class="music-player-local-save-icon"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
-                    <path
-                        d="M12 5V19"
-                    />
-                    <path
-                        d="M5 12H19"
-                    />
-                </svg>
-              `;
-}
-
-async function updateLocalSaveButton(): Promise<void> {
-
-    const requestId =
-        ++localSaveButtonRequestId;
-
-    const track =
-        activePlaybackSource ===
-        'youtube'
-            ? playbackState.currentMusicTrack
-            : null;
-
-
-    if (!track) {
-
-        localSaveButton.hidden =
-            true;
-
-        localSaveButton.disabled =
-            true;
-
-        return;
-    }
-
-
-    localSaveButton.hidden =
-        false;
-
-    localSaveButton.disabled =
-        true;
-
-
-    try {
-
-        const saved =
-            await hasLocalTrack(
-                track.id
-            );
-
-
-        if (
-            requestId !==
-            localSaveButtonRequestId
-        ) {
-            return;
-        }
-
-
-        setLocalSaveButtonState(
-            saved
-        );
-
-    } catch (error) {
-
-        console.error(
-            '[MusicPlayer] Unable to check local library state:',
-            error
-        );
-
-        if (
-            requestId ===
-            localSaveButtonRequestId
-        ) {
-
-            setLocalSaveButtonState(
-                false
-            );
-        }
-
-    } finally {
-
-        if (
-            requestId ===
-            localSaveButtonRequestId
-        ) {
-
-            localSaveButton.disabled =
-                false;
-        }
-    }
-}
-
-
-async function toggleLocalSave(): Promise<void> {
-
-    const track =
-        playbackState.currentMusicTrack;
-
-
-    if (
-        activePlaybackSource !==
-        'youtube' ||
-        !track
-    ) {
-        return;
-    }
-
-
-    localSaveButton.disabled =
-        true;
-
-
-    try {
-
-        const saved =
-            await hasLocalTrack(
-                track.id
-            );
-
-
-        if (saved) {
-
-            await removeLocalTrack(
-                track.id
-            );
-
-        } else {
-
-            /*
-             * Normalmente este ID ya existe
-             * porque la reproducción lo resolvió.
-             *
-             * Si todavía está resolviéndose,
-             * resolveYouTubeTrack() reutiliza
-             * la misma solicitud en vuelo.
-             */
-            let youtubeVideoId =
-                playbackState.currentYouTubeVideoId;
-
-
-            if (
-                !youtubeVideoId
-            ) {
-
-                youtubeVideoId =
-                    await resolveYouTubeTrack(
-                        track
-                    );
-            }
-
-
-            if (
-                !youtubeVideoId
-            ) {
-
-                console.error(
-                    '[MusicPlayer] Cannot save track: YouTube ID not available.'
-                );
-
-                return;
-            }
-
-
-            const now =
-                Date.now();
-
-
-            await saveLocalTrack({
-                id:
-                    track.id,
-
-                title:
-                    track.title,
-
-                duration:
-                    track.duration,
-
-                artist: {
-                    id:
-                        track.artist.id,
-
-                    name:
-                        track.artist.name,
-                },
-
-                album: {
-                    id:
-                        track.album.id,
-
-                    title:
-                        track.album.title,
-
-                    cover:
-                        track.album.cover ??
-                        null,
-                },
-
-                youtubeVideoId,
-
-                position:
-                    0,
-
-                addedAt:
-                    now,
-
-                updatedAt:
-                    now,
-            });
-        }
-
-
-        await updateLocalSaveButton();
-
-        localLibraryLoaded =
-            false;
-
-        if (
-            localLibrarySection.classList.contains(
-                'is-active'
-            )
-        ) {
-
-            void renderLocalLibrary();
-        }
-
-        /*
-         * Si MI MÚSICA está visible,
-         * actualizamos la lista inmediatamente.
-         */
-        if (
-            localLibrarySection.classList.contains(
-                'is-active'
-            )
-        ) {
-
-            void renderLocalLibrary();
-        }
-
-    } catch (error) {
-
-        console.error(
-            '[MusicPlayer] Unable to update local library:',
-            error
-        );
-
-    } finally {
-
-        localSaveButton.disabled =
-            false;
-    }
-}
-
 
 localSaveButton.addEventListener(
     'click',
@@ -3805,11 +2664,10 @@ function updateTrackInfo(): void {
         const track =
             playbackState.currentMusicTrack;
 
-        localSaveButton.hidden =
-            !track;
-
-        localSaveButton.disabled =
-            !track;
+        localLibraryController?.syncCurrentTrack(
+            track,
+            true
+        );
 
         if (!track) {
             return;
@@ -3893,13 +2751,10 @@ function updateTrackInfo(): void {
             '';
 
         trackArtist.textContent =
+
             '';
 
-        localSaveButton.hidden =
-            true;
-
-        localSaveButton.disabled =
-            true;
+        localLibraryController?.hidePlayerSaveButton();
 
         if (
             isInitialInfoLoading
@@ -3917,11 +2772,7 @@ function updateTrackInfo(): void {
      */
     if (source.type === 'radio') {
 
-        localSaveButton.hidden =
-            true;
-
-        localSaveButton.disabled =
-            true;
+        localLibraryController?.hidePlayerSaveButton();
 
         const infoKey =
             `radio:${currentStationId}`;
@@ -3975,6 +2826,8 @@ function updateTrackInfo(): void {
      */
     const infoKey =
         `${source.type}:${source.name}`;
+
+    localLibraryController?.hidePlayerSaveButton();
 
     if (
         infoKey ===
