@@ -690,7 +690,7 @@
 
     min-width: 28px;
 
-    color: #667;
+    color: rgb(204, 204, 204);
 
     font-size: var(--player-font-size-s);
     line-height: 1;
@@ -703,58 +703,187 @@
     text-align: center;
 }
 
+/* =========================================================
+   SEEK
+   ========================================================= */
+
 .music-player-seek-wrapper {
-    position: relative;
+    position:
+        relative;
 
-    flex: 1 1 auto;
+    flex:
+        1 1 auto;
 
-    min-width: 0;
+    min-width:
+        0;
 
-    width: 100%;
-    height: 2px;
+    width:
+        100%;
 
-    border-radius: .25rem;
+    height:
+        2px;
 
-    background: #3a3a3a;
+    border-radius:
+        .25rem;
+
+    background:
+        transparent;
 }
+
+
+/* ---------------------------------------------------------
+   PISTA VISUAL
+   --------------------------------------------------------- */
+
+.music-player-seek-wrapper::before {
+    content:
+        "";
+
+    position:
+        absolute;
+
+    top:
+        50%;
+
+    left:
+        0;
+
+    width:
+        100%;
+
+    height:
+        3px;
+
+    border-radius:
+        .25rem;
+
+    background:
+        #3a3a3a;
+
+    transform:
+        translateY(-50%)
+        scaleY(.6667);
+
+    transform-origin:
+        center center;
+
+    transition:
+        transform
+        0.12s ease;
+
+    pointer-events:
+        none;
+
+    z-index:
+        0;
+}
+
+
+.music-player-seek-wrapper:hover::before {
+    transform:
+        translateY(-50%)
+        scaleY(1);
+}
+
+
+/* ---------------------------------------------------------
+   PROGRESS NARANJA
+   --------------------------------------------------------- */
 
 .music-player-seek-progress {
-    position: absolute;
+    position:
+        absolute;
 
-    top: 0;
-    left: 0;
+    top:
+        50%;
 
-    width: 0;
-    height: 100%;
+    left:
+        0;
 
-    border-radius: .25rem;
+    width:
+        0;
 
-    background: #d97832;
+    height:
+        3px;
 
-    pointer-events: none;
+    border-radius:
+        .25rem;
+
+    background:
+        #d97832;
+
+    transform:
+        translateY(-50%)
+        scaleY(.6667);
+
+    transform-origin:
+        center center;
+
+    transition:
+        transform
+        0.12s ease;
+
+    pointer-events:
+        none;
+
+    z-index:
+        1;
 }
+
+
+.music-player-seek-wrapper:hover
+.music-player-seek-progress {
+    transform:
+        translateY(-50%)
+        scaleY(1);
+}
+
+
+/* ---------------------------------------------------------
+   INPUT
+   --------------------------------------------------------- */
 
 .music-player-seek {
-    position: absolute;
+    position:
+        absolute;
 
-    inset: 0;
+    top:
+        50%;
 
-    z-index: 2;
+    left:
+        0;
 
-    width: 100%;
-    height: 2px;
+    z-index:
+        2;
 
-    margin: 0;
+    width:
+        100%;
 
-    appearance: none;
-    -webkit-appearance: none;
+    height:
+        2px;
 
-    border: 0;
+    margin:
+        0;
 
-    background: transparent;
+    appearance:
+        none;
 
-    cursor: pointer;
+    -webkit-appearance:
+        none;
+
+    border:
+        0;
+
+    background:
+        transparent;
+
+    cursor:
+        pointer;
+
+    transform:
+        translateY(-50%);
 }
+
 /* Chrome / Edge / Safari */
 
 .music-player-seek::-webkit-slider-thumb {
@@ -785,7 +914,7 @@
 }
 
 .music-player-seek:hover::-webkit-slider-thumb {
-    background: #d97832;
+    background: #c8c8c8;
 
     transform:
         scale(1.15);
@@ -817,176 +946,12 @@
 }
 
 .music-player-seek:hover::-moz-range-thumb {
-    background: #d97832;
+    background: #c8c8c8;
 
     transform:
         scale(1.15);
 }
 
-/* =========================================================
-   PROGRESO — HOVER
-   ========================================================= */
-
-/* ---------------------------------------------------------
-   SEEK — BASE
-   --------------------------------------------------------- */
-
-/* PISTA VISUAL */
-
-.music-player-seek-wrapper::before {
-    content: "";
-
-    position: absolute;
-
-    top: 50%;
-    left: 0;
-
-    width: 100%;
-    height: 4px;
-
-    border-radius: .25rem;
-
-    background: #3a3a3a;
-
-    transform:
-        translateY(-50%)
-        scaleY(.5);
-
-    transform-origin:
-        center center;
-
-    transition:
-        transform 0.12s ease;
-
-    pointer-events: none;
-
-    z-index: 0;
-}
-
-.music-player-seek-wrapper:hover::before {
-    transform:
-        translateY(-50%)
-        scaleY(1);
-}
-
-
-.music-player-seek-wrapper {
-    background:
-        transparent;
-}
-
-
-.music-player-seek-wrapper::before {
-    content:
-        "";
-
-    position:
-        absolute;
-
-    top:
-        50%;
-
-    left:
-        0;
-
-    width:
-        100%;
-
-    height:
-        2px;
-
-    border-radius:
-        .25rem;
-
-    background:
-        #3a3a3a;
-
-    transform:
-        translateY(-50%);
-
-    transition:
-        height 0.12s ease;
-}
-
-
-/* PROGRESS NARANJA */
-
-.music-player-seek-progress {
-    transform:
-        scaleY(.5);
-
-    transform-origin:
-        center center;
-
-    transition:
-        transform 0.12s ease;
-
-    z-index: 1;
-}
-
-/* HOVER */
-
-.music-player-volume-slider-wrapper:hover::before {
-    transform:
-        translateY(-50%)
-        scaleY(1);
-}
-
-
-.music-player-seek-wrapper:hover
-.music-player-seek-progress {
-    transform:
-        scaleY(1);
-}
-
-/* ---------------------------------------------------------
-   VOLUMEN — BASE
-   --------------------------------------------------------- */
-
-.music-player-volume-slider-wrapper {
-    background:
-        transparent;
-}
-
-
-.music-player-volume-slider-wrapper::before {
-    content: "";
-
-    position: absolute;
-
-    top: 50%;
-    left: 0;
-
-    width: 100%;
-    height: 4px;
-
-    border-radius: .25rem;
-
-    background: #3a3a3a;
-
-    transform:
-        translateY(-50%)
-        scaleY(.5);
-
-    transform-origin:
-        center center;
-
-    transition:
-        transform 0.12s ease;
-
-    pointer-events: none;
-
-    z-index: 0;
-}
-
-
-/* HOVER */
-
-.music-player-volume-slider-wrapper:hover
-.music-player-volume-progress {
-    transform:
-        scaleY(1);
-}
 
 /* =========================================================
    SPINNER
@@ -1069,88 +1034,197 @@
 
 
 /* =========================================================
-   SLIDER
-   ========================================================= */
-
-/* =========================================================
    SLIDER DE VOLUMEN
    ========================================================= */
 
 .music-player-volume-slider-wrapper {
-    position: relative;
+    position:
+        relative;
 
-    flex: 0 0 55px;
+    flex:
+        0 0 55px;
 
-    width: 55px;
-    min-width: 55px;
-    max-width: 55px;
+    width:
+        55px;
 
-    height: 2px;
+    min-width:
+        55px;
 
-    box-sizing: border-box;
+    max-width:
+        55px;
 
-    border-radius: .25rem;
+    height:
+        2px;
 
-    background: #3a3a3a;
+    box-sizing:
+        border-box;
 
-    overflow: visible;
+    border-radius:
+        .25rem;
+
+    background:
+        transparent;
+
+    overflow:
+        visible;
 }
 
-.music-player-volume-progress {
-    position: absolute;
 
-    top: 0;
-    left: 0;
+/* ---------------------------------------------------------
+   PISTA VISUAL
+   --------------------------------------------------------- */
 
-    width: 0;
-    max-width: 100%;
+.music-player-volume-slider-wrapper::before {
+    content:
+        "";
 
-    height: 100%;
+    position:
+        absolute;
 
-    border-radius: .25rem;
+    top:
+        50%;
 
-    background: #d97832;
+    left:
+        0;
 
-    pointer-events: none;
-}
+    width:
+        100%;
 
-.music-player-volume-progress {
+    height:
+        3px;
+
+    border-radius:
+        .25rem;
+
+    background:
+        #3a3a3a;
+
     transform:
-        scaleY(.5);
+        translateY(-50%)
+        scaleY(.6667);
 
     transform-origin:
         center center;
 
     transition:
-        transform 0.12s ease;
+        transform
+        0.12s ease;
 
-    z-index: 1;
+    pointer-events:
+        none;
+
+    z-index:
+        0;
 }
 
+
+.music-player-volume-slider-wrapper:hover::before {
+    transform:
+        translateY(-50%)
+        scaleY(1);
+}
+
+
+/* ---------------------------------------------------------
+   PROGRESS NARANJA
+   --------------------------------------------------------- */
+
+.music-player-volume-progress {
+    position:
+        absolute;
+
+    top:
+        50%;
+
+    left:
+        0;
+
+    width:
+        0;
+
+    max-width:
+        100%;
+
+    height:
+        3px;
+
+    border-radius:
+        .25rem;
+
+    background:
+        #d97832;
+
+    transform:
+        translateY(-50%)
+        scaleY(.6667);
+
+    transform-origin:
+        center center;
+
+    transition:
+        transform
+        0.12s ease;
+
+    pointer-events:
+        none;
+
+    z-index:
+        1;
+}
+
+
+.music-player-volume-slider-wrapper:hover
+.music-player-volume-progress {
+    transform:
+        translateY(-50%)
+        scaleY(1);
+}
+
+
+/* ---------------------------------------------------------
+   INPUT
+   --------------------------------------------------------- */
 
 .music-player-volume-slider {
-    position: absolute;
+    position:
+        absolute;
 
-    top: 0;
-    left: 0;
+    top:
+        50%;
 
-    z-index: 2;
+    left:
+        0;
 
-    width: 100%;
-    height: 2px;
+    z-index:
+        2;
 
-    margin: 0;
+    width:
+        100%;
 
-    appearance: none;
-    -webkit-appearance: none;
+    height:
+        2px;
 
-    border: 0;
+    margin:
+        0;
 
-    background: transparent;
+    appearance:
+        none;
 
-    cursor: pointer;
+    -webkit-appearance:
+        none;
+
+    border:
+        0;
+
+    background:
+        transparent;
+
+    cursor:
+        pointer;
+
+    transform:
+        translateY(-50%);
 }
-
 
 /* =========================================================
    POINTER — CHROME / EDGE / SAFARI
@@ -1184,7 +1258,7 @@
 }
 
 .music-player-volume-slider:hover::-webkit-slider-thumb {
-    background: #d97832;
+    background: #c8c8c8;
 
     transform: scale(1.15);
 }
@@ -1219,7 +1293,7 @@
 }
 
 .music-player-volume-slider:hover::-moz-range-thumb {
-    background: #d97832;
+    background: #c8c8c8;
 
     transform: scale(1.15);
 }
