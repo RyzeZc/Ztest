@@ -168,6 +168,7 @@ interface SearchControllerOptions {
         number;
 }
 
+const GLOBAL_SEARCH_PREVIEW_LIMIT = 8;
 
 const CATEGORY_ORDER:
     MusicGlobalSearchCategory[] = [
@@ -785,6 +786,64 @@ export function createSearchController(
         return indicator;
     }    
 
+    function createCardCover(
+        image:
+            HTMLImageElement
+    ):
+        HTMLSpanElement {
+
+        const cover =
+            document.createElement(
+                'span'
+            );
+
+        cover.className =
+            'music-player-card-cover';
+
+        cover.appendChild(
+            image
+        );
+
+        cover.appendChild(
+            createCardPlaybackIndicator()
+        );
+
+        return cover;
+    }
+
+    function formatArtistFans(
+        fans:
+            number | null | undefined
+    ):
+        string {
+
+        if (
+            fans === null ||
+            fans === undefined ||
+            !Number.isFinite(
+                fans
+            )
+        ) {
+            return '— fans';
+        }
+
+        const formatted =
+            new Intl.NumberFormat(
+                'es-PE',
+                {
+                    notation:
+                        'compact',
+
+                    maximumFractionDigits:
+                        1,
+                }
+            ).format(
+                fans
+            );
+
+        return `${formatted} fans`;
+    }
+
     function appendArtistRow(
         artist:
             MusicArtist,
@@ -880,8 +939,9 @@ export function createSearchController(
             'music-player-search-entity-meta';
 
         meta.textContent =
-            'ARTISTA';
-
+            formatArtistFans(
+                artist.nb_fan
+            );
 
         info.appendChild(
             title
@@ -897,12 +957,10 @@ export function createSearchController(
         );
 
         item.appendChild(
-            image
-        );
-
-        item.appendChild(
-            createCardPlaybackIndicator()
-        );        
+            createCardCover(
+                image
+            )
+        );       
 
         item.appendChild(
             info
@@ -1059,12 +1117,10 @@ export function createSearchController(
         );
 
         item.appendChild(
-            image
-        );
-
-        item.appendChild(
-            createCardPlaybackIndicator()
-        );        
+            createCardCover(
+                image
+            )
+        );      
 
         item.appendChild(
             info
@@ -1224,11 +1280,9 @@ export function createSearchController(
         );
 
         item.appendChild(
-            image
-        );
-
-        item.appendChild(
-            createCardPlaybackIndicator()
+            createCardCover(
+                image
+            )
         );
 
         item.appendChild(
@@ -2916,7 +2970,7 @@ function renderActiveCategory():
                         []
                     ).slice(
                         0,
-                        5
+                        GLOBAL_SEARCH_PREVIEW_LIMIT
                     );
 
                 state.preview =
