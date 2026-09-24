@@ -545,33 +545,95 @@ import LoadingSpinner
                  MI MÚSICA
             ================================================== -->
 
-            <section
-              class="music-player-home-section music-player-local-library-section"
-              data-local-library-section
+<!-- =================================================
+     MI MÚSICA
+================================================== -->
+
+<section
+    class="music-player-home-section music-player-local-library-section"
+    data-local-library-section
+>
+
+    <div class="music-player-local-library-header">
+
+        <div class="music-player-local-library-heading">
+
+            <div class="music-player-local-library-eyebrow">
+                BIBLIOTECA LOCAL
+            </div>
+
+            <div class="music-player-local-library-title">
+                MI MÚSICA
+            </div>
+
+        </div>
+
+
+        <div class="music-player-local-library-actions">
+
+            <button
+                class="music-player-local-library-action"
+                type="button"
+                data-local-library-import
             >
+                IMPORTAR
+            </button>
 
-              <div class="music-player-local-library-header">
+            <button
+                class="music-player-local-library-action"
+                type="button"
+                data-local-library-export
+            >
+                EXPORTAR
+            </button>
 
-                <div class="music-player-local-library-eyebrow">
-                  BIBLIOTECA LOCAL
-                </div>
+        </div>
 
-                <div class="music-player-local-library-title">
-                  MI MÚSICA
-                </div>
+    </div>
 
-              </div>
 
-              <div
-                class="music-player-local-library-content"
-                data-local-library-content
-              >
-                <div class="music-player-local-library-loading">
-                  CARGANDO...
-                </div>
-              </div>
+    <input
+        type="file"
+        accept="application/json,.json"
+        data-local-library-file-input
+        hidden
+    />
 
-            </section>
+
+    <div
+        class="music-player-list-header music-player-local-library-list-header"
+        aria-hidden="true"
+    >
+
+        <span class="music-player-list-column-index">
+            #
+        </span>
+
+        <span class="music-player-list-column-cover"></span>
+
+        <span class="music-player-list-column-title">
+            TÍTULO
+        </span>
+
+        <span class="music-player-list-column-duration">
+            DURACIÓN
+        </span>
+
+    </div>
+
+
+    <div
+        class="music-player-local-library-content"
+        data-local-library-content
+    >
+
+        <div class="music-player-local-library-loading">
+            CARGANDO...
+        </div>
+
+    </div>
+
+</section>
             
           </div>
 
