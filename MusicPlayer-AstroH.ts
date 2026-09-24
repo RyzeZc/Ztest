@@ -77,16 +77,26 @@ import LoadingSpinner
 
   </div>
 
-  <div class="music-player-track-artist-wrapper">
+    <div class="music-player-track-artist-wrapper">
 
-    <div
-      class="music-player-track-artist-skeleton"
-      aria-hidden="true"
-    ></div>
+      <div
+        class="music-player-track-artist-skeleton"
+        aria-hidden="true"
+      ></div>
 
-    <div class="music-player-track-artist"></div>
+      <div class="music-player-track-artist"></div>
 
-  </div>
+      <div class="music-player-status">
+
+        <span class="music-player-dot"></span>
+
+        <span class="music-player-status-text">
+          LISTO
+        </span>
+
+      </div>
+
+    </div>
 
 </div>
 
@@ -137,13 +147,16 @@ import LoadingSpinner
         aria-label="Contenido musical"
       >
 
-        <button
-          class="music-player-panel-nav-item is-active"
-          type="button"
-          data-home-section-button="trending"
-          aria-current="page"
-        >
-          TENDENCIAS
+        <div class="music-player-panel-nav-item-wrap">
+
+          <button
+            class="music-player-panel-nav-item is-active"
+            type="button"
+            data-home-section-button="trending"
+            aria-current="page"
+          >
+            TENDENCIAS
+          </button>
 
           <span
             class="music-player-playback-equalizer"
@@ -155,7 +168,8 @@ import LoadingSpinner
             <span></span>
             <span></span>
           </span>
-        </button>
+
+        </div>
 
         <button
           class="music-player-panel-nav-item"
@@ -228,27 +242,31 @@ import LoadingSpinner
             BUSCAR
         </button>
 
-        <button
-            class="music-player-panel-tab"
-            type="button"
-            data-panel-tab="playback"
-            role="tab"
-            aria-selected="false"
-            hidden
-        >
-            REPRODUCIENDO
+        <div class="music-player-panel-tab-wrap">
 
-            <span
-                class="music-player-playback-equalizer"
-                data-playback-equalizer="queue"
-                aria-hidden="true"
-            >
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-            </span>
-        </button>
+          <button
+              class="music-player-panel-tab"
+              type="button"
+              data-panel-tab="playback"
+              role="tab"
+              aria-selected="false"
+              hidden
+          >
+              REPRODUCIENDO
+          </button>
+
+          <span
+              class="music-player-playback-equalizer"
+              data-playback-equalizer="queue"
+              aria-hidden="true"
+          >
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+          </span>
+
+        </div>
 
         <button
           class="music-player-panel-close"
@@ -861,6 +879,28 @@ import LoadingSpinner
 </div>
 
   <!-- VIDEO TOGGLE -->
+
+<!-- LISTA PERSONALIZADA -->
+
+    <button
+        class="music-player-button music-player-custom-list-button"
+        type="button"
+        aria-label="Abrir lista personalizada"
+        title="Lista personalizada"
+    >
+        <svg
+            class="music-player-custom-list-icon"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <path d="M4 6.5H13.5" />
+            <path d="M4 11.5H13.5" />
+            <path d="M4 16.5H10" />
+            <path d="M17.5 14V20" />
+            <path d="M14.5 17H20.5" />
+        </svg>
+    </button>  
+    
     <button
         class="music-player-button music-player-video-toggle"
         type="button"
@@ -884,18 +924,6 @@ import LoadingSpinner
       />
     </svg>
   </button>
-
-  <!-- ESTADO -->
-
-  <div class="music-player-status">
-
-    <span class="music-player-dot"></span>
-
-    <span class="music-player-status-text">
-      LISTO
-    </span>
-
-  </div>
 
     <!-- PANEL DE VIDEO -->
   <div
