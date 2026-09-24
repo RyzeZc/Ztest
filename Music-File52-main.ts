@@ -242,11 +242,6 @@ function initializeMusicPlayer(): void {
             )
         );
 
-    const homeSectionsContainer =
-    player.querySelector(
-        '.music-player-home-sections'
-    );
-
     const localLibraryNavButton =
         player.querySelector<HTMLButtonElement>(
             '.music-player-local-library-nav'
@@ -378,7 +373,6 @@ function initializeMusicPlayer(): void {
         !(queuePanel instanceof HTMLElement) ||
         !(queueList instanceof HTMLElement) ||
         !(searchLoader instanceof HTMLElement) ||
-        !(homeSectionsContainer instanceof HTMLElement) ||
         !(localLibraryNavButton instanceof HTMLButtonElement) ||
         !(localLibrarySection instanceof HTMLElement) ||
         !(localLibraryContent instanceof HTMLElement) ||
@@ -873,9 +867,8 @@ function resetLocalLibraryNavigation(): void {
         'is-active'
     );
 
-    localLibraryNavButton.setAttribute(
-        'aria-current',
-        'false'
+    localLibraryNavButton.removeAttribute(
+        'aria-current'
     );
 
     localLibrarySection.classList.remove(
@@ -896,7 +889,9 @@ function formatLocalLibraryTime(
     }
 
     const totalSeconds =
-        Math.floor(seconds);
+        Math.floor(
+            seconds
+        );
 
     const minutes =
         Math.floor(
@@ -927,8 +922,7 @@ async function renderLocalLibrary(): Promise<void> {
             await getLocalLibrary();
 
         if (
-            tracks.length ===
-            0
+            tracks.length === 0
         ) {
 
             localLibraryContent.innerHTML =
@@ -1001,21 +995,14 @@ async function renderLocalLibrary(): Promise<void> {
                 cover.className =
                     'music-player-local-library-cover';
 
-                if (
+                cover.src =
+                    track.album.cover ??
+                    '';
+
+                cover.alt =
                     track.album.cover
-                ) {
-
-                    cover.src =
-                        track.album.cover;
-
-                    cover.alt =
-                        `${track.title} - portada`;
-
-                } else {
-
-                    cover.alt =
-                        '';
-                }
+                        ? `${track.title} - portada`
+                        : '';
 
 
                 const info =
@@ -1048,17 +1035,7 @@ async function renderLocalLibrary(): Promise<void> {
                     'music-player-local-library-track-artist';
 
                 artist.textContent =
-                    track.artist.name ||
-                    'ARTISTA DESCONOCIDO';
-
-
-                info.appendChild(
-                    title
-                );
-
-                info.appendChild(
-                    artist
-                );
+                    track.artist.name;
 
 
                 const duration =
@@ -1073,6 +1050,15 @@ async function renderLocalLibrary(): Promise<void> {
                     formatLocalLibraryTime(
                         track.duration
                     );
+
+
+                info.appendChild(
+                    title
+                );
+
+                info.appendChild(
+                    artist
+                );
 
 
                 item.appendChild(
@@ -1099,10 +1085,7 @@ async function renderLocalLibrary(): Promise<void> {
         );
 
 
-        localLibraryContent.innerHTML =
-            '';
-
-        localLibraryContent.appendChild(
+        localLibraryContent.replaceChildren(
             list
         );
 
@@ -1126,11 +1109,16 @@ async function renderLocalLibrary(): Promise<void> {
     }
 }
 
-
 function openLocalLibrary(): void {
 
     /*
-     * HOME sigue siendo la pestaña activa.
+     * Abrimos el panel principal si estaba cerrado.
+     */
+    openStationMenu();
+
+
+    /*
+     * MI MÚSICA pertenece a HOME.
      */
     activatePanelTab(
         'home'
@@ -1138,8 +1126,8 @@ function openLocalLibrary(): void {
 
 
     /*
-     * Desactivamos todas las secciones
-     * normales de HOME.
+     * Desactivamos las demás secciones
+     * de HOME.
      */
     homeSections.forEach(
         section => {
@@ -1161,7 +1149,7 @@ function openLocalLibrary(): void {
 
     /*
      * Quitamos la selección visual
-     * de TENDENCIAS / DESCUBRE / etc.
+     * de las secciones normales.
      */
     homeNavItems.forEach(
         item => {
@@ -1177,6 +1165,9 @@ function openLocalLibrary(): void {
     );
 
 
+    /*
+     * Activamos MI MÚSICA en el sidebar.
+     */
     localLibraryNavButton.classList.add(
         'is-active'
     );
@@ -1187,8 +1178,9 @@ function openLocalLibrary(): void {
     );
 
 
-    closeStationMenu();
-
+    /*
+     * Cargamos el contenido desde IndexedDB.
+     */
     void renderLocalLibrary();
 }
 
@@ -1200,11 +1192,26 @@ customListButton.addEventListener(
     }
 );
 
+
 localLibraryNavButton.addEventListener(
     'click',
     () => {
 
         openLocalLibrary();
+    }
+);
+
+
+homeNavItems.forEach(
+    item => {
+
+        item.addEventListener(
+            'click',
+            () => {
+
+                resetLocalLibraryNavigation();
+            }
+        );
     }
 );
 
