@@ -144,6 +144,17 @@ import LoadingSpinner
           aria-current="page"
         >
           TENDENCIAS
+
+          <span
+            class="music-player-playback-equalizer"
+            data-playback-equalizer="trending"
+            aria-hidden="true"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
         </button>
 
         <button
@@ -226,6 +237,17 @@ import LoadingSpinner
             hidden
         >
             REPRODUCIENDO
+
+            <span
+                class="music-player-playback-equalizer"
+                data-playback-equalizer="queue"
+                aria-hidden="true"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
         </button>
 
         <button
