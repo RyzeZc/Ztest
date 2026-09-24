@@ -66,14 +66,37 @@ import LoadingSpinner
 
 <div class="music-player-track-info">
 
-  <div class="music-player-track-title-wrapper">
+  <div class="music-player-track-title-row">
 
-    <div
-      class="music-player-track-title-skeleton"
-      aria-hidden="true"
-    ></div>
+    <div class="music-player-track-title-wrapper">
+      <div
+        class="music-player-track-title-skeleton"
+        aria-hidden="true"
+      ></div>
 
-    <div class="music-player-track-title"></div>
+      <div class="music-player-track-title"></div>
+    </div>
+
+    <button
+      class="music-player-local-save"
+      type="button"
+      aria-label="Guardar en Mi Música"
+      aria-pressed="false"
+      hidden
+    >
+      <svg
+        class="music-player-local-save-icon"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+      >
+        <path
+          d="M12 5V19"
+        />
+        <path
+          d="M5 12H19"
+        />
+      </svg>
+    </button>
 
   </div>
 
@@ -201,6 +224,19 @@ import LoadingSpinner
         data-home-section-button="stations"
       >
         EMISORAS
+      </button>
+
+      <div
+        class="music-player-panel-sidebar-divider"
+        aria-hidden="true"
+      ></div>
+
+      <button
+        class="music-player-panel-nav-item music-player-local-library-nav"
+        type="button"
+        aria-current="false"
+      >
+        MI MÚSICA
       </button>
 
       </nav>
@@ -504,6 +540,39 @@ import LoadingSpinner
 
 </section>
 
+
+            <!-- =================================================
+                 MI MÚSICA
+            ================================================== -->
+
+            <section
+              class="music-player-home-section music-player-local-library-section"
+              data-local-library-section
+            >
+
+              <div class="music-player-local-library-header">
+
+                <div class="music-player-local-library-eyebrow">
+                  BIBLIOTECA LOCAL
+                </div>
+
+                <div class="music-player-local-library-title">
+                  MI MÚSICA
+                </div>
+
+              </div>
+
+              <div
+                class="music-player-local-library-content"
+                data-local-library-content
+              >
+                <div class="music-player-local-library-loading">
+                  CARGANDO...
+                </div>
+              </div>
+
+            </section>
+            
           </div>
 
         </section>
@@ -518,18 +587,6 @@ import LoadingSpinner
               data-panel="search"
               data-panel-view="search"
           >
-
-          <!--div class="music-player-results-header">
-
-            <div class="music-player-results-eyebrow">
-              BUSCAR MÚSICA
-            </div>
-
-            <div class="music-player-results-title">
-              RESULTADOS
-            </div>
-
-          </div-->
 
 
           <form
@@ -728,28 +785,87 @@ import LoadingSpinner
 
     </button>
 
-    <!-- PLAY / PAUSE -->
+<!-- PLAY / PAUSE -->
 
-    <button
-      class="music-player-button music-player-play"
-      type="button"
-      aria-label="Reproducir"
-      aria-pressed="false"
+<button
+    class="music-player-button music-player-play"
+    type="button"
+    aria-label="Reproducir"
+    aria-pressed="false"
+>
+
+    <!-- LOADING SPINNER -->
+
+    <svg
+        class="music-player-progress-circle"
+        xmlns="http://www.w3.org/2000/svg"
+        width="48"
+        height="48"
+        viewBox="0 0 48 48"
+        fill="none"
+        aria-hidden="true"
     >
+        <g clip-path="url(#music-player-progress-circle-clip)">
 
-      <span class="music-player-play-ring"></span>
+            <path
+                stroke="url(#music-player-progress-circle-gradient)"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-miterlimit="10"
+                d="M45.72 31.644c-1.016 3.036-2.777 5.84-5.116 8.301-8.846 9.161-23.386 9.5-32.547.654-9.16-8.845-9.416-23.44-.654-32.546"
+            />
 
-      <svg
+        </g>
+
+        <defs>
+
+            <linearGradient
+                id="music-player-progress-circle-gradient"
+                x1="7.863"
+                x2="45.527"
+                y1="7.178"
+                y2="31.53"
+                gradientUnits="userSpaceOnUse"
+            >
+                <stop
+                    stop-color="currentColor"
+                />
+
+                <stop
+                    offset="1"
+                    stop-color="currentColor"
+                    stop-opacity="0"
+                />
+            </linearGradient>
+
+            <clipPath
+                id="music-player-progress-circle-clip"
+            >
+                <path
+                    fill="currentColor"
+                    d="M0 0h48v48H0z"
+                />
+            </clipPath>
+
+        </defs>
+
+    </svg>
+
+
+    <!-- PLAY / PAUSE ICON -->
+
+    <svg
         class="music-player-play-icon"
         viewBox="0 0 24 24"
         aria-hidden="true"
-      >
+    >
         <path
-          d="M9 6.5L18 12L9 17.5V6.5Z"
+            d="M9 6.5L18 12L9 17.5V6.5Z"
         />
-      </svg>
+    </svg>
 
-    </button>
+</button>
 
     <!-- SIGUIENTE -->
 
