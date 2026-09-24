@@ -222,38 +222,132 @@
    ARTISTA
 -------------------------------------------------- */
 
+/* =========================================================
+   ARTISTA / RADIO / ESTADO
+   ========================================================= */
+
 .music-player-track-artist-wrapper {
-    position: relative;
+    position:
+        relative;
 
-    width: 100%;
-    height: 20px;
+    display:
+        flex;
 
-    overflow: hidden;
+    align-items:
+        center;
+
+    gap:
+        8px;
+
+    width:
+        100%;
+
+    height:
+        20px;
+
+    overflow:
+        hidden;
 }
 
 
 .music-player-track-artist {
-    width: 100%;
-    height: 12px;
+    flex:
+        1 1 auto;
 
-    margin: 0;
+    min-width:
+        0;
 
-    overflow: hidden;
+    width:
+        auto;
 
-    color: #777;
+    height:
+        12px;
 
-    font-size: var(--player-font-size-s);
-    line-height: 12px;
+    margin:
+        0;
 
-    font-weight: var(--player-font-weight-subtitle);
+    overflow:
+        hidden;
 
-    letter-spacing: 0.12em;
+    color:
+        #777;
 
-    text-transform: uppercase;
+    font-size:
+        var(--player-font-size-s);
 
-    white-space: nowrap;
+    line-height:
+        12px;
 
-    text-overflow: ellipsis;
+    font-weight:
+        var(--player-font-weight-subtitle);
+
+    letter-spacing:
+        0.12em;
+
+    text-transform:
+        uppercase;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+/* ESTADO OCULTO POR DEFECTO */
+
+.music-player-status {
+    display:
+        none;
+
+    align-items:
+        center;
+
+    gap:
+        6px;
+
+    width:
+        auto;
+
+    flex:
+        0 0 auto;
+
+    margin:
+        0;
+}
+
+
+/* SOLO RADIO */
+
+.music-player.is-radio
+.music-player-status {
+    display:
+        flex;
+}
+
+
+.music-player-status-text {
+    width:
+        auto;
+
+    font-size:
+        var(--player-font-size-xs);
+
+    line-height:
+        1;
+
+    font-weight:
+        var(--player-font-weight-m-title);
+
+    letter-spacing:
+        0.05em;
+
+    white-space:
+        nowrap;
+
+    color:
+        #555;
 }
 
 /* --------------------------------------------------
@@ -730,6 +824,171 @@
 }
 
 /* =========================================================
+   PROGRESO — HOVER
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   SEEK — BASE
+   --------------------------------------------------------- */
+
+/* PISTA VISUAL */
+
+.music-player-seek-wrapper::before {
+    content: "";
+
+    position: absolute;
+
+    top: 50%;
+    left: 0;
+
+    width: 100%;
+    height: 4px;
+
+    border-radius: .25rem;
+
+    background: #3a3a3a;
+
+    transform:
+        translateY(-50%)
+        scaleY(.5);
+
+    transform-origin:
+        center center;
+
+    transition:
+        transform 0.12s ease;
+
+    pointer-events: none;
+
+    z-index: 0;
+}
+
+.music-player-seek-wrapper:hover::before {
+    transform:
+        translateY(-50%)
+        scaleY(1);
+}
+
+
+.music-player-seek-wrapper {
+    background:
+        transparent;
+}
+
+
+.music-player-seek-wrapper::before {
+    content:
+        "";
+
+    position:
+        absolute;
+
+    top:
+        50%;
+
+    left:
+        0;
+
+    width:
+        100%;
+
+    height:
+        2px;
+
+    border-radius:
+        .25rem;
+
+    background:
+        #3a3a3a;
+
+    transform:
+        translateY(-50%);
+
+    transition:
+        height 0.12s ease;
+}
+
+
+/* PROGRESS NARANJA */
+
+.music-player-seek-progress {
+    transform:
+        scaleY(.5);
+
+    transform-origin:
+        center center;
+
+    transition:
+        transform 0.12s ease;
+
+    z-index: 1;
+}
+
+/* HOVER */
+
+.music-player-volume-slider-wrapper:hover::before {
+    transform:
+        translateY(-50%)
+        scaleY(1);
+}
+
+
+.music-player-seek-wrapper:hover
+.music-player-seek-progress {
+    transform:
+        scaleY(1);
+}
+
+/* ---------------------------------------------------------
+   VOLUMEN — BASE
+   --------------------------------------------------------- */
+
+.music-player-volume-slider-wrapper {
+    background:
+        transparent;
+}
+
+
+.music-player-volume-slider-wrapper::before {
+    content: "";
+
+    position: absolute;
+
+    top: 50%;
+    left: 0;
+
+    width: 100%;
+    height: 4px;
+
+    border-radius: .25rem;
+
+    background: #3a3a3a;
+
+    transform:
+        translateY(-50%)
+        scaleY(.5);
+
+    transform-origin:
+        center center;
+
+    transition:
+        transform 0.12s ease;
+
+    pointer-events: none;
+
+    z-index: 0;
+}
+
+
+/* HOVER */
+
+.music-player-volume-slider-wrapper:hover
+.music-player-volume-progress {
+    transform:
+        scaleY(1);
+}
+
+/* =========================================================
    SPINNER
    ========================================================= */
 
@@ -855,6 +1114,20 @@
     pointer-events: none;
 }
 
+.music-player-volume-progress {
+    transform:
+        scaleY(.5);
+
+    transform-origin:
+        center center;
+
+    transition:
+        transform 0.12s ease;
+
+    z-index: 1;
+}
+
+
 .music-player-volume-slider {
     position: absolute;
 
@@ -962,7 +1235,7 @@ YOUTUBE VIDEO
     width: 30px;
     height: 30px;
 
-    margin-left: 2px;
+    margin-left: 0px;
 
     opacity: 0;
     visibility: hidden;
@@ -1073,17 +1346,6 @@ YOUTUBE VIDEO
 /* =========================================================
    ESTADO
    ========================================================= */
-
-.music-player-status {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 6px;
-    width: 62px;
-    flex-shrink: 0;
-    margin-left: 8px;
-    margin-right: 5px;
-}
 
 .music-player-dot {
     width: 6px;
@@ -1219,7 +1481,7 @@ YOUTUBE VIDEO
         grid;
 
     grid-template-columns:
-        140px
+        155px
         minmax(0, 1fr);
 
     width:
@@ -4273,21 +4535,81 @@ img {
    EQUALIZER — ESTADO DE REPRODUCCIÓN
    ========================================================= */
 
+.music-player-panel-nav-item-wrap,
+.music-player-panel-tab-wrap {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    min-width:
+        0;
+}
+
+
+/* ---------------------------------------------------------
+   TENDENCIAS
+   --------------------------------------------------------- */
+
+.music-player-panel-nav-item-wrap {
+    width:
+        100%;
+
+    height:
+        34px;
+}
+
+
+.music-player-panel-nav-item-wrap
+.music-player-panel-nav-item {
+    width:
+        auto;
+
+    flex:
+        0 0 auto;
+}
+
+
+/* ---------------------------------------------------------
+   REPRODUCIENDO
+   --------------------------------------------------------- */
+
+.music-player-panel-tab-wrap {
+    height:
+        100%;
+
+    flex:
+        0 0 auto;
+}
+
+
+.music-player-panel-tab-wrap
+.music-player-panel-tab {
+    flex:
+        0 0 auto;
+}
+
+
+/* ---------------------------------------------------------
+   EQUALIZER
+   --------------------------------------------------------- */
+
 .music-player-playback-equalizer {
     position:
-        absolute;
+        relative;
 
     top:
-        50%;
+        auto;
 
     right:
-        8px;
+        auto;
 
     display:
         flex;
 
     align-items:
-        flex-end;
+        center;
 
     justify-content:
         center;
@@ -4296,110 +4618,58 @@ img {
         2px;
 
     width:
-        17px;
+        0;
 
     height:
-        13px;
+        17px;
 
-    transform:
-        translateY(
-            -50%
-        );
+    margin-left:
+        0;
+
+    overflow:
+        hidden;
 
     opacity:
         0;
 
+    transform:
+        none;
+
     pointer-events:
         none;
+
+    flex:
+        0 0 0;
+
+    transition:
+        width 0.16s ease,
+        flex-basis 0.16s ease,
+        margin-left 0.16s ease,
+        opacity 0.12s ease;
 }
 
-
-.music-player-panel-nav-item,
-.music-player-panel-tab {
-    position:
-        relative;
-}
-
-
-/* TENDENCIAS */
-
-.music-player-panel-nav-item
-.music-player-playback-equalizer {
-    right:
-        8px;
-}
-
-
-/* REPRODUCIENDO */
-
-.music-player-panel-tab[data-panel-tab="playback"] {
-    padding-right:
-        38px;
-}
-
-
-.music-player-panel-tab[data-panel-tab="playback"]
-.music-player-playback-equalizer {
-    right:
-        9px;
-}
-
-
-/* VISIBLE */
 
 .music-player-playback-equalizer.is-active {
+    width:
+        18px;
+
+    flex-basis:
+        18px;
+
+    margin-left:
+        7px;
+
     opacity:
         1;
 }
 
 
-/* ANIMACIÓN */
+/* ---------------------------------------------------------
+   BARRAS
+   --------------------------------------------------------- */
 
-.music-player-playback-equalizer.is-active.is-playing
-span:nth-child(1) {
-    animation:
-        music-player-equalizer-1
-        0.32s
-        ease-in-out
-        infinite
-        alternate;
-}
-
-
-.music-player-playback-equalizer.is-active.is-playing
-span:nth-child(2) {
-    animation:
-        music-player-equalizer-2
-        0.24s
-        ease-in-out
-        infinite
-        alternate;
-}
-
-
-.music-player-playback-equalizer.is-active.is-playing
-span:nth-child(3) {
-    animation:
-        music-player-equalizer-3
-        0.36s
-        ease-in-out
-        infinite
-        alternate;
-}
-
-
-.music-player-playback-equalizer.is-active.is-playing
-span:nth-child(4) {
-    animation:
-        music-player-equalizer-4
-        0.28s
-        ease-in-out
-        infinite
-        alternate;
-}
-
-
-.music-player-playback-equalizer span {
+.music-player-playback-equalizer
+span {
     display:
         block;
 
@@ -4407,7 +4677,10 @@ span:nth-child(4) {
         3px;
 
     height:
-        5px;
+        8px;
+
+    flex:
+        0 0 3px;
 
     border-radius:
         2px;
@@ -4420,7 +4693,95 @@ span:nth-child(4) {
 }
 
 
-/* BARRA 1 */
+/* ---------------------------------------------------------
+   ANIMACIÓN
+   IMPORTANTE:
+   La animación existe incluso en PAUSA.
+   Solo cambia animation-play-state.
+   --------------------------------------------------------- */
+
+.music-player-playback-equalizer.is-active
+span:nth-child(1) {
+    animation:
+        music-player-equalizer-1
+        0.32s
+        ease-in-out
+        infinite
+        alternate;
+
+    animation-play-state:
+        paused;
+
+    animation-fill-mode:
+        both;
+}
+
+
+.music-player-playback-equalizer.is-active
+span:nth-child(2) {
+    animation:
+        music-player-equalizer-2
+        0.24s
+        ease-in-out
+        infinite
+        alternate;
+
+    animation-play-state:
+        paused;
+
+    animation-fill-mode:
+        both;
+}
+
+
+.music-player-playback-equalizer.is-active
+span:nth-child(3) {
+    animation:
+        music-player-equalizer-3
+        0.36s
+        ease-in-out
+        infinite
+        alternate;
+
+    animation-play-state:
+        paused;
+
+    animation-fill-mode:
+        both;
+}
+
+
+.music-player-playback-equalizer.is-active
+span:nth-child(4) {
+    animation:
+        music-player-equalizer-4
+        0.28s
+        ease-in-out
+        infinite
+        alternate;
+
+    animation-play-state:
+        paused;
+
+    animation-fill-mode:
+        both;
+}
+
+
+/* ---------------------------------------------------------
+   REPRODUCCIÓN
+   --------------------------------------------------------- */
+
+.music-player-playback-equalizer.is-active.is-playing
+span {
+    animation-play-state:
+        running;
+}
+
+
+/* ---------------------------------------------------------
+   KEYFRAMES
+   --------------------------------------------------------- */
 
 @keyframes music-player-equalizer-1 {
 
@@ -4440,8 +4801,6 @@ span:nth-child(4) {
 }
 
 
-/* BARRA 2 */
-
 @keyframes music-player-equalizer-2 {
 
     from {
@@ -4460,8 +4819,6 @@ span:nth-child(4) {
 }
 
 
-/* BARRA 3 */
-
 @keyframes music-player-equalizer-3 {
 
     from {
@@ -4479,8 +4836,6 @@ span:nth-child(4) {
     }
 }
 
-
-/* BARRA 4 */
 
 @keyframes music-player-equalizer-4 {
 
@@ -4504,10 +4859,10 @@ span:nth-child(4) {
     prefers-reduced-motion: reduce
 ) {
 
-    .music-player-playback-equalizer.is-playing
+    .music-player-playback-equalizer.is-active
     span {
-        animation:
-            none;
+        animation-play-state:
+            paused;
     }
 }
 
@@ -4547,6 +4902,62 @@ span:nth-child(4) {
     margin:
         8px auto;
 }
+
+
+/* =========================================================
+   LISTA PERSONALIZADA
+   ========================================================= */
+
+.music-player-custom-list-button {
+    flex-shrink:
+        0;
+
+    width:
+        30px;
+
+    height:
+        30px;
+
+    margin-left:
+        7px;
+
+    opacity:
+        1;
+
+    visibility:
+        visible;
+
+    transform:
+        none;
+
+    pointer-events:
+        auto;
+}
+
+
+.music-player-custom-list-icon {
+    width:
+        24px;
+
+    height:
+        24px;
+
+    fill:
+        none;
+
+    stroke:
+        currentColor;
+
+    stroke-width:
+        1.7;
+
+    stroke-linecap:
+        round;
+
+    stroke-linejoin:
+        round;
+}
+
 /* =========================================================
    RESPONSIVE
    ========================================================= */
