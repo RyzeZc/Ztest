@@ -888,14 +888,15 @@ const searchController:
                             'artist-radio',
 
                         label:
-                            'ARTIST RADIO',
+                            `MIX`,
 
                         title:
-                            track.artist.name ??
-                            'ARTISTA',
+                            track.title && track.artist.name 
+                                ? `${track.title} - ${track.artist.name}` 
+                                : 'ARTISTA',
 
                         subtitle:
-                            'Radio basada en este artista',
+                            'Los mixes son playlists que se generan para ti',
 
                         image:
                             track.album.cover ??
@@ -2049,6 +2050,70 @@ function updateTrackPlaybackIndicators(): void {
             isActuallyPlaying ||
             isPendingPlayback
         );
+
+    const isTrendingPlayback =
+        activePlaybackSource ===
+            'youtube' &&
+        playbackState.playbackListSource ===
+            'home-trending' &&
+        playbackState.playbackList.length >
+            0;
+
+
+    const isQueuePlayback =
+        activePlaybackSource ===
+            'youtube' &&
+        isPlaybackPanelSource(
+            playbackState.playbackListSource
+        ) &&
+        playbackState.playbackList.length >
+            0;
+
+
+    const trendingEqualizer =
+        player.querySelector<HTMLElement>(
+            '[data-playback-equalizer="trending"]'
+        );
+
+
+    const queueEqualizer =
+        player.querySelector<HTMLElement>(
+            '[data-playback-equalizer="queue"]'
+        );
+
+
+    if (
+        trendingEqualizer
+    ) {
+
+        trendingEqualizer.classList.toggle(
+            'is-active',
+            isTrendingPlayback
+        );
+
+        trendingEqualizer.classList.toggle(
+            'is-playing',
+            isTrendingPlayback &&
+            isVisuallyPlaying
+        );
+    }
+
+
+    if (
+        queueEqualizer
+    ) {
+
+        queueEqualizer.classList.toggle(
+            'is-active',
+            isQueuePlayback
+        );
+
+        queueEqualizer.classList.toggle(
+            'is-playing',
+            isQueuePlayback &&
+            isVisuallyPlaying
+        );
+    }
 
     /*
      * --------------------------------------------------
