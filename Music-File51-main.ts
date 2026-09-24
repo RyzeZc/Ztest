@@ -38,6 +38,10 @@ import {
     createHomeController,
 } from '../../lib/MusicPlayer/home';
 
+import {
+    getLocalLibrary,
+} from '../../lib/MusicPlayer/local-library';
+
 function initializeMusicPlayer(): void {
 
     const player =
@@ -243,6 +247,21 @@ function initializeMusicPlayer(): void {
         '.music-player-home-sections'
     );
 
+    const localLibraryNavButton =
+        player.querySelector<HTMLButtonElement>(
+            '.music-player-local-library-nav'
+        );
+
+    const localLibrarySection =
+        player.querySelector<HTMLElement>(
+            '[data-local-library-section]'
+        );
+
+    const localLibraryContent =
+        player.querySelector<HTMLElement>(
+            '[data-local-library-content]'
+        );    
+
     const panelCloseButton =
     player.querySelector<HTMLButtonElement>(
         '[data-panel-close]'
@@ -251,6 +270,11 @@ function initializeMusicPlayer(): void {
     const youtubeButton =
         player.querySelector(
             '.music-player-youtube-button'
+        );
+
+    const customListButton =
+        player.querySelector<HTMLButtonElement>(
+            '.music-player-custom-list-button'
         );
 
     const youtubeSearchForm =
@@ -355,12 +379,16 @@ function initializeMusicPlayer(): void {
         !(queueList instanceof HTMLElement) ||
         !(searchLoader instanceof HTMLElement) ||
         !(homeSectionsContainer instanceof HTMLElement) ||
+        !(localLibraryNavButton instanceof HTMLButtonElement) ||
+        !(localLibrarySection instanceof HTMLElement) ||
+        !(localLibraryContent instanceof HTMLElement) ||
         !(panelCloseButton instanceof HTMLButtonElement) ||
         !(playbackContext instanceof HTMLElement) ||
         !(playbackContextImage instanceof HTMLImageElement) ||
         !(playbackContextLabel instanceof HTMLElement) ||
         !(playbackContextTitle instanceof HTMLElement) ||
-        !(playbackContextSubtitle instanceof HTMLElement)
+        !(playbackContextSubtitle instanceof HTMLElement) ||
+        !(customListButton instanceof HTMLButtonElement)
     ) {
         console.error(
             '[MusicPlayer] Required elements not found.'
@@ -780,6 +808,19 @@ const {
         },
 });
 
+homeNavItems.forEach(
+    item => {
+
+        item.addEventListener(
+            'click',
+            () => {
+
+                resetLocalLibraryNavigation();
+            }
+        );
+    }
+);
+
 const playbackState =
     createPlaybackState();
 
@@ -821,6 +862,351 @@ const {
 
         activatePanelTab,
     });
+
+/* ============================================================
+ * MI MÚSICA
+ * ============================================================ */
+
+function resetLocalLibraryNavigation(): void {
+
+    localLibraryNavButton.classList.remove(
+        'is-active'
+    );
+
+    localLibraryNavButton.setAttribute(
+        'aria-current',
+        'false'
+    );
+
+    localLibrarySection.classList.remove(
+        'is-active'
+    );
+}
+
+
+function formatLocalLibraryTime(
+    seconds: number
+): string {
+
+    if (
+        !Number.isFinite(seconds) ||
+        seconds < 0
+    ) {
+        return '0:00';
+    }
+
+    const totalSeconds =
+        Math.floor(seconds);
+
+    const minutes =
+        Math.floor(
+            totalSeconds / 60
+        );
+
+    const remainingSeconds =
+        totalSeconds % 60;
+
+    return `${minutes}:${remainingSeconds
+        .toString()
+        .padStart(2, '0')}`;
+}
+
+
+async function renderLocalLibrary(): Promise<void> {
+
+    localLibraryContent.innerHTML =
+        `
+            <div class="music-player-local-library-loading">
+                CARGANDO...
+            </div>
+        `;
+
+    try {
+
+        const tracks =
+            await getLocalLibrary();
+
+        if (
+            tracks.length ===
+            0
+        ) {
+
+            localLibraryContent.innerHTML =
+                `
+                    <div class="music-player-local-library-empty">
+
+                        <div class="music-player-local-library-empty-title">
+                            TU LISTA ESTÁ VACÍA
+                        </div>
+
+                        <div class="music-player-local-library-empty-text">
+                            GUARDA TUS CANCIONES FAVORITAS PARA TENERLAS SIEMPRE AQUÍ
+                        </div>
+
+                    </div>
+                `;
+
+            return;
+        }
+
+
+        const list =
+            document.createElement(
+                'div'
+            );
+
+        list.className =
+            'music-player-local-library-list';
+
+
+        tracks.forEach(
+            (
+                track,
+                index
+            ) => {
+
+                const item =
+                    document.createElement(
+                        'div'
+                    );
+
+                item.className =
+                    'music-player-local-library-item';
+
+                item.dataset.trackId =
+                    String(
+                        track.id
+                    );
+
+
+                const number =
+                    document.createElement(
+                        'span'
+                    );
+
+                number.className =
+                    'music-player-local-library-index';
+
+                number.textContent =
+                    String(
+                        index + 1
+                    );
+
+
+                const cover =
+                    document.createElement(
+                        'img'
+                    );
+
+                cover.className =
+                    'music-player-local-library-cover';
+
+                if (
+                    track.album.cover
+                ) {
+
+                    cover.src =
+                        track.album.cover;
+
+                    cover.alt =
+                        `${track.title} - portada`;
+
+                } else {
+
+                    cover.alt =
+                        '';
+                }
+
+
+                const info =
+                    document.createElement(
+                        'span'
+                    );
+
+                info.className =
+                    'music-player-local-library-info';
+
+
+                const title =
+                    document.createElement(
+                        'span'
+                    );
+
+                title.className =
+                    'music-player-local-library-track-title';
+
+                title.textContent =
+                    track.title;
+
+
+                const artist =
+                    document.createElement(
+                        'span'
+                    );
+
+                artist.className =
+                    'music-player-local-library-track-artist';
+
+                artist.textContent =
+                    track.artist.name ||
+                    'ARTISTA DESCONOCIDO';
+
+
+                info.appendChild(
+                    title
+                );
+
+                info.appendChild(
+                    artist
+                );
+
+
+                const duration =
+                    document.createElement(
+                        'span'
+                    );
+
+                duration.className =
+                    'music-player-local-library-duration';
+
+                duration.textContent =
+                    formatLocalLibraryTime(
+                        track.duration
+                    );
+
+
+                item.appendChild(
+                    number
+                );
+
+                item.appendChild(
+                    cover
+                );
+
+                item.appendChild(
+                    info
+                );
+
+                item.appendChild(
+                    duration
+                );
+
+
+                list.appendChild(
+                    item
+                );
+            }
+        );
+
+
+        localLibraryContent.innerHTML =
+            '';
+
+        localLibraryContent.appendChild(
+            list
+        );
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Unable to load local library:',
+            error
+        );
+
+        localLibraryContent.innerHTML =
+            `
+                <div class="music-player-local-library-empty">
+
+                    <div class="music-player-local-library-empty-title">
+                        NO SE PUDO CARGAR MI MÚSICA
+                    </div>
+
+                </div>
+            `;
+    }
+}
+
+
+function openLocalLibrary(): void {
+
+    /*
+     * HOME sigue siendo la pestaña activa.
+     */
+    activatePanelTab(
+        'home'
+    );
+
+
+    /*
+     * Desactivamos todas las secciones
+     * normales de HOME.
+     */
+    homeSections.forEach(
+        section => {
+
+            section.classList.remove(
+                'is-active'
+            );
+        }
+    );
+
+
+    /*
+     * Activamos MI MÚSICA.
+     */
+    localLibrarySection.classList.add(
+        'is-active'
+    );
+
+
+    /*
+     * Quitamos la selección visual
+     * de TENDENCIAS / DESCUBRE / etc.
+     */
+    homeNavItems.forEach(
+        item => {
+
+            item.classList.remove(
+                'is-active'
+            );
+
+            item.removeAttribute(
+                'aria-current'
+            );
+        }
+    );
+
+
+    localLibraryNavButton.classList.add(
+        'is-active'
+    );
+
+    localLibraryNavButton.setAttribute(
+        'aria-current',
+        'page'
+    );
+
+
+    closeStationMenu();
+
+    void renderLocalLibrary();
+}
+
+customListButton.addEventListener(
+    'click',
+    () => {
+
+        openLocalLibrary();
+    }
+);
+
+localLibraryNavButton.addEventListener(
+    'click',
+    () => {
+
+        openLocalLibrary();
+    }
+);
 
 const searchCategoryTabs =
     player.querySelector<HTMLElement>(
