@@ -726,6 +726,31 @@ export function createHomeController(
         return indicator;
     }    
 
+    function createCardCover(
+        image:
+            HTMLImageElement
+    ):
+        HTMLSpanElement {
+
+        const cover =
+            document.createElement(
+                'span'
+            );
+
+        cover.className =
+            'music-player-card-cover';
+
+        cover.appendChild(
+            image
+        );
+
+        cover.appendChild(
+            createCardPlaybackIndicator()
+        );
+
+        return cover;
+    }    
+
     function renderDiscover(
         section:
             HTMLElement,
@@ -850,12 +875,10 @@ export function createHomeController(
 
 
                 card.appendChild(
-                    image
-                );
-
-                card.appendChild(
-                    createCardPlaybackIndicator()
-                );                
+                    createCardCover(
+                        image
+                    )
+                );              
 
                 card.appendChild(
                     title
@@ -1098,15 +1121,11 @@ export function createHomeController(
                         ? `${playlist.user.name} · ${playlist.nb_tracks ?? 0} pistas`
                         : `${playlist.nb_tracks ?? 0} pistas`;
 
-
                 card.appendChild(
-                    image
+                    createCardCover(
+                        image
+                    )
                 );
-
-                card.appendChild(
-                    createCardPlaybackIndicator()
-                );
-
 
                 card.appendChild(
                     title
@@ -1339,15 +1358,11 @@ export function createHomeController(
                 name.textContent =
                     genre.name;
 
-
                 card.appendChild(
-                    image
+                    createCardCover(
+                        image
+                    )
                 );
-
-                card.appendChild(
-                    createCardPlaybackIndicator()
-                );
-
 
                 card.appendChild(
                     name
