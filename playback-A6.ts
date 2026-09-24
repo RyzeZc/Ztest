@@ -38,6 +38,29 @@ const resolvedYouTubeIds =
         string
     >();
 
+export function primeResolvedYouTubeTracks(
+    tracks: Array<{
+        id: number;
+        youtubeVideoId: string;
+    }>
+): void {
+
+    for (
+        const track of tracks
+    ) {
+
+        if (
+            !track.youtubeVideoId
+        ) {
+            continue;
+        }
+
+        resolvedYouTubeIds.set(
+            track.id,
+            track.youtubeVideoId
+        );
+    }
+}
 
 /* ============================================================
  * ARTIST RADIO CACHE
