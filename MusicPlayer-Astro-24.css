@@ -1,3 +1,5 @@
+
+
 /* =========================================================
    MUSIC PLAYER
    ========================================================= */
@@ -207,10 +209,10 @@
 
     color: #d2d2d2;
 
-    font-size: 12px;
+    font-size: var(--player-font-size-s);
     line-height: 18px;
 
-    font-weight: 700;
+    font-weight: var(--player-font-weight-subtitle);
 
     white-space: nowrap;
 }
@@ -240,10 +242,10 @@
 
     color: #777;
 
-    font-size: 10px;
+    font-size: var(--player-font-size-s);
     line-height: 12px;
 
-    font-weight: 700;
+    font-weight: var(--player-font-weight-subtitle);
 
     letter-spacing: 0.12em;
 
@@ -497,8 +499,8 @@
 -------------------------------------------------- */
 
 .music-player-play {
-    width: 46px;
-    height: 46px;
+    width: 40px;
+    height: 40px;
 
     flex-shrink: 0;
 
@@ -594,12 +596,12 @@
 
     min-width: 28px;
 
-    color: #666;
+    color: #667;
 
-    font-size: 12px;
+    font-size: var(--player-font-size-s);
     line-height: 1;
 
-    font-weight: 700;
+    font-weight: var(--player-font-weight-subtitle);
 
     font-variant-numeric:
         tabular-nums;
@@ -615,7 +617,7 @@
     min-width: 0;
 
     width: 100%;
-    height: 4px;
+    height: 2px;
 
     border-radius: .25rem;
 
@@ -646,7 +648,7 @@
     z-index: 2;
 
     width: 100%;
-    height: 4px;
+    height: 2px;
 
     margin: 0;
 
@@ -824,7 +826,7 @@
     min-width: 55px;
     max-width: 55px;
 
-    height: 4px;
+    height: 2px;
 
     box-sizing: border-box;
 
@@ -862,7 +864,7 @@
     z-index: 2;
 
     width: 100%;
-    height: 4px;
+    height: 2px;
 
     margin: 0;
 
@@ -1093,10 +1095,10 @@ YOUTUBE VIDEO
 
 .music-player-status-text {
     width: 50px;
-    font-size: 7px;
+    font-size: var(--player-font-size-xs);
     line-height: 1;
-    font-weight: 800;
-    letter-spacing: 0.13em;
+    font-weight: var(--player-font-weight-m-title);
+    letter-spacing: 0.05em;
     white-space: nowrap;
     color: #555;
 }
@@ -1213,16 +1215,21 @@ YOUTUBE VIDEO
    ========================================================= */
 
 .music-player-panel-shell {
-    display: grid;
+    display:
+        grid;
 
     grid-template-columns:
-        190px
+        140px
         minmax(0, 1fr);
 
-    width: 100%;
-    height: 100%;
+    width:
+        100%;
 
-    min-width: 0;
+    height:
+        100%;
+
+    min-width:
+        0;
 }
 
 
@@ -1281,11 +1288,11 @@ YOUTUBE VIDEO
 
     color: #8a8a8a;
 
-    font-family: inherit;
+    font-family: var(--player-font);
 
-    font-size: 9px;
+    font-size: var(--player-font-size-s);
 
-    font-weight: 800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing: 0.1em;
 
@@ -1364,13 +1371,13 @@ YOUTUBE VIDEO
 
     color: #696969;
 
-    font-family: inherit;
+    font-family: var(--player-font);
 
-    font-size: 9px;
+    font-size: var(--player-font-size-s);
 
-    font-weight: 800;
+    font-weight: var(--player-font-weight-title);
 
-    letter-spacing: 0.12em;
+    letter-spacing: 0.04em;
 
     text-align: left;
 
@@ -1482,13 +1489,13 @@ YOUTUBE VIDEO
 
     color: #5d5d5d;
 
-    font-family: inherit;
+    font-family: var(--player-font);
 
-    font-size: 8px;
+    font-size: var(--player-font-size-s);
 
-    font-weight: 800;
+    font-weight: var(--player-font-weight-title);
 
-    letter-spacing: 0.12em;
+    letter-spacing: 0.05em;
 
     cursor: pointer;
 
@@ -1575,9 +1582,9 @@ YOUTUBE VIDEO
 .music-player-queue-eyebrow {
     color: #555;
 
-    font-size: 8px;
+    font-size: var(--player-font-size-s);
 
-    font-weight: 800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing: 0.14em;
 }
@@ -1594,7 +1601,7 @@ YOUTUBE VIDEO
 
     line-height: 1.1;
 
-    font-weight: 800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing: 0.03em;
 }
@@ -1633,9 +1640,9 @@ YOUTUBE VIDEO
 
     color: #8b8b8b;
 
-    font-size: 9px;
+    font-size: var(--player-font-size-s);
 
-    font-weight: 800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing: 0.12em;
 }
@@ -1696,9 +1703,9 @@ YOUTUBE VIDEO
 
     color: #444;
 
-    font-size: 8px;
+    font-size: var(--player-font-size-s);
 
-    font-weight: 800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing: 0.13em;
 }
@@ -1779,9 +1786,9 @@ YOUTUBE VIDEO
 
     color: #ccc;
 
-    font-family: inherit;
+    font-family: var(--player-font);
 
-    font-size: 10px;
+    font-size: var(--player-font-size-s);
 }
 
 
@@ -1811,11 +1818,11 @@ YOUTUBE VIDEO
 
     color: #777;
 
-    font-family: inherit;
+    font-family: var(--player-font);
 
-    font-size: 7px;
+    font-size: var(--player-font-size-s);
 
-    font-weight: 800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing: 0.08em;
 
@@ -1873,9 +1880,9 @@ YOUTUBE VIDEO
     color:
         #555;
 
-    font-size: 8px;
+    font-size: var(--player-font-size-s);
 
-    font-weight: 800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing: 0.12em;
 
@@ -1911,11 +1918,9 @@ YOUTUBE VIDEO
     color:
         #555;
 
-    font-size:
-        8px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing:
         0.12em;
@@ -1993,11 +1998,9 @@ YOUTUBE VIDEO
     color:
         #444;
 
-    font-size:
-        8px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing:
         0.13em;
@@ -2052,13 +2055,11 @@ YOUTUBE VIDEO
         1px solid #242424;
 
     color:
-        #4d4d4d;
+        #667;
 
-    font-size:
-        8px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing:
         0.12em;
@@ -2103,13 +2104,11 @@ YOUTUBE VIDEO
     min-width: 0;
 
     color:
-        #666;
+        #667;
 
-    font-size:
-        9px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        700;
+    font-weight: var(--player-font-weight-subtitle);
 
     text-align:
         right;
@@ -2236,14 +2235,12 @@ YOUTUBE VIDEO
     color:
         #c4c4c4;
 
-    font-size:
-        10px;
+    font-size: var(--player-font-size-s);
 
     line-height:
         1.3;
 
-    font-weight:
-        700;
+    font-weight: var(--player-font-weight-subtitle);
 
     white-space:
         nowrap;
@@ -2269,14 +2266,12 @@ YOUTUBE VIDEO
     color:
         #5d5d5d;
 
-    font-size:
-        8px;
+    font-size: var(--player-font-size-s);
 
     line-height:
         1;
 
-    font-weight:
-        700;
+    font-weight: var(--player-font-weight-subtitle);
 
     white-space:
         nowrap;
@@ -2328,7 +2323,9 @@ YOUTUBE VIDEO
         );
 }
 
-
+.music-player-queue-index {
+    text-align: center;
+}
 .music-player-queue-item.is-current
 .music-player-queue-index,
 
@@ -2487,11 +2484,9 @@ YOUTUBE VIDEO
     color:
         #444;
 
-    font-size:
-        8px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing:
         0.13em;
@@ -2570,11 +2565,9 @@ YOUTUBE VIDEO
     font-family:
         inherit;
 
-    font-size:
-        10px;
+    font-size: var(--player-font-size-s);
 
-    font-weight:
-        700;
+    font-weight: var(--player-font-weight-subtitle);
 
     text-align:
         left;
@@ -2617,8 +2610,7 @@ YOUTUBE VIDEO
     text-align:
         center;
 
-    font-size:
-        9px;
+    font-size: var(--player-font-size-s);
 
     font-variant-numeric:
         tabular-nums;
@@ -2680,11 +2672,9 @@ YOUTUBE VIDEO
     color:
         #4a4a4a;
 
-    font-size:
-        8px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing:
         0.12em;
@@ -2758,6 +2748,10 @@ YOUTUBE VIDEO
 
     background:
         #151515;
+
+    /*border-color: #38373b;
+    border-style: solid;
+    border-width: 0.0625rem;*/
 }
 
 
@@ -2771,14 +2765,12 @@ YOUTUBE VIDEO
     color:
         #c4c4c4;
 
-    font-size:
-        10px;
+    font-size: var(--player-font-size-s);
 
     line-height:
         1.25;
 
-    font-weight:
-        700;
+    font-weight: var(--player-font-weight-subtitle);
 
     white-space:
         nowrap;
@@ -2796,16 +2788,14 @@ YOUTUBE VIDEO
         hidden;
 
     color:
-        #666;
+        #667;
 
-    font-size:
-        8px;
+    font-size: var(--player-font-size-s);
 
     line-height:
         1.1;
 
-    font-weight:
-        700;
+    font-weight: var(--player-font-weight-subtitle);
 
     white-space:
         nowrap;
@@ -2822,11 +2812,9 @@ YOUTUBE VIDEO
     color:
         #4d4d4d;
 
-    font-size:
-        7px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        700;
+    font-weight: var(--player-font-weight-subtitle);
 
     text-transform:
         uppercase;
@@ -2980,11 +2968,9 @@ YOUTUBE VIDEO
     color:
         #e0e0e0;
 
-    font-size:
-        9px;
+    font-size: var(--player-font-size-s);
 
-    font-weight:
-        800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing:
         0.03em;
@@ -3035,8 +3021,8 @@ YOUTUBE VIDEO
 }
 
 .music-player-station-menu-icon {
-    width: 28px;
-    height: 32px;
+    width: 24px;
+    height: 27px;
 
     fill: none;
     stroke: currentColor;
@@ -3171,7 +3157,7 @@ YOUTUBE VIDEO
         transparent;
 
     color:
-        #666;
+        #667;
 
     cursor:
         pointer;
@@ -3267,14 +3253,12 @@ YOUTUBE VIDEO
     font-family:
         inherit;
 
-    font-size:
-        7px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing:
-        0.1em;
+        0.05em;
 
     cursor:
         pointer;
@@ -3313,7 +3297,7 @@ YOUTUBE VIDEO
         0;
 
     height:
-        2px;
+        1px;
 
     background:
         #d97832;
@@ -3355,11 +3339,9 @@ YOUTUBE VIDEO
     color:
         #777;
 
-    font-size:
-        8px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing:
         0.12em;
@@ -3371,13 +3353,11 @@ YOUTUBE VIDEO
         7px;
 
     color:
-        #414141;
+        #f0a61d;
 
-    font-size:
-        7px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        700;
+    font-weight: var(--player-font-weight-subtitle);
 }
 
 
@@ -3400,11 +3380,9 @@ YOUTUBE VIDEO
     font-family:
         inherit;
 
-    font-size:
-        7px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing:
         0.08em;
@@ -3577,14 +3555,12 @@ YOUTUBE VIDEO
     color:
         #c4c4c4;
 
-    font-size:
-        10px;
+    font-size: var(--player-font-size-s);
 
     line-height:
         1.25;
 
-    font-weight:
-        700;
+    font-weight: var(--player-font-weight-subtitle);
 
     white-space:
         nowrap;
@@ -3603,16 +3579,14 @@ YOUTUBE VIDEO
         hidden;
 
     color:
-        #666;
+        #667;
 
-    font-size:
-        8px;
+    font-size: var(--player-font-size-xs);
 
     line-height:
         1.2;
 
-    font-weight:
-        700;
+    font-weight: var(--player-font-weight-subtitle);
 
     white-space:
         nowrap;
@@ -3636,6 +3610,8 @@ YOUTUBE VIDEO
 
     background:
         transparent;
+
+    text-align: center !important;
 }
 
 
@@ -3873,11 +3849,9 @@ YOUTUBE VIDEO
     color:
         #d97832;
 
-    font-size:
-        7px;
+    font-size: var(--player-font-size-s);
 
-    font-weight:
-        800;
+    font-weight: var(--player-font-weight-title);
 
     letter-spacing:
         0.14em;
@@ -3897,8 +3871,7 @@ YOUTUBE VIDEO
     font-size:
         15px;
 
-    font-weight:
-        800;
+    font-weight: var(--player-font-weight-title);
 
     line-height:
         1.2;
@@ -3919,13 +3892,11 @@ YOUTUBE VIDEO
         hidden;
 
     color:
-        #666;
+        #667;
 
-    font-size:
-        8px;
+    font-size: var(--player-font-size-xs);
 
-    font-weight:
-        700;
+    font-weight: var(--player-font-weight-subtitle);
 
     line-height:
         1.2;
@@ -4079,21 +4050,103 @@ YOUTUBE VIDEO
 }
 
 /* =========================================================
-   PLAY / PAUSE — CARDS DE REPRODUCCIÓN
+   COVER + PLAY / PAUSE
    ========================================================= */
 
-.music-player-discover-card,
-.music-player-search-entity-card {
+.music-player-card-cover {
     position:
         relative;
+
+    display:
+        block;
+
+    width:
+        100%;
 }
 
 
-.music-player-genre-card {
-    position:
-        relative;
+/* DESCUBRE / PLAYLIST */
+
+.music-player-discover-card
+.music-player-card-cover {
+    width:
+        100%;
 }
 
+
+.music-player-discover-card
+.music-player-card-cover
+img {
+    display:
+        block;
+
+    width:
+        100%;
+}
+
+
+/* ARTISTAS */
+
+.music-player-search-entity-card--artist
+.music-player-card-cover {
+    width:
+        76px;
+
+    height:
+        76px;
+
+    margin:
+        2px auto 10px;
+}
+
+
+.music-player-search-entity-card--artist
+.music-player-card-cover
+.music-player-search-entity-image {
+    width:
+        76px;
+
+    height:
+        76px;
+
+    margin:
+        0;
+
+    border-radius:
+        50%;
+}
+
+
+/* GÉNEROS */
+
+.music-player-genre-card
+.music-player-card-cover {
+    position:
+        absolute;
+
+    inset:
+        0;
+
+    width:
+        100%;
+
+    height:
+        100%;
+}
+
+
+.music-player-genre-card
+.music-player-card-cover
+img {
+    width:
+        100%;
+
+    height:
+        100%;
+}
+
+
+/* INDICADOR */
 
 .music-player-card-play-indicator {
     position:
@@ -4143,8 +4196,7 @@ YOUTUBE VIDEO
     font-size:
         13px;
 
-    font-weight:
-        900;
+    font-weight: var(--player-font-weight-title);
 
     line-height:
         1;
@@ -4165,7 +4217,7 @@ YOUTUBE VIDEO
         none;
 
     z-index:
-        3;
+        4;
 
     box-shadow:
         0 2px 8px
@@ -4205,7 +4257,6 @@ YOUTUBE VIDEO
         );
 }
 
-
 .music-player-discover-card.is-playing
 .music-player-card-play-indicator,
 
@@ -4215,9 +4266,287 @@ YOUTUBE VIDEO
 .music-player-genre-card.is-playing
 .music-player-card-play-indicator {
     background:
-        #d97832;
+        #f16b0b;
 }
 
+/* =========================================================
+   EQUALIZER — ESTADO DE REPRODUCCIÓN
+   ========================================================= */
+
+.music-player-playback-equalizer {
+    position:
+        absolute;
+
+    top:
+        50%;
+
+    right:
+        8px;
+
+    display:
+        flex;
+
+    align-items:
+        flex-end;
+
+    justify-content:
+        center;
+
+    gap:
+        2px;
+
+    width:
+        17px;
+
+    height:
+        13px;
+
+    transform:
+        translateY(
+            -50%
+        );
+
+    opacity:
+        0;
+
+    pointer-events:
+        none;
+}
+
+
+.music-player-panel-nav-item,
+.music-player-panel-tab {
+    position:
+        relative;
+}
+
+
+/* TENDENCIAS */
+
+.music-player-panel-nav-item
+.music-player-playback-equalizer {
+    right:
+        8px;
+}
+
+
+/* REPRODUCIENDO */
+
+.music-player-panel-tab[data-panel-tab="playback"] {
+    padding-right:
+        38px;
+}
+
+
+.music-player-panel-tab[data-panel-tab="playback"]
+.music-player-playback-equalizer {
+    right:
+        9px;
+}
+
+
+/* VISIBLE */
+
+.music-player-playback-equalizer.is-active {
+    opacity:
+        1;
+}
+
+
+/* ANIMACIÓN */
+
+.music-player-playback-equalizer.is-active.is-playing
+span:nth-child(1) {
+    animation:
+        music-player-equalizer-1
+        0.32s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+.music-player-playback-equalizer.is-active.is-playing
+span:nth-child(2) {
+    animation:
+        music-player-equalizer-2
+        0.24s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+.music-player-playback-equalizer.is-active.is-playing
+span:nth-child(3) {
+    animation:
+        music-player-equalizer-3
+        0.36s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+.music-player-playback-equalizer.is-active.is-playing
+span:nth-child(4) {
+    animation:
+        music-player-equalizer-4
+        0.28s
+        ease-in-out
+        infinite
+        alternate;
+}
+
+
+.music-player-playback-equalizer span {
+    display:
+        block;
+
+    width:
+        3px;
+
+    height:
+        5px;
+
+    border-radius:
+        2px;
+
+    background:
+        #d97832;
+
+    transform-origin:
+        center bottom;
+}
+
+
+/* BARRA 1 */
+
+@keyframes music-player-equalizer-1 {
+
+    from {
+        transform:
+            scaleY(
+                0.30
+            );
+    }
+
+    to {
+        transform:
+            scaleY(
+                1
+            );
+    }
+}
+
+
+/* BARRA 2 */
+
+@keyframes music-player-equalizer-2 {
+
+    from {
+        transform:
+            scaleY(
+                0.18
+            );
+    }
+
+    to {
+        transform:
+            scaleY(
+                0.82
+            );
+    }
+}
+
+
+/* BARRA 3 */
+
+@keyframes music-player-equalizer-3 {
+
+    from {
+        transform:
+            scaleY(
+                0.38
+            );
+    }
+
+    to {
+        transform:
+            scaleY(
+                1
+            );
+    }
+}
+
+
+/* BARRA 4 */
+
+@keyframes music-player-equalizer-4 {
+
+    from {
+        transform:
+            scaleY(
+                0.20
+            );
+    }
+
+    to {
+        transform:
+            scaleY(
+                0.76
+            );
+    }
+}
+
+
+@media (
+    prefers-reduced-motion: reduce
+) {
+
+    .music-player-playback-equalizer.is-playing
+    span {
+        animation:
+            none;
+    }
+}
+
+/* =========================================================
+   SPINNER — INFINITE SCROLL DE CATEGORÍAS
+   ========================================================= */
+
+.music-player-search-category-loader {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    width:
+        100%;
+
+    min-height:
+        42px;
+
+    padding:
+        0;
+
+    box-sizing:
+        border-box;
+
+    flex-shrink:
+        0;
+}
+
+
+.music-player-search-category-loader
+.loading-spinner {
+    margin:
+        8px auto;
+}
 /* =========================================================
    RESPONSIVE
    ========================================================= */
@@ -4290,7 +4619,7 @@ YOUTUBE VIDEO
 
 .music-player-panel-shell {
     grid-template-columns:
-        150px
+        130px
         minmax(0, 1fr);
 }
 
@@ -4372,7 +4701,7 @@ YOUTUBE VIDEO
         10px;
 
     padding:
-        14px 0px 20px;
+        14px 16px 20px;
 }
 
 }
