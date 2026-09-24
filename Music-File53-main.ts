@@ -7,14 +7,13 @@ import {
     getPlaylist,
 } from '../../lib/music/music-service';
 
-
 import {
     createPlaybackController,
     createPlaybackState,
     hasResolveInFlight,
     isPlaybackPanelSource,
+    resolveYouTubeTrack,
 } from '../../lib/MusicPlayer/playback';
-
 
 import type {
     MusicTrack,
@@ -40,6 +39,9 @@ import {
 
 import {
     getLocalLibrary,
+    hasLocalTrack,
+    removeLocalTrack,
+    saveLocalTrack,
 } from '../../lib/MusicPlayer/local-library';
 
 function initializeMusicPlayer(): void {
@@ -317,6 +319,11 @@ function initializeMusicPlayer(): void {
             '.music-player-track-title'
         );
         
+    const localSaveButton =
+        player.querySelector<HTMLButtonElement>(
+            '.music-player-local-save'
+        );
+
     const progressSeek =
     player.querySelector(
         '.music-player-seek'
@@ -376,6 +383,7 @@ function initializeMusicPlayer(): void {
         !(localLibraryNavButton instanceof HTMLButtonElement) ||
         !(localLibrarySection instanceof HTMLElement) ||
         !(localLibraryContent instanceof HTMLElement) ||
+        !(localSaveButton instanceof HTMLButtonElement) ||
         !(panelCloseButton instanceof HTMLButtonElement) ||
         !(playbackContext instanceof HTMLElement) ||
         !(playbackContextImage instanceof HTMLImageElement) ||
@@ -1463,6 +1471,9 @@ const searchController:
     number | null = null;
 
     let currentTrackInfoKey = '';
+    
+    let localSaveButtonRequestId =
+    0;
 
     interface PlaybackContextInfo {
 
@@ -2979,6 +2990,296 @@ function updateArtwork(
         '1';
 }
 
+function setLocalSaveButtonState(
+    saved: boolean
+): void {
+
+    localSaveButton.classList.toggle(
+        'is-saved',
+        saved
+    );
+
+    localSaveButton.setAttribute(
+        'aria-pressed',
+        String(saved)
+    );
+
+    localSaveButton.setAttribute(
+        'aria-label',
+        saved
+            ? 'Quitar de Mi Música'
+            : 'Guardar en Mi Música'
+    );
+
+
+    localSaveButton.innerHTML =
+        saved
+            ? `
+                <svg
+                  class="music-player-local-save-icon"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5 12L10 17L19 7"
+                  />
+                </svg>
+              `
+            : `
+                <svg
+                  class="music-player-local-save-icon"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M12 5V19"
+                  />
+                  <path
+                    d="M5 12H19"
+                  />
+                </svg>
+              `;
+}
+
+
+async function updateLocalSaveButton(): Promise<void> {
+
+    const requestId =
+        ++localSaveButtonRequestId;
+
+    const track =
+        activePlaybackSource ===
+        'youtube'
+            ? playbackState.currentMusicTrack
+            : null;
+
+
+    if (!track) {
+
+        localSaveButton.hidden =
+            true;
+
+        localSaveButton.disabled =
+            true;
+
+        return;
+    }
+
+
+    localSaveButton.hidden =
+        false;
+
+    localSaveButton.disabled =
+        true;
+
+
+    try {
+
+        const saved =
+            await hasLocalTrack(
+                track.id
+            );
+
+
+        if (
+            requestId !==
+            localSaveButtonRequestId
+        ) {
+            return;
+        }
+
+
+        setLocalSaveButtonState(
+            saved
+        );
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Unable to check local library state:',
+            error
+        );
+
+        if (
+            requestId ===
+            localSaveButtonRequestId
+        ) {
+
+            setLocalSaveButtonState(
+                false
+            );
+        }
+
+    } finally {
+
+        if (
+            requestId ===
+            localSaveButtonRequestId
+        ) {
+
+            localSaveButton.disabled =
+                false;
+        }
+    }
+}
+
+
+async function toggleLocalSave(): Promise<void> {
+
+    const track =
+        playbackState.currentMusicTrack;
+
+
+    if (
+        activePlaybackSource !==
+        'youtube' ||
+        !track
+    ) {
+        return;
+    }
+
+
+    localSaveButton.disabled =
+        true;
+
+
+    try {
+
+        const saved =
+            await hasLocalTrack(
+                track.id
+            );
+
+
+        if (saved) {
+
+            await removeLocalTrack(
+                track.id
+            );
+
+        } else {
+
+            /*
+             * Normalmente este ID ya existe
+             * porque la reproducción lo resolvió.
+             *
+             * Si todavía está resolviéndose,
+             * resolveYouTubeTrack() reutiliza
+             * la misma solicitud en vuelo.
+             */
+            let youtubeVideoId =
+                playbackState.currentYouTubeVideoId;
+
+
+            if (
+                !youtubeVideoId
+            ) {
+
+                youtubeVideoId =
+                    await resolveYouTubeTrack(
+                        track
+                    );
+            }
+
+
+            if (
+                !youtubeVideoId
+            ) {
+
+                console.error(
+                    '[MusicPlayer] Cannot save track: YouTube ID not available.'
+                );
+
+                return;
+            }
+
+
+            const now =
+                Date.now();
+
+
+            await saveLocalTrack({
+                id:
+                    track.id,
+
+                title:
+                    track.title,
+
+                duration:
+                    track.duration,
+
+                artist: {
+                    id:
+                        track.artist.id,
+
+                    name:
+                        track.artist.name,
+                },
+
+                album: {
+                    id:
+                        track.album.id,
+
+                    title:
+                        track.album.title,
+
+                    cover:
+                        track.album.cover ??
+                        null,
+                },
+
+                youtubeVideoId,
+
+                position:
+                    0,
+
+                addedAt:
+                    now,
+
+                updatedAt:
+                    now,
+            });
+        }
+
+
+        await updateLocalSaveButton();
+
+
+        /*
+         * Si MI MÚSICA está visible,
+         * actualizamos la lista inmediatamente.
+         */
+        if (
+            localLibrarySection.classList.contains(
+                'is-active'
+            )
+        ) {
+
+            void renderLocalLibrary();
+        }
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Unable to update local library:',
+            error
+        );
+
+    } finally {
+
+        localSaveButton.disabled =
+            false;
+    }
+}
+
+
+localSaveButton.addEventListener(
+    'click',
+    () => {
+
+        void toggleLocalSave();
+    }
+);
 
 function updateTrackInfo(): void {
 
@@ -3042,6 +3343,8 @@ function updateTrackInfo(): void {
             `${track.title} - portada`
         );
 
+        void updateLocalSaveButton();
+
         requestAnimationFrame(
             updateTrackMarquee
         );
@@ -3086,6 +3389,12 @@ function updateTrackInfo(): void {
 
         trackArtist.textContent =
             '';
+            
+        localSaveButton.hidden =
+            true;
+
+        localSaveButton.disabled =
+            true;
 
         if (
             isInitialInfoLoading
@@ -3126,6 +3435,12 @@ function updateTrackInfo(): void {
         player.classList.remove(
             'is-track'
         );
+
+        localSaveButton.hidden =
+            true;
+
+        localSaveButton.disabled =
+            true;        
 
         trackTitle.textContent =
             source.name;
