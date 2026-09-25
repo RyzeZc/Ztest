@@ -122,20 +122,8 @@ export function isPlaybackPanelSource(
     return (
         source !== null &&
         source !== 'home-trending' &&
-        source !== 'search-all'
-    );
-}
-
-function isParkablePlaybackSource(
-    source: PlaybackListSource
-): boolean {
-
-    return (
-        source ===
-            'local-list' ||
-        isPlaybackPanelSource(
-            source
-        )
+        source !== 'search-all' &&
+        source !== 'local-list'
     );
 }
 
@@ -855,54 +843,95 @@ export function createPlaybackController(
                 )
             );
 
-        /*
-         * --------------------------------------------------
-         * PARKED PLAYBACK CONTEXT
-         * --------------------------------------------------
-         *
-         * Conservamos un único contexto anterior
-         * cuando una nueva reproducción reemplaza
-         * la cola actual.
-         *
-         * MI MÚSICA y cualquier otro contexto reproducible
-         * pueden ocupar este espacio.
-         */
+/*
+ * --------------------------------------------------
+ * PARKED PLAYBACK CONTEXT
+ * --------------------------------------------------
+ *
+ * Solo conservamos el contexto anterior cuando
+ * entramos en MI MÚSICA desde una fuente que tiene
+ * una vista propia en REPRODUCIENDO.
+ *
+ * Solo existe un contexto aparcado.
+ */
 
-        const isContextReplacementRequest =
-            hasPlaybackListSelection ||
-            selectionOptions.queueAction ===
-                'generate';
+const isContextReplacementRequest =
+    hasPlaybackListSelection ||
+    selectionOptions.queueAction ===
+        'generate' ||
+    selectionOptions.queueAction ===
+        'clear';
 
 
-        const requestedPlaybackSource =
+const isContextChanging =
+    hasPlaybackListSelection
+        ? !isSamePlaybackContext
+        : isContextReplacementRequest;
+
+
+const requestedPlaybackSource =
+    (
+        selectionOptions.queueAction ===
+            'clear' &&
+        selectionOptions.playbackList ===
+            undefined
+    )
+        ? null
+        : (
             selectionOptions.playbackListSource ??
             (
                 selectionOptions.queueAction ===
-                'generate'
+                    'generate'
                     ? 'search-tracks-queue'
                     : state.playbackListSource
-            );
-
-
-        const isSameContextForParking =
-            (
-                state.playbackListSource ===
-                    'local-list' &&
-                requestedPlaybackSource ===
-                    'local-list'
             )
-                ? true
-                : isSamePlaybackContext;
+        );
 
 
+if (
+    isContextChanging
+) {
+
+    /*
+     * ---------------------------------------------
+     * ENTRANDO EN MI MÚSICA
+     * ---------------------------------------------
+     */
+    if (
+        requestedPlaybackSource ===
+        'local-list'
+    ) {
+
+        /*
+         * Si ya estábamos en MI MÚSICA,
+         * conservamos el contexto aparcado
+         * anterior.
+         *
+         * Ejemplo:
+         *
+         * ACTIVO: MI MÚSICA
+         * PARKED: PLAYLIST ROCK
+         *
+         * Cambiar de canción dentro de MI MÚSICA
+         * no debe destruir PLAYLIST ROCK.
+         */
         if (
-            isContextReplacementRequest &&
-            !isSameContextForParking &&
+            state.playbackListSource ===
+            'local-list'
+        ) {
+
+            // Mantener parkedPlaybackContext.
+
+        /*
+         * Venimos de una cola normal de
+         * REPRODUCIENDO.
+         */
+        } else if (
             getActivePlaybackSource() ===
                 'youtube' &&
             state.playbackList.length >
                 0 &&
-            isParkablePlaybackSource(
+            isPlaybackPanelSource(
                 state.playbackListSource
             )
         ) {
@@ -942,9 +971,36 @@ export function createPlaybackController(
 
                 youtubeShuffleHistoryPosition:
                     state.youtubeShuffleHistoryPosition,
+
             };
+
+        } else {
+
+            /*
+             * Venimos de RADIO, TENDENCIAS,
+             * búsqueda simple, etc.
+             *
+             * No hay una cola que deba recuperarse.
+             */
+            state.parkedPlaybackContext =
+                null;
         }
 
+
+    /*
+     * ---------------------------------------------
+     * SALIMOS DE MI MÚSICA
+     * ---------------------------------------------
+     *
+     * El contexto aparcado solo es útil mientras
+     * MI MÚSICA sea la reproducción activa.
+     */
+    } else {
+
+        state.parkedPlaybackContext =
+            null;
+    }
+}            
         /*
         * --------------------------------------------------
         * MISMA CANCIÓN
