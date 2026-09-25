@@ -12,6 +12,7 @@ import {
     createPlaybackState,
     hasResolveInFlight,
     isPlaybackPanelSource,
+    primeResolvedYouTubeTracks,
 } from '../../lib/MusicPlayer/playback';
 
 import type {
@@ -40,6 +41,13 @@ import {
     createLocalLibraryController,
     type LocalLibraryController,
 } from '../../lib/MusicPlayer/local-library-controller';
+
+import {
+    clearMusicPlaybackSnapshot,
+    loadMusicPlaybackSnapshot,
+    saveMusicPlaybackSnapshot,
+    type MusicPlaybackSnapshot,
+} from '../../lib/MusicPlayer/playback-persistence';
 
 function initializeMusicPlayer(): void {
 
@@ -1165,6 +1173,14 @@ const searchController:
 
     let currentTrackInfoKey = '';
 
+    let playbackPersistenceTimer:
+        ReturnType<typeof setTimeout> |
+        null =
+        null;
+
+    let isRestoringPlayback =
+        false;
+
     type MusicEntityWithEmbeddedTracks = {
         title?: string;
 
@@ -1259,6 +1275,167 @@ function formatTime(
         .padStart(2, '0')}`;
 }
 
+function getMusicPlaybackSnapshot():
+    MusicPlaybackSnapshot |
+    null {
+
+    if (
+        activePlaybackSource !==
+        'youtube'
+    ) {
+        return null;
+    }
+
+
+    const track =
+        playbackState.currentMusicTrack;
+
+    const youtubeVideoId =
+        playbackState.currentYouTubeVideoId;
+
+
+    if (
+        !track ||
+        !youtubeVideoId
+    ) {
+        return null;
+    }
+
+
+    const youtubeState =
+        youtubePlayer.getState();
+
+
+    const currentTime =
+        youtubePlayer.getCurrentTime();
+
+
+    if (
+        !Number.isFinite(
+            currentTime
+        )
+    ) {
+        return null;
+    }
+
+
+    return {
+
+        version:
+            1,
+
+        savedAt:
+            Date.now(),
+
+        track,
+
+        youtubeVideoId,
+
+        currentTime:
+            Math.max(
+                0,
+                currentTime
+            ),
+
+        volume:
+            youtubeState.volume,
+
+        muted:
+            youtubeState.muted,
+
+        playbackIntent:
+            playbackState.playbackIntent,
+
+        playbackList:
+            [
+                ...playbackState.playbackList,
+            ],
+
+        playbackListCurrentIndex:
+            playbackState.playbackListCurrentIndex,
+
+        playbackListMode:
+            playbackState.playbackListMode,
+
+        playbackListSource:
+            playbackState.playbackListSource,
+
+        playbackListNext:
+            playbackState.playbackListNext,
+
+        playbackListTotal:
+            playbackState.playbackListTotal,
+
+        youtubeRepeat:
+            playbackState.youtubeRepeat,
+
+        youtubeShuffle:
+            playbackState.youtubeShuffle,
+
+        youtubeShuffleHistory:
+            [
+                ...playbackState.youtubeShuffleHistory,
+            ],
+
+        youtubeShuffleHistoryPosition:
+            playbackState.youtubeShuffleHistoryPosition,
+
+    };
+}
+
+function saveMusicPlaybackNow():
+    void {
+
+    if (
+        isRestoringPlayback
+    ) {
+        return;
+    }
+
+
+    const snapshot =
+        getMusicPlaybackSnapshot();
+
+
+    if (
+        !snapshot
+    ) {
+        return;
+    }
+
+
+    saveMusicPlaybackSnapshot(
+        snapshot
+    );
+}
+
+
+function scheduleMusicPlaybackSave():
+    void {
+
+    if (
+        isRestoringPlayback ||
+        playbackPersistenceTimer !==
+            null
+    ) {
+        return;
+    }
+
+
+    playbackPersistenceTimer =
+        setTimeout(
+            () => {
+
+                playbackPersistenceTimer =
+                    null;
+
+                saveMusicPlaybackNow();
+
+            },
+            1500
+        );
+}
+
 function updateYouTubeProgress(): void {
 
     if (
@@ -1308,6 +1485,8 @@ function updateYouTubeProgress(): void {
 
     progressSeekProgress.style.width =
     `${(currentTime / duration) * 100}%`;
+
+    scheduleMusicPlaybackSave();
 }
 
 function startYouTubeProgress(): void {
@@ -3552,6 +3731,8 @@ shuffleButton.addEventListener('click', () => {
         }
 
         stopYouTubeProgress();
+        
+        scheduleMusicPlaybackSave();
     }
 );
 
@@ -3801,6 +3982,8 @@ progressSeek.addEventListener(
             targetTime
         );
 
+        scheduleMusicPlaybackSave();
+
         const seekStartTime =
             performance.now();
 
@@ -3988,6 +4171,7 @@ playButton.addEventListener(
     );
 
     updateUI();
+    
 }
 
 
