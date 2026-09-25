@@ -12,8 +12,10 @@ import {
 } from './playback';
 
 import {
+    createNewLocalLibrary,
     exportLocalLibrary,
     getLocalLibrary,
+    getLocalLibraryName,
     hasLocalTrack,
     importLocalLibrary,
     removeLocalTrack,
@@ -129,6 +131,26 @@ export function createLocalLibraryController(
             '[data-local-library-list-header]'
         );
 
+    const localLibraryCoverWrap =
+        player.querySelector<HTMLElement>(
+            '[data-local-library-cover-wrap]'
+        );
+
+    const localLibraryCover =
+        player.querySelector<HTMLImageElement>(
+            '[data-local-library-cover]'
+        );
+
+    const localLibraryName =
+        player.querySelector<HTMLElement>(
+            '[data-local-library-name]'
+        );
+
+    const localLibraryCount =
+        player.querySelector<HTMLElement>(
+            '[data-local-library-count]'
+        );        
+
     const localLibraryImportButton =
         player.querySelector<HTMLButtonElement>(
             '[data-local-library-import]'
@@ -179,6 +201,10 @@ export function createLocalLibraryController(
         !(localLibrarySection instanceof HTMLElement) ||
         !(localLibraryContent instanceof HTMLElement) ||
         !(localLibraryListHeader instanceof HTMLElement) ||
+        !(localLibraryCoverWrap instanceof HTMLElement) ||
+        !(localLibraryCover instanceof HTMLImageElement) ||
+        !(localLibraryName instanceof HTMLElement) ||
+        !(localLibraryCount instanceof HTMLElement) ||
         !(localLibraryImportButton instanceof HTMLButtonElement) ||
         !(localLibraryExportButton instanceof HTMLButtonElement) ||
         !(localLibraryFileInput instanceof HTMLInputElement) ||
@@ -310,61 +336,41 @@ export function createLocalLibraryController(
      * ==================================================
      */
 
-function setSaveButtonIcon(
+function setSaveButtonIcon(): void {
+
+    localSaveButton.innerHTML =
+        `
+            <svg class="music-player-local-save-icon" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8"></path>
+                <path d="M11.75 8a.75.75 0 0 1-.75.75H8.75V11a.75.75 0 0 1-1.5 0V8.75H5a.75.75 0 0 1 0-1.5h2.25V5a.75.75 0 0 1 1.5 0v2.25H11a.75.75 0 0 1 .75.75"></path>
+            </svg>
+
+        `;
+}
+
+function setSaveButtonState(
     saved: boolean
 ): void {
 
-    localSaveButton.innerHTML =
+    localSaveButton.classList.toggle(
+        'is-saved',
         saved
-            ? `
-                <svg
-                    class="music-player-local-save-icon"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
-                    <path
-                        d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35Z"
-                    />
-                </svg>
-              `
-            : `
-                <svg
-                    class="music-player-local-save-icon"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                >
-                    <path
-                        d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z"
-                    />
-                </svg>
-              `;
-}    
+    );
 
-    function setSaveButtonState(
-        saved: boolean
-    ): void {
+    localSaveButton.setAttribute(
+        'aria-pressed',
+        String(saved)
+    );
 
-        localSaveButton.classList.toggle(
-            'is-saved',
-            saved
-        );
+    localSaveButton.setAttribute(
+        'aria-label',
+        saved
+            ? 'Quitar de Mi Música'
+            : 'Guardar en Mi Música'
+    );
 
-        localSaveButton.setAttribute(
-            'aria-pressed',
-            String(saved)
-        );
-
-        localSaveButton.setAttribute(
-            'aria-label',
-            saved
-                ? 'Quitar de Mi Música'
-                : 'Guardar en Mi Música'
-        );
-
-        setSaveButtonIcon(
-            saved
-        );
-    }
+    setSaveButtonIcon();
+}
 
 
     function hidePlayerSaveButton(): void {
@@ -1203,8 +1209,13 @@ function setSaveButtonIcon(
 
         try {
 
-            const tracks =
-                await getLocalLibrary();
+            const [
+                tracks,
+                playlistName,
+            ] = await Promise.all([
+                getLocalLibrary(),
+                getLocalLibraryName(),
+            ]);
 
 
             if (
@@ -1221,6 +1232,51 @@ function setSaveButtonIcon(
             localLibraryLoaded =
                 true;
 
+            localLibraryName.textContent =
+                playlistName;
+
+            localLibraryCount.textContent =
+                `${tracks.length} ${
+                    tracks.length === 1
+                        ? 'TRACK'
+                        : 'TRACKS'
+                }`;
+
+
+            const firstTrack =
+                tracks[0];
+
+
+            const firstCover =
+                firstTrack?.album.cover ??
+                null;
+
+
+            if (
+                firstCover
+            ) {
+
+                localLibraryCover.src =
+                    firstCover;
+
+                localLibraryCover.alt =
+                    `${firstTrack.title} - portada`;
+
+                localLibraryCoverWrap.hidden =
+                    false;
+
+            } else {
+
+                localLibraryCover.removeAttribute(
+                    'src'
+                );
+
+                localLibraryCover.alt =
+                    '';
+
+                localLibraryCoverWrap.hidden =
+                    true;
+            }                
 
             localLibraryListHeader.hidden =
                 tracks.length ===
@@ -1752,11 +1808,25 @@ function setSaveButtonIcon(
             anchor.href =
                 url;
 
+            const safeFileName =
+                data.playlistName
+                    .replace(
+                        /[<>:"/\\|?*\x00-\x1F]/g,
+                        ''
+                    )
+                    .trim()
+                    .slice(
+                        0,
+                        80
+                    ) ||
+                'Mi Música';
+
+
             anchor.download =
-                'new-retro-mi-musica.json';
+                `${safeFileName}.json`;
 
 
-            document.body.appendChild(
+            player.appendChild(
                 anchor
             );
 
