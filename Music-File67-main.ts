@@ -43,9 +43,10 @@ import {
 } from '../../lib/MusicPlayer/local-library-controller';
 
 import {
-    clearMusicPlaybackSnapshot,
+    getLastMedia,
     loadMusicPlaybackSnapshot,
     saveMusicPlaybackSnapshot,
+    setLastMedia,
     type MusicPlaybackSnapshot,
 } from '../../lib/MusicPlayer/playback-persistence';
 
@@ -384,14 +385,25 @@ function initializeMusicPlayer(): void {
     );
 
     const youtubePlayer =
-    new YouTubePlayer();
+        new YouTubePlayer(
+            youtubePlayerContainer
+        );
 
     const savedMusicSnapshot =
     loadMusicPlaybackSnapshot();
 
+    const lastMedia =
+    getLastMedia();
+
+    const shouldRestoreMusic =
+        savedMusicSnapshot !==
+            null &&
+        lastMedia !==
+            'radio';
+
 
     if (
-        !savedMusicSnapshot
+        !shouldRestoreMusic
     ) {
 
         queueMicrotask(
@@ -401,59 +413,51 @@ function initializeMusicPlayer(): void {
 
             }
         );
-    }
 
+    } else {
 
-    youtubePlayer
-        .initialize(
-            youtubePlayerContainer
-        )
-        .then(
-            async () => {
+        void youtubePlayer
+            .initialize()
+            .then(
+                async () => {
 
-                console.log(
-                    '[MusicPlayer] YouTube player ready.'
-                );
-
-
-                if (
-                    !savedMusicSnapshot
-                ) {
-                    return;
-                }
-
-
-                const restored =
-                    await restoreMusicPlayback(
-                        savedMusicSnapshot
+                    console.log(
+                        '[MusicPlayer] YouTube player ready for session restore.'
                     );
 
 
-                if (
-                    !restored
-                ) {
+                    const restored =
+                        await restoreMusicPlayback(
+                            savedMusicSnapshot
+                        );
+
+
+                    if (
+                        !restored
+                    ) {
+
+                        initializeDefaultRadio();
+                    }
+                }
+            )
+            .catch(
+                error => {
+
+                    /*
+                    * Una falla de YouTube NO debe
+                    * destruir el snapshot.
+                    */
+                    console.warn(
+                        '[MusicPlayer] Previous music session could not be restored:',
+                        error
+                    );
+
 
                     initializeDefaultRadio();
                 }
-            }
-        )
-        .catch(
-            error => {
+            );
+    }
 
-                console.error(
-                    '[MusicPlayer] Unable to initialize YouTube player:',
-                    error
-                );
-
-
-                if (
-                    savedMusicSnapshot
-                ) {
-
-                    initializeDefaultRadio();
-                }
-            }
-        );
 
     /* --------------------------------------------------
        ESTACIONES
@@ -665,6 +669,10 @@ function selectStation(
 
     activePlaybackSource =
         'radio';
+
+    setLastMedia(
+        'radio'
+    );        
 
     stopYouTubeProgress();
 
@@ -3305,6 +3313,10 @@ function updateTrackInfo(): void {
      * --------------------------------------------------
      */
     if (activePlaybackSource === 'youtube') {
+
+        setLastMedia(
+            'music'
+        );
 
         const track =
             playbackState.currentMusicTrack;
