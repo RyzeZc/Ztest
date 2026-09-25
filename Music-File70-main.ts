@@ -1358,21 +1358,8 @@ function getMusicPlaybackSnapshot():
         youtubePlayer.getState();
 
 
-    if (
-        youtubeState.status ===
-        'error'
-    ) {
-
-        resolve(
-            false
-        );
-
-        return;
-    }
-            
     const currentTime =
         youtubePlayer.getCurrentTime();
-
 
     if (
         !Number.isFinite(
@@ -1573,6 +1560,18 @@ async function restoreMusicPlayback(
             }
         );
 
+        /*
+         * Si YouTube rechazó la carga del vídeo,
+         * no tiene sentido continuar esperando
+         * a que aparezca una duración.
+         */
+        if (
+            youtubePlayer.getState().status ===
+            'error'
+        ) {
+
+            return false;
+        }        
 
         /*
          * Nos aseguramos de conservar
@@ -1636,76 +1635,104 @@ async function restoreMusicPlayback(
 
         const durationReady =
             await new Promise<boolean>(
-            resolve => {
+                resolve => {
 
-                const check =
-                    () => {
+                    const check =
+                        () => {
 
-                        const duration =
-                            youtubePlayer.getDuration();
+                            const youtubeState =
+                                youtubePlayer.getState();
 
-
-                        if (
-                            Number.isFinite(
-                                duration
-                            ) &&
-                            duration > 0
-                        ) {
-
-                            let targetTime =
-                                snapshot.currentTime;
-
-
+                            /*
+                             * Error definitivo de YouTube:
+                             * no seguimos esperando.
+                             */
                             if (
-                                targetTime >=
-                                duration - 2
+                                youtubeState.status ===
+                                'error'
                             ) {
 
-                                targetTime =
-                                    0;
-                            }
-
-
-                            if (
-                                targetTime > 0
-                            ) {
-
-                                youtubePlayer.seekTo(
-                                    targetTime
+                                resolve(
+                                    false
                                 );
+
+                                return;
+                            }
+
+                            const duration =
+                                youtubePlayer.getDuration();
+
+                            /*
+                             * YouTube ya tiene una duración
+                             * válida. Podemos restaurar
+                             * la posición.
+                             */
+                            if (
+                                Number.isFinite(
+                                    duration
+                                ) &&
+                                duration > 0
+                            ) {
+
+                                let targetTime =
+                                    snapshot.currentTime;
+
+
+                                if (
+                                    targetTime >=
+                                    duration - 2
+                                ) {
+
+                                    targetTime =
+                                        0;
+                                }
+
+
+                                if (
+                                    targetTime > 0
+                                ) {
+
+                                    youtubePlayer.seekTo(
+                                        targetTime
+                                    );
+                                }
+
+
+                                resolve(
+                                    true
+                                );
+
+                                return;
                             }
 
 
-                            resolve(
-                                true
+                            /*
+                             * Evitamos esperar indefinidamente
+                             * si YouTube nunca entrega duración.
+                             */
+                            if (
+                                performance.now() -
+                                restoreStart >
+                                7000
+                            ) {
+
+                                resolve(
+                                    false
+                                );
+
+                                return;
+                            }
+
+
+                            requestAnimationFrame(
+                                check
                             );
-
-                            return;
-                        }
-
-                        if (
-                            performance.now() -
-                            restoreStart >
-                            7000
-                        ) {
-
-                            resolve(
-                                false
-                            );
-
-                            return;
-                        }
-
-                        requestAnimationFrame(
-                            check
-                        );
-                    };
+                        };
 
 
-                check();
-            }
-
-        );
+                    check();
+                }
+            );
 
         if (
             !durationReady
@@ -3649,10 +3676,10 @@ function updateTrackMarquee(): void {
         if (!isYouTube) {
 
             progressCurrent.textContent =
-                '--';
+                '-:--';
 
             progressTotal.textContent =
-                '--';
+                '-:--';
 
             progressSeek.value =
                 '100';
