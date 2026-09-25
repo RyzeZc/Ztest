@@ -175,7 +175,7 @@
     flex-direction: column;
     justify-content: center;
 
-    gap: 7px;
+    /*gap: 7px;*/
 
     min-width: 0;
 
@@ -197,7 +197,7 @@
         minmax(0, 1fr) 24px;
 
     grid-template-rows:
-        18px 20px;
+        auto auto;
 
     column-gap:
         7px;
@@ -231,30 +231,6 @@
 
     height:
         18px;
-}
-
-
-.music-player-local-save-container {
-    grid-column:
-        2;
-
-    grid-row:
-        1 / span 2;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    width:
-        24px;
-
-    height:
-        38px;
 }
 
 .music-player-track-title-wrapper {
@@ -295,121 +271,6 @@
     white-space: nowrap;
 }
 
-
-.music-player-local-save {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    flex:
-        0 0 20px;
-
-    width:
-        20px;
-
-    height:
-        20px;
-
-    margin:
-        0;
-
-    padding:
-        0;
-
-    border:
-        0;
-
-    background:
-        transparent;
-
-    color:
-        #5a5a5a;
-
-    cursor:
-        pointer;
-
-    opacity:
-        0.9;
-
-    transition:
-        color 160ms ease,
-        opacity 160ms ease,
-        transform 120ms ease;
-}
-
-
-.music-player-local-save:hover {
-    color:
-        #d97832;
-
-    opacity:
-        1;
-}
-
-
-.music-player-local-save:disabled {
-    cursor:
-        default;
-
-    opacity:
-        0.45;
-}
-
-
-.music-player-local-save-icon {
-    display:
-        block;
-
-    width:
-        18px;
-
-    height:
-        18px;
-
-    fill:
-        none;
-
-    stroke:
-        #fff;
-
-    stroke-width:
-        1.9;
-
-    stroke-linecap:
-        round;
-
-    stroke-linejoin:
-        round;
-}
-
-
-.music-player-local-save.is-saved
-.music-player-local-save-icon {
-    fill:
-        currentColor;
-
-    stroke:
-        currentColor;
-
-    stroke-width:
-        0;
-}
-
-
-.music-player-local-save.is-saved {
-    color:
-        #d97832;
-}
-
-/* --------------------------------------------------
-   ARTISTA
--------------------------------------------------- */
-
 /* =========================================================
    ARTISTA / RADIO / ESTADO
    ========================================================= */
@@ -422,7 +283,7 @@
         flex;
 
     align-items:
-        center;
+        flex-start;
 
     gap:
         8px;
@@ -706,7 +567,7 @@
     border: 0;
     background: transparent;
 
-    color: #858585;
+    color: #ffffffb3;
 
     cursor: pointer;
 
@@ -836,9 +697,9 @@
     width: 100%;
     min-width: 0;
 
-    gap: 9px;
+    gap: 7px;
 
-    /*margin-top: 7px;*/
+    /*argin-top: 7px;*/
 
     padding: 0;
 
@@ -1123,10 +984,10 @@
         relative;
 
     width:
-        40px;
+        32px;
 
     height:
-        40px;
+        32px;
 
     flex-shrink:
         0;
@@ -1175,10 +1036,10 @@
         50%;
 
     width:
-        40px;
+        35px;
 
     height:
-        40px;
+        35px;
 
     display:
         block;
@@ -3687,14 +3548,14 @@ YOUTUBE VIDEO
     border: 0;
     background: transparent;
 
-    color: #777;
+    color: #ffffffb3;
 
     cursor: pointer;
 }
 
 .music-player-station-menu-icon {
-    width: 24px;
-    height: 27px;
+    width: 20px;
+    height: 30px;
 
     fill: none;
     stroke: currentColor;
@@ -5480,31 +5341,136 @@ span {
         );
 }
 
-.music-player-local-library-heading {
+.music-player-local-library-identity {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
     min-width:
         0;
 }
 
-.music-player-local-library-title {
-    margin-top:
-        4px;
 
+.music-player-local-library-cover-wrap {
+    width:
+        56px;
+
+    height:
+        56px;
+
+    flex:
+        0 0 56px;
+
+    overflow:
+        hidden;
+
+    border-radius:
+        5px;
+
+    background:
+        #151515;
+}
+
+
+.music-player-local-library-cover-wrap[hidden] {
+    display:
+        none;
+}
+
+
+.music-player-local-library-cover {
+    display:
+        block;
+
+    width:
+        100%;
+
+    height:
+        100%;
+
+    object-fit:
+        cover;
+}
+
+
+.music-player-local-library-heading {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    min-width:
+        0;
+}
+
+
+.music-player-local-library-eyebrow {
     color:
-        #bebebe;
+        #d97832;
 
     font-size:
-        16px;
-
-    line-height:
-        1.1;
+        var(--player-font-size-s);
 
     font-weight:
         var(--player-font-weight-title);
 
     letter-spacing:
-        0.02em;
+        0.14em;
+
+    line-height:
+        1.1;
 }
 
+
+.music-player-local-library-title {
+    margin-top:
+        4px;
+
+    overflow:
+        hidden;
+
+    color:
+        #d0d0d0;
+
+    font-size:
+        15px;
+
+    font-weight:
+        var(--player-font-weight-title);
+
+    line-height:
+        1.2;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+.music-player-local-library-count {
+    margin-top:
+        4px;
+
+    color:
+        #667;
+
+    font-size:
+        var(--player-font-size-xs);
+
+    font-weight:
+        var(--player-font-weight-subtitle);
+
+    line-height:
+        1.2;
+}
 
 .music-player-local-library-actions {
     display:
@@ -5918,12 +5884,15 @@ span {
    BOTÓN + / CORAZÓN DEL REPRODUCTOR
    ========================================================= */
 
-.music-player-local-save {
+.music-player-local-save-container {
+    grid-column:
+        2;
+
+    grid-row:
+        1 / span 2;
+
     display:
         flex;
-
-    flex:
-        0 0 18px;
 
     align-items:
         center;
@@ -5932,10 +5901,40 @@ span {
         center;
 
     width:
-        18px;
+        24px;
 
     height:
+        52px;
+    margin-left: 10px;
+}
+
+.music-player-local-save-icon{
+    width:
         18px;
+
+    height: auto;
+
+    fill:
+        #ffffffb3;
+}
+.music-player-local-save {
+    display:
+        flex;
+
+    flex:
+        0 0 24px;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    width:
+        24px;
+
+    height:
+        24px;
 
     margin:
         0;
@@ -5950,7 +5949,7 @@ span {
         transparent;
 
     color:
-        #5a5a5a;
+        #ffffffb3;
 
     cursor:
         pointer;
