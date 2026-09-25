@@ -1438,6 +1438,201 @@ function scheduleMusicPlaybackSave():
         );
 }
 
+async function restoreMusicPlayback():
+    Promise<void> {
+
+    const snapshot =
+        loadMusicPlaybackSnapshot();
+
+
+    if (
+        !snapshot
+    ) {
+        return;
+    }
+
+
+    isRestoringPlayback =
+        true;
+
+
+    try {
+
+        primeResolvedYouTubeTracks(
+            [
+                {
+                    id:
+                        snapshot.track.id,
+
+                    youtubeVideoId:
+                        snapshot.youtubeVideoId,
+                },
+            ]
+        );
+
+
+        await selectMusicTrack(
+            snapshot.track,
+            {
+
+                queueAction:
+                    'clear',
+
+                playbackList:
+                    snapshot.playbackList.length >
+                        0
+                        ? snapshot.playbackList
+                        : [
+                            snapshot.track,
+                        ],
+
+                playbackListMode:
+                    snapshot.playbackListMode,
+
+                playbackListSource:
+                    snapshot.playbackListSource,
+
+                playbackListNext:
+                    snapshot.playbackListNext,
+
+                playbackListTotal:
+                    snapshot.playbackListTotal,
+
+                autoplay:
+                    snapshot.playbackIntent ===
+                        'play',
+
+            }
+        );
+
+
+        youtubePlayer.setVolume(
+            snapshot.volume * 100
+        );
+
+        youtubePlayer.setMuted(
+            snapshot.muted
+        );
+
+
+        /*
+         * Esperamos hasta que YouTube
+         * tenga una duración disponible.
+         */
+        const restoreStart =
+            performance.now();
+
+
+        await new Promise<void>(
+            resolve => {
+
+                const check =
+                    () => {
+
+                        const duration =
+                            youtubePlayer
+                                .getDuration();
+
+
+                        if (
+                            Number.isFinite(
+                                duration
+                            ) &&
+                            duration > 0
+                        ) {
+
+                            let targetTime =
+                                snapshot.currentTime;
+
+
+                            /*
+                             * Una pista que ya terminó
+                             * no debe abrirse al final.
+                             */
+                            if (
+                                targetTime >=
+                                duration - 2
+                            ) {
+
+                                targetTime =
+                                    0;
+                            }
+
+
+                            if (
+                                targetTime > 0
+                            ) {
+
+                                youtubePlayer.seekTo(
+                                    targetTime
+                                );
+                            }
+
+
+                            resolve();
+
+                            return;
+                        }
+
+
+                        if (
+                            performance.now() -
+                            restoreStart >
+                            7000
+                        ) {
+
+                            resolve();
+
+                            return;
+                        }
+
+
+                        requestAnimationFrame(
+                            check
+                        );
+                    };
+
+
+                check();
+            }
+        );
+
+
+        playbackState.youtubeRepeat =
+            snapshot.youtubeRepeat;
+
+        playbackState.youtubeShuffle =
+            snapshot.youtubeShuffle;
+
+        playbackState.youtubeShuffleHistory =
+            [
+                ...snapshot.youtubeShuffleHistory,
+            ];
+
+        playbackState.youtubeShuffleHistoryPosition =
+            snapshot.youtubeShuffleHistoryPosition;
+
+
+        updateUI();
+
+        updateTrackPlaybackIndicators();
+
+    } catch (error) {
+
+        console.error(
+            '[MusicPlayer] Unable to restore previous music session:',
+            error
+        );
+
+        clearMusicPlaybackSnapshot();
+
+    } finally {
+
+        isRestoringPlayback =
+            false;
+    }
+}
+
 function updateYouTubeProgress(): void {
 
     if (
