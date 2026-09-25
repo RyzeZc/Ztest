@@ -1889,13 +1889,24 @@ function renderQueuePanel(): void {
             : playbackState.playbackListCurrentIndex;
 
 
+    const hasParkedPlayback =
+        isParkedQueue &&
+        displayPlaybackList.length >
+            0;
+
+
+    const hasActivePlaybackPanel =
+        !isParkedQueue &&
+        displayPlaybackList.length >
+            0 &&
+        isPlaybackPanelSource(
+            playbackState.playbackListSource
+        );
+
+
     const shouldShowPlaybackPanel =
-        isParkedQueue
-            ? displayPlaybackList.length > 0
-            : displayPlaybackList.length > 0 &&
-              isPlaybackPanelSource(
-                  playbackState.playbackListSource
-              );
+        hasParkedPlayback ||
+        hasActivePlaybackPanel;
 
 
     if (
