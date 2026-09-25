@@ -1389,48 +1389,77 @@ if (
                     videoId;
 
 
+                /*
+                * El vídeo siempre debe cargarse.
+                *
+                * autoplay === false significa:
+                *
+                *   cargar → quedar pausado
+                *
+                * NO significa:
+                *
+                *   no cargar el vídeo.
+                */
+                audioPlayer.pause();
+
+                setActivePlaybackSource(
+                    'youtube'
+                );
+
+
+                youtubePlayer.load(
+                    videoId
+                );
+
+
                 if (
-                    state.playbackIntent !==
+                    state.playbackIntent ===
+                    'play'
+                ) {
+
+                    youtubePlayer.play();
+
+                } else {
+
+                    /*
+                    * Restauración / selección pausada.
+                    *
+                    * El vídeo ya quedó cargado por
+                    * youtubePlayer.load(), pero no iniciamos
+                    * la reproducción.
+                    */
+                    console.log(
+                        '[MusicPlayer] Track loaded in paused state:',
+                        track.id
+                    );
+                }
+
+
+                updateUI();
+
+                updateTrackPlaybackIndicators();
+
+
+                if (
+                    state.playbackIntent ===
                     'play'
                 ) {
 
                     console.log(
-                        '[MusicPlayer] Track resolved but playback was paused by user:',
-                        track.id
+                        '[MusicPlayer] YouTube playback started:',
+                        {
+                            deezerId:
+                                track.id,
+
+                            youtubeId:
+                                videoId,
+                        }
                     );
-
-
-                    updateUI();
-                    updateTrackPlaybackIndicators();
-
 
                 } else {
 
-                    audioPlayer.pause();
-
-                    setActivePlaybackSource(
-                        'youtube'
-                    );
-
-                    youtubePlayer.load(
-                        videoId
-                    );
-
-                    if (
-                        state.playbackIntent ===
-                        'play'
-                    ) {
-
-                        youtubePlayer.play();
-                    }
-
-                    updateUI();
-
-                    updateTrackPlaybackIndicators();
-
-
                     console.log(
-                        '[MusicPlayer] YouTube playback started:',
+                        '[MusicPlayer] YouTube track loaded without autoplay:',
                         {
                             deezerId:
                                 track.id,
