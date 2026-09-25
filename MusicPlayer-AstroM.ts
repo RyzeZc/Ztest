@@ -577,7 +577,7 @@ import LoadingSpinner
         <div class="music-player-local-library-heading">
 
             <div class="music-player-local-library-title">
-                Playlist Local:
+                Playlist Local
             </div>
 
         </div>
