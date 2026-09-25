@@ -540,14 +540,9 @@ import LoadingSpinner
 
 </section>
 
-
-            <!-- =================================================
-                 MI MÚSICA
-            ================================================== -->
-
 <!-- =================================================
      MI MÚSICA
-================================================== -->
+================================================= -->
 
 <section
     class="music-player-home-section music-player-local-library-section"
@@ -602,6 +597,7 @@ import LoadingSpinner
 
     <div
         class="music-player-list-header music-player-local-library-list-header"
+        data-local-library-list-header
         aria-hidden="true"
     >
 
@@ -609,7 +605,10 @@ import LoadingSpinner
             #
         </span>
 
-        <span class="music-player-list-column-cover"></span>
+        <span
+            class="music-player-list-column-cover"
+            aria-hidden="true"
+        ></span>
 
         <span class="music-player-list-column-title">
             TÍTULO
@@ -618,6 +617,11 @@ import LoadingSpinner
         <span class="music-player-list-column-duration">
             DURACIÓN
         </span>
+
+        <span
+            class="music-player-local-library-action-column"
+            aria-hidden="true"
+        ></span>
 
     </div>
 
