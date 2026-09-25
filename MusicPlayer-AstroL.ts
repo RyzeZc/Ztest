@@ -66,39 +66,45 @@ import LoadingSpinner
 
 <div class="music-player-track-info">
 
-  <div class="music-player-track-title-row">
+    <div class="music-player-track-title-row">
 
-    <div class="music-player-track-title-wrapper">
-      <div
-        class="music-player-track-title-skeleton"
-        aria-hidden="true"
-      ></div>
+        <div class="music-player-track-title-wrapper">
 
-      <div class="music-player-track-title"></div>
+            <div
+                class="music-player-track-title-skeleton"
+                aria-hidden="true"
+            ></div>
+
+            <div class="music-player-track-title"></div>
+
+        </div>
+
     </div>
 
-    <button
-      class="music-player-local-save"
-      type="button"
-      aria-label="Guardar en Mi Música"
-      aria-pressed="false"
-      hidden
-    >
-      <svg
-        class="music-player-local-save-icon"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-      >
-        <path
-          d="M12 5V19"
-        />
-        <path
-          d="M5 12H19"
-        />
-      </svg>
-    </button>
 
-  </div>
+    <div class="music-player-local-save-container">
+
+        <button
+            class="music-player-local-save"
+            type="button"
+            aria-label="Guardar en Mi Música"
+            aria-pressed="false"
+            hidden
+        >
+
+            <svg
+                class="music-player-local-save-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+            >
+                <path
+                    d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 3.5-3.5 3.5-2.89-3.14-5.74-7.9-10.05z"
+                />
+            </svg>
+
+        </button>
+
+    </div>
 
     <div class="music-player-track-artist-wrapper">
 
@@ -231,13 +237,28 @@ import LoadingSpinner
         aria-hidden="true"
       ></div>
 
-      <button
+<div class="music-player-panel-nav-item-wrap">
+
+    <button
         class="music-player-panel-nav-item music-player-local-library-nav"
         type="button"
         aria-current="false"
-      >
+    >
         MI MÚSICA
-      </button>
+    </button>
+
+    <span
+        class="music-player-playback-equalizer"
+        data-playback-equalizer="local-library"
+        aria-hidden="true"
+    >
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+    </span>
+
+</div>
 
       </nav>
 
@@ -549,16 +570,14 @@ import LoadingSpinner
     data-local-library-section
 >
 
+<div class="music-player-local-library-sticky-header">
+
     <div class="music-player-local-library-header">
 
         <div class="music-player-local-library-heading">
 
-            <div class="music-player-local-library-eyebrow">
-                BIBLIOTECA LOCAL
-            </div>
-
             <div class="music-player-local-library-title">
-                MI MÚSICA
+                Playlist Local:
             </div>
 
         </div>
@@ -587,12 +606,10 @@ import LoadingSpinner
     </div>
 
 
-    <input
-        type="file"
-        accept="application/json,.json"
-        data-local-library-file-input
-        hidden
-    />
+    <div
+        class="music-player-local-library-header-separator"
+        aria-hidden="true"
+    ></div>
 
 
     <div
@@ -625,6 +642,14 @@ import LoadingSpinner
 
     </div>
 
+</div>
+
+    <input
+        type="file"
+        accept="application/json,.json"
+        data-local-library-file-input
+        hidden
+    />
 
     <div
         class="music-player-local-library-content"
