@@ -97,7 +97,10 @@ export function createPlaybackState():
         playbackListTotal: null,
         playbackListLoadingMore: false,
 
+        parkedPlaybackContext: null,
+
         currentMusicTrack: null,
+
         currentYouTubeVideoId: null,
 
         playbackIntent: 'pause',
@@ -120,6 +123,19 @@ export function isPlaybackPanelSource(
         source !== null &&
         source !== 'home-trending' &&
         source !== 'search-all'
+    );
+}
+
+function isParkablePlaybackSource(
+    source: PlaybackListSource
+): boolean {
+
+    return (
+        source ===
+            'local-list' ||
+        isPlaybackPanelSource(
+            source
+        )
     );
 }
 
@@ -839,6 +855,95 @@ export function createPlaybackController(
                 )
             );
 
+        /*
+         * --------------------------------------------------
+         * PARKED PLAYBACK CONTEXT
+         * --------------------------------------------------
+         *
+         * Conservamos un único contexto anterior
+         * cuando una nueva reproducción reemplaza
+         * la cola actual.
+         *
+         * MI MÚSICA y cualquier otro contexto reproducible
+         * pueden ocupar este espacio.
+         */
+
+        const isContextReplacementRequest =
+            hasPlaybackListSelection ||
+            selectionOptions.queueAction ===
+                'generate';
+
+
+        const requestedPlaybackSource =
+            selectionOptions.playbackListSource ??
+            (
+                selectionOptions.queueAction ===
+                'generate'
+                    ? 'search-tracks-queue'
+                    : state.playbackListSource
+            );
+
+
+        const isSameContextForParking =
+            (
+                state.playbackListSource ===
+                    'local-list' &&
+                requestedPlaybackSource ===
+                    'local-list'
+            )
+                ? true
+                : isSamePlaybackContext;
+
+
+        if (
+            isContextReplacementRequest &&
+            !isSameContextForParking &&
+            getActivePlaybackSource() ===
+                'youtube' &&
+            state.playbackList.length >
+                0 &&
+            isParkablePlaybackSource(
+                state.playbackListSource
+            )
+        ) {
+
+            state.parkedPlaybackContext = {
+
+                playbackList:
+                    [
+                        ...state.playbackList,
+                    ],
+
+                playbackListCurrentIndex:
+                    state.playbackListCurrentIndex,
+
+                playbackListMode:
+                    state.playbackListMode,
+
+                playbackListSource:
+                    state.playbackListSource,
+
+                playbackListNext:
+                    state.playbackListNext,
+
+                playbackListTotal:
+                    state.playbackListTotal,
+
+                youtubeRepeat:
+                    state.youtubeRepeat,
+
+                youtubeShuffle:
+                    state.youtubeShuffle,
+
+                youtubeShuffleHistory:
+                    [
+                        ...state.youtubeShuffleHistory,
+                    ],
+
+                youtubeShuffleHistoryPosition:
+                    state.youtubeShuffleHistoryPosition,
+            };
+        }
 
         /*
         * --------------------------------------------------
@@ -1020,6 +1125,20 @@ export function createPlaybackController(
             renderQueuePanel();
 
             if (
+                state.playbackListSource ===
+                'local-list'
+            ) {
+
+                /*
+                * MI MÚSICA se reproduce dentro de HOME.
+                *
+                * No cambiamos a REPRODUCIENDO.
+                */
+                activatePanelTab(
+                    'home'
+                );
+
+            } else if (
                 isPlaybackPanelSource(
                     state.playbackListSource
                 )
@@ -1380,6 +1499,132 @@ export function createPlaybackController(
         }
     }
 
+    async function restoreParkedPlaybackContext(
+        index:
+            number
+    ): Promise<void> {
+
+        const parked =
+            state.parkedPlaybackContext;
+
+
+        if (
+            !parked
+        ) {
+            return;
+        }
+
+
+        if (
+            index < 0 ||
+            index >=
+                parked.playbackList.length
+        ) {
+            return;
+        }
+
+
+        const track =
+            parked.playbackList[index];
+
+
+        if (
+            !track
+        ) {
+            return;
+        }
+
+
+        /*
+        * Restauramos la cola anterior.
+        */
+        state.playbackList =
+            [
+                ...parked.playbackList,
+            ];
+
+        state.playbackListCurrentIndex =
+            index;
+
+        state.playbackListMode =
+            parked.playbackListMode;
+
+        state.playbackListSource =
+            parked.playbackListSource;
+
+        state.playbackListNext =
+            parked.playbackListNext;
+
+        state.playbackListTotal =
+            parked.playbackListTotal;
+
+        state.playbackListLoadingMore =
+            false;
+
+
+        /*
+        * Restauramos Repeat / Shuffle.
+        */
+        state.youtubeRepeat =
+            parked.youtubeRepeat;
+
+        state.youtubeShuffle =
+            parked.youtubeShuffle;
+
+        state.youtubeShuffleHistory =
+            [
+                ...parked.youtubeShuffleHistory,
+            ];
+
+        state.youtubeShuffleHistoryPosition =
+            parked.youtubeShuffleHistoryPosition;
+
+
+        /*
+        * El contexto aparcado deja de existir.
+        */
+        state.parkedPlaybackContext =
+            null;
+
+
+        /*
+        * Forzamos que la pista seleccionada
+        * se considere una nueva reproducción.
+        */
+        state.currentMusicTrack =
+            null;
+
+        state.currentYouTubeVideoId =
+            null;
+
+        state.playbackIntent =
+            'play';
+
+
+        /*
+        * Reutilizamos el mismo pipeline
+        * de reproducción.
+        *
+        * No pasamos playbackList porque
+        * ya acabamos de restaurarla.
+        */
+        await selectMusicTrack(
+            track,
+            {
+                queueAction:
+                    'keep',
+            }
+        );
+
+
+        renderQueuePanel();
+
+        activatePanelTab(
+            'playback'
+        );
+
+        updateTrackPlaybackIndicators();
+    }
 
     async function playMusicQueueTrack(
         index: number
@@ -1792,10 +2037,18 @@ export function createPlaybackController(
 
 
     return {
+
         selectMusicTrack,
+
         playMusicQueueTrack,
+
         playNextMusicQueueTrack,
+
         playPreviousMusicQueueTrack,
+
         loadMorePlaybackList,
+
+        restoreParkedPlaybackContext,
+
     };
 }
