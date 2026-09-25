@@ -1282,7 +1282,10 @@ if (
 
 
         state.playbackIntent =
-            'play';
+            selectionOptions.autoplay ===
+                false
+                ? 'pause'
+                : 'play';
 
 
         state.currentYouTubeVideoId =
@@ -1405,21 +1408,24 @@ if (
 
                     audioPlayer.pause();
 
-
                     setActivePlaybackSource(
                         'youtube'
                     );
-
 
                     youtubePlayer.load(
                         videoId
                     );
 
+                    if (
+                        state.playbackIntent ===
+                        'play'
+                    ) {
 
-                    youtubePlayer.play();
-
+                        youtubePlayer.play();
+                    }
 
                     updateUI();
+
                     updateTrackPlaybackIndicators();
 
 
