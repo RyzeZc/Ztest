@@ -397,6 +397,8 @@ function initializeMusicPlayer(): void {
                 '[MusicPlayer] YouTube player ready.'
             );
 
+            void restoreMusicPlayback();
+
         }
     )
     .catch(
@@ -4082,12 +4084,16 @@ playButton.addEventListener(
 
                 youtubePlayer.pause();
 
+                scheduleMusicPlaybackSave();
+
             } else {
 
                 playbackState.playbackIntent =
                     'play';
 
                 youtubePlayer.play();
+
+                scheduleMusicPlaybackSave();
             }
 
             return;
@@ -4126,6 +4132,8 @@ playButton.addEventListener(
                     !state.muted
                 );
 
+                scheduleMusicPlaybackSave();
+
                 return;
             }
 
@@ -4161,6 +4169,8 @@ playButton.addEventListener(
                     volume * 100
                 );
 
+                scheduleMusicPlaybackSave();
+
                 return;
             }
 
@@ -4174,6 +4184,13 @@ playButton.addEventListener(
     
 }
 
+window.addEventListener(
+    'pagehide',
+    () => {
+
+        saveMusicPlaybackNow();
+    }
+);
 
 document.addEventListener(
     'astro:page-load',
