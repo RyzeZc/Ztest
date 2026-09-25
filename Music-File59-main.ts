@@ -847,6 +847,7 @@ const {
     playNextMusicQueueTrack,
     playPreviousMusicQueueTrack,
     loadMorePlaybackList,
+    restoreParkedPlaybackContext,
 } = createPlaybackController({
 
         state:
@@ -880,47 +881,40 @@ const {
         activatePanelTab,
     });
 
-localLibraryController =
-    createLocalLibraryController({
+    localLibraryController =
+        createLocalLibraryController({
 
-        player,
+            player,
 
-        openPanel:
-            openStationMenu,
+            openPanel:
+                openStationMenu,
 
-        activateHomeTab:
-            () => {
-                activatePanelTab(
-                    'home'
-                );
-            },
+            activateHomeTab:
+                () => {
+                    activatePanelTab(
+                        'home'
+                    );
+                },
 
-        getCurrentTrack:
-            () =>
-                playbackState.currentMusicTrack,
+            getCurrentTrack:
+                () =>
+                    playbackState.currentMusicTrack,
 
-        getActivePlaybackSource:
-            () =>
-                activePlaybackSource,
+            getActivePlaybackSource:
+                () =>
+                    activePlaybackSource,
 
-        getCurrentYouTubeVideoId:
-            () =>
-                playbackState.currentYouTubeVideoId,
+            getCurrentYouTubeVideoId:
+                () =>
+                    playbackState.currentYouTubeVideoId,
 
-        getPlaybackListSource:
-            () =>
-                playbackState.playbackListSource,
+            getPlaybackListSource:
+                () =>
+                    playbackState.playbackListSource,
 
-        selectMusicTrack,
+            selectMusicTrack,
 
-        clearPlaybackContext:
-            () => {
-
-                currentPlaybackContextInfo =
-                    null;
-            },
-
-    });
+        });
 
 const searchCategoryTabs =
     player.querySelector<HTMLElement>(
@@ -1769,16 +1763,38 @@ const playbackListObserver =
 
 function renderPlaybackContext(): void {
 
+    const parkedPlaybackContext =
+        playbackState.playbackListSource ===
+            'local-list'
+            ? playbackState.parkedPlaybackContext
+            : null;
+
+
+    const displayPlaybackList =
+        parkedPlaybackContext
+            ? parkedPlaybackContext.playbackList
+            : playbackState.playbackList;
+
+
+    const displayPlaybackSource =
+        parkedPlaybackContext
+            ? parkedPlaybackContext.playbackListSource
+            : playbackState.playbackListSource;
+
+
     const shouldShow =
-        playbackState.playbackList.length > 0 &&
+        displayPlaybackList.length >
+            0 &&
         isPlaybackPanelSource(
-            playbackState.playbackListSource
+            displayPlaybackSource
         ) &&
-        currentPlaybackContextInfo !== null;
+        currentPlaybackContextInfo !==
+            null;
 
 
     playbackContext.hidden =
         !shouldShow;
+
 
     if (
         !shouldShow ||
@@ -1795,8 +1811,10 @@ function renderPlaybackContext(): void {
         return;
     }
 
+
     playbackContext.dataset.contextType =
-    currentPlaybackContextInfo.type;
+        currentPlaybackContextInfo.type;
+
 
     playbackContextLabel.textContent =
         currentPlaybackContextInfo.label;
@@ -1846,30 +1864,63 @@ function renderQueuePanel(): void {
                 'playback'
         );
 
-    const shouldShowPlaybackPanel =
-        playbackState.playbackList.length > 0 &&
-        isPlaybackPanelSource(
-            playbackState.playbackListSource
-        );
 
-    if (playbackTab) {
+    const parkedPlaybackContext =
+        playbackState.playbackListSource ===
+            'local-list'
+            ? playbackState.parkedPlaybackContext
+            : null;
+
+
+    const isParkedQueue =
+        parkedPlaybackContext !==
+        null;
+
+
+    const displayPlaybackList =
+        isParkedQueue
+            ? parkedPlaybackContext.playbackList
+            : playbackState.playbackList;
+
+
+    const displayPlaybackCurrentIndex =
+        isParkedQueue
+            ? -1
+            : playbackState.playbackListCurrentIndex;
+
+
+    const shouldShowPlaybackPanel =
+        isParkedQueue
+            ? displayPlaybackList.length > 0
+            : displayPlaybackList.length > 0 &&
+              isPlaybackPanelSource(
+                  playbackState.playbackListSource
+              );
+
+
+    if (
+        playbackTab
+    ) {
 
         playbackTab.hidden =
             !shouldShowPlaybackPanel;
     }
 
+
     queuePanel.hidden =
         !shouldShowPlaybackPanel;
 
-    queueList.innerHTML = '';
+
+    queueList.innerHTML =
+        '';
+
 
     renderPlaybackContext();
+
 
     if (
         !shouldShowPlaybackPanel
     ) {
-
-
 
         queueList.appendChild(
             playbackListLoader
@@ -1885,42 +1936,66 @@ function renderQueuePanel(): void {
             playbackState.playbackListLoadingMore
         );
 
+
         updateTrackPlaybackIndicators();
 
         return;
     }
 
-    playbackState.playbackList.forEach(
-        (track, index) => {
+
+    displayPlaybackList.forEach(
+        (
+            track,
+            index
+        ) => {
 
             const item =
                 document.createElement(
                     'button'
                 );
 
+
             item.type =
                 'button';
+
 
             item.className =
                 'music-player-queue-item';
 
+
             item.dataset.queueIndex =
-                String(index);
-                
+                String(
+                    index
+                );
+
+
             item.dataset.trackId =
                 String(
                     track.id
                 );
 
+
             if (
+                !isParkedQueue &&
                 index ===
-                playbackState.playbackListCurrentIndex
+                    displayPlaybackCurrentIndex
             ) {
 
                 item.classList.add(
                     'is-current'
                 );
             }
+
+
+            if (
+                isParkedQueue
+            ) {
+
+                item.classList.add(
+                    'is-parked'
+                );
+            }
+
 
             /*
              * --------------------------------------------
@@ -1933,13 +2008,16 @@ function renderQueuePanel(): void {
                     'span'
                 );
 
+
             number.className =
                 'music-player-queue-index';
+
 
             number.textContent =
                 String(
                     index + 1
                 );
+
 
             /*
              * --------------------------------------------
@@ -1952,14 +2030,18 @@ function renderQueuePanel(): void {
                     'img'
                 );
 
+
             thumbnail.className =
                 'music-player-queue-thumbnail';
+
 
             thumbnail.src =
                 track.album.cover;
 
+
             thumbnail.alt =
                 `${track.title} - portada`;
+
 
             /*
              * --------------------------------------------
@@ -1972,39 +2054,49 @@ function renderQueuePanel(): void {
                     'span'
                 );
 
+
             info.className =
                 'music-player-queue-info';
+
 
             const title =
                 document.createElement(
                     'span'
                 );
 
+
             title.className =
                 'music-player-queue-track-title';
 
+
             title.textContent =
                 track.title;
+
 
             const artist =
                 document.createElement(
                     'span'
                 );
 
+
             artist.className =
                 'music-player-queue-track-artist';
+
 
             artist.textContent =
                 track.artist.name ||
                 'ARTISTA DESCONOCIDO';
 
+
             info.appendChild(
                 title
             );
 
+
             info.appendChild(
                 artist
             );
+
 
             /*
              * --------------------------------------------
@@ -2017,13 +2109,16 @@ function renderQueuePanel(): void {
                     'span'
                 );
 
+
             duration.className =
                 'music-player-list-column-duration';
+
 
             duration.textContent =
                 formatTime(
                     track.duration
                 );
+
 
             /*
              * --------------------------------------------
@@ -2035,33 +2130,76 @@ function renderQueuePanel(): void {
                 number
             );
 
+
             item.appendChild(
                 thumbnail
             );
+
 
             item.appendChild(
                 info
             );
 
+
             item.appendChild(
                 duration
             );
+
+
+            item.setAttribute(
+                'aria-label',
+                isParkedQueue
+                    ? `Volver a reproducir ${track.title}`
+                    : `Reproducir ${track.title}`
+            );
+
 
             item.addEventListener(
                 'click',
                 () => {
 
-                    playMusicQueueTrack(
+                    if (
+                        isParkedQueue
+                    ) {
+
+                        void restoreParkedPlaybackContext(
+                            index
+                        );
+
+                        return;
+                    }
+
+
+                    void playMusicQueueTrack(
                         index
                     );
                 }
             );
+
 
             queueList.appendChild(
                 item
             );
         }
     );
+
+
+    queueList.appendChild(
+        playbackListLoader
+    );
+
+
+    playbackListLoader.hidden =
+        isParkedQueue ||
+        !playbackState.playbackListNext;
+
+
+    playbackListLoader.classList.toggle(
+        'is-loading',
+        !isParkedQueue &&
+        playbackState.playbackListLoadingMore
+    );
+
 
     updateTrackPlaybackIndicators();
 }
@@ -2091,6 +2229,12 @@ function scrollQueueTrackIntoView(
 }
 
 function updateTrackPlaybackIndicators(): void {
+
+    const isParkedQueueVisible =
+        playbackState.playbackListSource ===
+            'local-list' &&
+        playbackState.parkedPlaybackContext !==
+            null;
 
     const state =
         youtubePlayer.getState();
@@ -2288,6 +2432,7 @@ function updateTrackPlaybackIndicators(): void {
                 );
 
             const isCurrent =
+                !isParkedQueueVisible &&
                 trackId ===
                 currentTrackId;
 
@@ -2389,7 +2534,9 @@ function updateTrackPlaybackIndicators(): void {
 
     const activeContextKey =
         activePlaybackSource ===
-            'youtube'
+            'youtube' &&
+        playbackState.playbackListSource !==
+            'local-list'
             ? currentPlaybackContextInfo?.key ??
             null
             : null;
