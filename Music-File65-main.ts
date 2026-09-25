@@ -386,32 +386,76 @@ function initializeMusicPlayer(): void {
     const youtubePlayer =
     new YouTubePlayer();
 
+    const savedMusicSnapshot =
+    loadMusicPlaybackSnapshot();
+
     youtubePlayer
-    .initialize(
-        youtubePlayerContainer
-    )
-    .then(
-        () => {
+        .initialize(
+            youtubePlayerContainer
+        )
+        .then(
+            async () => {
 
-            console.log(
-                '[MusicPlayer] YouTube player ready.'
-            );
+                console.log(
+                    '[MusicPlayer] YouTube player ready.'
+                );
 
-            void restoreMusicPlayback();
 
-        }
-    )
-    .catch(
-        error => {
+                /*
+                * Solo restauramos música si existe
+                * una sesión válida.
+                */
+                if (
+                    savedMusicSnapshot
+                ) {
 
-            console.error(
-                '[MusicPlayer] Unable to initialize YouTube player:',
-                error
-            );
+                    const restored =
+                        await restoreMusicPlayback(
+                            savedMusicSnapshot
+                        );
 
-        }
-    );
 
+                    /*
+                    * Si la restauración no pudo
+                    * realizarse, usamos el comportamiento
+                    * normal de entrada.
+                    */
+                    if (
+                        !restored
+                    ) {
+
+                        initializeDefaultRadio();
+                    }
+
+
+                    return;
+                }
+
+
+                /*
+                * Sin historial musical:
+                * comportamiento normal.
+                */
+                initializeDefaultRadio();
+            }
+        )
+        .catch(
+            error => {
+
+                console.error(
+                    '[MusicPlayer] Unable to initialize YouTube player:',
+                    error
+                );
+
+
+                /*
+                * Si falla YouTube y no hay música
+                * que restaurar, seguimos teniendo
+                * la radio normal.
+                */
+                initializeDefaultRadio();
+            }
+        );
 
     /* --------------------------------------------------
        ESTACIONES
@@ -3000,39 +3044,54 @@ function updateTrackPlaybackIndicators(): void {
         }
     );
 
+function initializeDefaultRadio():
+    void {
+
     const initialStation =
         audioStations[0];
 
-    if (initialStation) {
 
-        currentStationId =
-            initialStation.id;
-
-        stationName.textContent =
-            initialStation.name;
-
-        audioPlayer.setSource(
-            initialStation
-        );
-
-        updateTrackInfo();
-
-        activatePanelTab(
-            'home'
-        );
-
-        activateHomeSection(
-            'trending'
-        );
-
-        renderQueuePanel();
-
-        updateStationMenu();
-
-    } else {
+    if (
+        !initialStation
+    ) {
 
         finishInitialInfoLoading();
+
+        return;
     }
+
+
+    currentStationId =
+        initialStation.id;
+
+
+    stationName.textContent =
+        initialStation.name;
+
+
+    audioPlayer.setSource(
+        initialStation
+    );
+
+
+    updateTrackInfo();
+
+
+    activatePanelTab(
+        'home'
+    );
+
+
+    activateHomeSection(
+        'trending'
+    );
+
+
+    renderQueuePanel();
+
+
+    updateStationMenu();
+}
 
 
     /* --------------------------------------------------
