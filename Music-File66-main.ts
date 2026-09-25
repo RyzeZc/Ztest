@@ -389,6 +389,21 @@ function initializeMusicPlayer(): void {
     const savedMusicSnapshot =
     loadMusicPlaybackSnapshot();
 
+
+    if (
+        !savedMusicSnapshot
+    ) {
+
+        queueMicrotask(
+            () => {
+
+                initializeDefaultRadio();
+
+            }
+        );
+    }
+
+
     youtubePlayer
         .initialize(
             youtubePlayerContainer
@@ -401,42 +416,25 @@ function initializeMusicPlayer(): void {
                 );
 
 
-                /*
-                * Solo restauramos música si existe
-                * una sesión válida.
-                */
                 if (
-                    savedMusicSnapshot
+                    !savedMusicSnapshot
                 ) {
-
-                    const restored =
-                        await restoreMusicPlayback(
-                            savedMusicSnapshot
-                        );
-
-
-                    /*
-                    * Si la restauración no pudo
-                    * realizarse, usamos el comportamiento
-                    * normal de entrada.
-                    */
-                    if (
-                        !restored
-                    ) {
-
-                        initializeDefaultRadio();
-                    }
-
-
                     return;
                 }
 
 
-                /*
-                * Sin historial musical:
-                * comportamiento normal.
-                */
-                initializeDefaultRadio();
+                const restored =
+                    await restoreMusicPlayback(
+                        savedMusicSnapshot
+                    );
+
+
+                if (
+                    !restored
+                ) {
+
+                    initializeDefaultRadio();
+                }
             }
         )
         .catch(
@@ -448,12 +446,12 @@ function initializeMusicPlayer(): void {
                 );
 
 
-                /*
-                * Si falla YouTube y no hay música
-                * que restaurar, seguimos teniendo
-                * la radio normal.
-                */
-                initializeDefaultRadio();
+                if (
+                    savedMusicSnapshot
+                ) {
+
+                    initializeDefaultRadio();
+                }
             }
         );
 
@@ -1482,19 +1480,11 @@ function scheduleMusicPlaybackSave():
         );
 }
 
-async function restoreMusicPlayback():
-    Promise<void> {
-
-    const snapshot =
-        loadMusicPlaybackSnapshot();
-
-
-    if (
-        !snapshot
-    ) {
-        return;
-    }
-
+async function restoreMusicPlayback(
+    snapshot:
+        MusicPlaybackSnapshot
+):
+    Promise<boolean> {
 
     isRestoringPlayback =
         true;
@@ -1502,17 +1492,32 @@ async function restoreMusicPlayback():
 
     try {
 
+        /*
+         * El snapshot ya contiene el ID resuelto
+         * de la canción actual.
+         */
         primeResolvedYouTubeTracks(
             [
                 {
+
                     id:
                         snapshot.track.id,
 
                     youtubeVideoId:
                         snapshot.youtubeVideoId,
+
                 },
             ]
         );
+
+
+        const playbackList =
+            snapshot.playbackList.length >
+                0
+                ? snapshot.playbackList
+                : [
+                    snapshot.track,
+                ];
 
 
         await selectMusicTrack(
@@ -1522,13 +1527,7 @@ async function restoreMusicPlayback():
                 queueAction:
                     'clear',
 
-                playbackList:
-                    snapshot.playbackList.length >
-                        0
-                        ? snapshot.playbackList
-                        : [
-                            snapshot.track,
-                        ],
+                playbackList,
 
                 playbackListMode:
                     snapshot.playbackListMode,
@@ -1542,17 +1541,65 @@ async function restoreMusicPlayback():
                 playbackListTotal:
                     snapshot.playbackListTotal,
 
+                /*
+                 * Restaurar estado NO significa
+                 * forzar autoplay.
+                 *
+                 * El usuario pulsa Play para continuar.
+                 */
                 autoplay:
-                    snapshot.playbackIntent ===
-                        'play',
+                    false,
 
             }
         );
 
 
+        /*
+         * Nos aseguramos de conservar
+         * exactamente el índice que tenía
+         * la sesión guardada.
+         */
+        if (
+            snapshot.playbackListCurrentIndex >=
+                0 &&
+            snapshot.playbackListCurrentIndex <
+                playbackState.playbackList.length
+        ) {
+
+            playbackState.playbackListCurrentIndex =
+                snapshot.playbackListCurrentIndex;
+        }
+
+
+        /*
+         * Estado de Repeat / Shuffle.
+         */
+        playbackState.youtubeRepeat =
+            snapshot.youtubeRepeat;
+
+
+        playbackState.youtubeShuffle =
+            snapshot.youtubeShuffle;
+
+
+        playbackState.youtubeShuffleHistory =
+            [
+                ...snapshot.youtubeShuffleHistory,
+            ];
+
+
+        playbackState.youtubeShuffleHistoryPosition =
+            snapshot.youtubeShuffleHistoryPosition;
+
+
+        /*
+         * Restauramos volumen y mute.
+         */
         youtubePlayer.setVolume(
-            snapshot.volume * 100
+            snapshot.volume *
+            100
         );
+
 
         youtubePlayer.setMuted(
             snapshot.muted
@@ -1560,8 +1607,8 @@ async function restoreMusicPlayback():
 
 
         /*
-         * Esperamos hasta que YouTube
-         * tenga una duración disponible.
+         * Esperamos a que el vídeo tenga
+         * una duración válida antes del seek.
          */
         const restoreStart =
             performance.now();
@@ -1574,8 +1621,7 @@ async function restoreMusicPlayback():
                     () => {
 
                         const duration =
-                            youtubePlayer
-                                .getDuration();
+                            youtubePlayer.getDuration();
 
 
                         if (
@@ -1589,10 +1635,6 @@ async function restoreMusicPlayback():
                                 snapshot.currentTime;
 
 
-                            /*
-                             * Una pista que ya terminó
-                             * no debe abrirse al final.
-                             */
                             if (
                                 targetTime >=
                                 duration - 2
@@ -1642,24 +1684,13 @@ async function restoreMusicPlayback():
         );
 
 
-        playbackState.youtubeRepeat =
-            snapshot.youtubeRepeat;
-
-        playbackState.youtubeShuffle =
-            snapshot.youtubeShuffle;
-
-        playbackState.youtubeShuffleHistory =
-            [
-                ...snapshot.youtubeShuffleHistory,
-            ];
-
-        playbackState.youtubeShuffleHistoryPosition =
-            snapshot.youtubeShuffleHistoryPosition;
-
-
         updateUI();
 
+
         updateTrackPlaybackIndicators();
+
+
+        return true;
 
     } catch (error) {
 
@@ -1668,7 +1699,16 @@ async function restoreMusicPlayback():
             error
         );
 
-        clearMusicPlaybackSnapshot();
+
+        /*
+         * IMPORTANTE:
+         *
+         * NO borramos el snapshot.
+         *
+         * Podría ser un error temporal de
+         * YouTube/red/estado del iframe.
+         */
+        return false;
 
     } finally {
 
