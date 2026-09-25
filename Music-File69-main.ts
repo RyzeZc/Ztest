@@ -1358,6 +1358,18 @@ function getMusicPlaybackSnapshot():
         youtubePlayer.getState();
 
 
+    if (
+        youtubeState.status ===
+        'error'
+    ) {
+
+        resolve(
+            false
+        );
+
+        return;
+    }
+            
     const currentTime =
         youtubePlayer.getCurrentTime();
 
@@ -1622,7 +1634,8 @@ async function restoreMusicPlayback(
             performance.now();
 
 
-        await new Promise<void>(
+        const durationReady =
+            await new Promise<boolean>(
             resolve => {
 
                 const check =
@@ -1663,11 +1676,12 @@ async function restoreMusicPlayback(
                             }
 
 
-                            resolve();
+                            resolve(
+                                true
+                            );
 
                             return;
                         }
-
 
                         if (
                             performance.now() -
@@ -1675,11 +1689,12 @@ async function restoreMusicPlayback(
                             7000
                         ) {
 
-                            resolve();
+                            resolve(
+                                false
+                            );
 
                             return;
                         }
-
 
                         requestAnimationFrame(
                             check
@@ -1689,14 +1704,21 @@ async function restoreMusicPlayback(
 
                 check();
             }
+
         );
 
+        if (
+            !durationReady
+        ) {
+
+            return false;
+        }
 
         updateUI();
 
+        updateYouTubeProgress();
 
         updateTrackPlaybackIndicators();
-
 
         return true;
 
@@ -3363,6 +3385,13 @@ function updateTrackInfo(): void {
             `${track.title} - portada`
         );
 
+        if (
+            isInitialInfoLoading
+        ) {
+
+            finishInitialInfoLoading();
+        }        
+
         requestAnimationFrame(
             updateTrackMarquee
         );
@@ -3613,7 +3642,9 @@ function updateTrackMarquee(): void {
             'youtube';
 
         progressSeek.disabled =
-            !isYouTube;
+            !isYouTube ||
+            !state.videoId;
+
 
         if (!isYouTube) {
 
@@ -3626,40 +3657,53 @@ function updateTrackMarquee(): void {
             progressSeek.value =
                 '100';
 
+            progressSeek.style.setProperty(
+                '--music-player-seek-progress',
+                '100%'
+            );
+
             progressSeekProgress.style.width =
                 '100%';
 
+
+        } else if (
+            !state.videoId
+        ) {
+
+            /*
+            * Estamos cambiando a YouTube pero
+            * todavía no tenemos vídeo cargado.
+            *
+            * No heredamos el 100% de RADIO.
+            */
+            progressCurrent.textContent =
+                '0:00';
+
+            progressTotal.textContent =
+                '0:00';
+
+            progressSeek.value =
+                '0';
+
+            progressSeek.style.setProperty(
+                '--music-player-seek-progress',
+                '0%'
+            );
+
+            progressSeekProgress.style.width =
+                '0%';
         }
 
-            videoToggle.hidden =
-                !isYouTube;
 
-            if (!isYouTube) {
-
-                videoPanel.hidden =
-                    true;
-
-                videoPanel.setAttribute(
-                    'aria-hidden',
-                    'true'
-                );
-
-                videoToggle.setAttribute(
-                    'aria-pressed',
-                    'false'
-                );
-
-                videoToggle.setAttribute(
-                    'aria-label',
-                    'Mostrar video de YouTube'
-                );
-            }
+        videoToggle.hidden =
+            !isYouTube;
 
 
         videoToggle.classList.toggle(
             'is-visible',
             isYouTube
         );
+
 
         if (!isYouTube) {
 
