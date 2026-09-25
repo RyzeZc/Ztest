@@ -499,6 +499,133 @@ function setSaveButtonState(
         )();
     }
 
+function updateSavedTrackIndicators():
+    void {
+
+    const items =
+        player.querySelectorAll<HTMLElement>(
+            [
+                '.music-player-queue-item',
+                '.music-player-trending-item',
+                '.music-player-youtube-result'
+            ].join(',')
+        );
+
+    items.forEach(
+        item => {
+
+            const trackId =
+                Number(
+                    item.dataset.trackId
+                );
+
+            if (
+                !Number.isInteger(
+                    trackId
+                )
+            ) {
+                return;
+            }
+
+            const duration =
+                item.querySelector<HTMLElement>(
+                    '.music-player-list-column-duration'
+                );
+
+            if (
+                !duration
+            ) {
+                return;
+            }
+
+            const existing =
+                duration.querySelector<HTMLElement>(
+                    '.music-player-saved-indicator'
+                );
+
+            const saved =
+                savedTrackIdsLoaded &&
+                savedTrackIds.has(
+                    trackId
+                );
+
+            if (
+                saved &&
+                !existing
+            ) {
+
+                const indicator =
+                    document.createElement(
+                        'span'
+                    );
+
+                indicator.className =
+                    'music-player-saved-indicator';
+
+                indicator.title =
+                    'Guardada en Mi Música';
+
+                indicator.setAttribute(
+                    'aria-label',
+                    'Guardada en Mi Música'
+                );
+
+                indicator.innerHTML =
+                    `
+                        <svg
+                            viewBox="0 0 16 16"
+                            aria-hidden="true"
+                        >
+                            <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m11.748-1.97a.75.75 0 0 0-1.06-1.06l-4.47 4.47-1.405-1.406a.75.75 0 1 0-1.061 1.06l2.466 2.467 5.53-5.53z"></path>
+                        </svg>
+                    `;
+
+                duration.prepend(
+                    indicator
+                );
+
+            } else if (
+                !saved &&
+                existing
+            ) {
+
+                existing.remove();
+            }
+        }
+    );
+}
+
+async function refreshSavedTrackIds():
+    Promise<void> {
+
+    try {
+
+        const tracks =
+            await getLocalLibrary();
+
+        savedTrackIds =
+            new Set(
+                tracks.map(
+                    track =>
+                        track.id
+                )
+            );
+
+        savedTrackIdsLoaded =
+            true;
+
+        updateSavedTrackIndicators();
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            '[LocalLibrary] Unable to load saved track indicators:',
+            error
+        );
+    }
+}
 
     async function togglePlayerSave():
         Promise<void> {
@@ -646,6 +773,25 @@ function setSaveButtonState(
             const savedNow =
                 !saved;
 
+            if (
+                savedNow
+            ) {
+
+                savedTrackIds.add(
+                    track.id
+                );
+
+            } else {
+
+                savedTrackIds.delete(
+                    track.id
+                );
+            }
+
+            savedTrackIdsLoaded =
+                true;
+
+            updateSavedTrackIndicators();
 
             lastPlayerTrackId =
                 track.id;
@@ -2038,6 +2184,8 @@ function setSaveButtonState(
                         );
             }
         );
+
+        updateSavedTrackIndicators();
     }
 
 
