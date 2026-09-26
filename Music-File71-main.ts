@@ -425,16 +425,18 @@ function initializeMusicPlayer(): void {
                         '[MusicPlayer] YouTube player ready for session restore.'
                     );
 
-
                     const restored =
                         await restoreMusicPlayback(
                             savedMusicSnapshot
                         );
 
-
                     if (
-                        !restored
+                        restored
                     ) {
+
+                        initializeStaticPanelContent();
+
+                    } else {
 
                         initializeDefaultRadio();
                     }
@@ -3141,6 +3143,26 @@ function updateTrackPlaybackIndicators(): void {
         }
     );
 
+function initializeStaticPanelContent():
+    void {
+
+    /*
+     * Contenido que debe inicializarse
+     * independientemente de si comenzamos
+     * en RADIO o restauramos una sesión musical.
+     */
+
+    updateStationMenu();
+
+    activatePanelTab(
+        'home'
+    );
+
+    activateHomeSection(
+        'trending'
+    );
+}
+
 function initializeDefaultRadio():
     void {
 
@@ -3174,20 +3196,9 @@ function initializeDefaultRadio():
     updateTrackInfo();
 
 
-    activatePanelTab(
-        'home'
-    );
-
-
-    activateHomeSection(
-        'trending'
-    );
-
-
     renderQueuePanel();
 
-
-    updateStationMenu();
+    initializeStaticPanelContent();
 }
 
 
