@@ -876,6 +876,7 @@ const {
 
 const {
     getState,
+    subscribe,
     setPlaybackIntent,
     toggleRepeat,
     toggleShuffle,
@@ -921,6 +922,20 @@ const {
 
     const playbackState =
     getState();
+
+    const unsubscribePlayback =
+        subscribe(
+            (
+                event
+            ) => {
+
+                console.log(
+                    '[MusicPlayer] Playback event:',
+                    event.type
+                );
+
+            }
+        );
 
     localLibraryController =
         createLocalLibraryController({
