@@ -1079,10 +1079,11 @@ if (
         if (
             isSameCurrentTrack &&
             isSamePlaybackContext &&
+            selectionOptions.startSeconds ===
+                undefined &&
             (
                 state.currentYouTubeVideoId !==
                     null ||
-
                 hasResolveInFlight(
                     track.id
                 )
@@ -1478,7 +1479,8 @@ if (
 
 
                 youtubePlayer.load(
-                    videoId
+                    videoId,
+                    selectionOptions.startSeconds
                 );
 
 
