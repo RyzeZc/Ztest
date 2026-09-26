@@ -38,26 +38,65 @@ const resolvedYouTubeIds =
         string
     >();
 
+const YOUTUBE_VIDEO_ID_REGEX =
+    /^[A-Za-z0-9_-]{11}$/;
+
+
+export function isValidYouTubeVideoId(
+    videoId:
+        string
+): boolean {
+
+    return YOUTUBE_VIDEO_ID_REGEX.test(
+        videoId
+    );
+}    
+
 export function primeResolvedYouTubeTracks(
-    tracks: Array<{
-        id: number;
-        youtubeVideoId: string;
-    }>
-): void {
+    tracks:
+        Array<{
+            id:
+                number;
+
+            youtubeVideoId:
+                string;
+        }>
+):
+    void {
 
     for (
         const track of tracks
     ) {
 
+        const videoId =
+            track.youtubeVideoId
+                .trim();
+
+
         if (
-            !track.youtubeVideoId
+            !isValidYouTubeVideoId(
+                videoId
+            )
         ) {
+
+            console.warn(
+                '[MusicPlayer] Ignoring invalid cached YouTube ID:',
+                {
+                    deezerId:
+                        track.id,
+
+                    youtubeId:
+                        videoId,
+                }
+            );
+
             continue;
         }
 
+
         resolvedYouTubeIds.set(
             track.id,
-            track.youtubeVideoId
+            videoId
         );
     }
 }
@@ -150,20 +189,41 @@ export async function resolveYouTubeTrack(
             track.id
         );
 
-    if (cachedVideoId) {
 
-        console.log(
-            '[MusicPlayer] Using cached YouTube ID:',
-            {
-                deezerId:
-                    track.id,
+    if (
+        cachedVideoId
+    ) {
 
-                youtubeId:
-                    cachedVideoId,
-            }
+        if (
+            isValidYouTubeVideoId(
+                cachedVideoId
+            )
+        ) {
+
+            console.log(
+                '[MusicPlayer] Using cached YouTube ID:',
+                {
+                    deezerId:
+                        track.id,
+
+                    youtubeId:
+                        cachedVideoId,
+                }
+            );
+
+
+            return cachedVideoId;
+        }
+
+
+        /*
+        * El caché contenía un ID inválido.
+        * Lo eliminamos y hacemos una resolución
+        * nueva.
+        */
+        resolvedYouTubeIds.delete(
+            track.id
         );
-
-        return cachedVideoId;
     }
 
 
@@ -236,19 +296,29 @@ export async function resolveYouTubeTrack(
 
 
                 const videoId =
-                    response.results?.[0]?.id;
+                    response.results?.[0]?.id?.trim();
 
-
-                if (!videoId) {
+                if (
+                    !videoId ||
+                    !isValidYouTubeVideoId(
+                        videoId
+                    )
+                ) {
 
                     console.log(
-                        '[MusicPlayer] No YouTube video found:',
-                        track.id
+                        '[MusicPlayer] Invalid YouTube video ID returned:',
+                        {
+                            deezerId:
+                                track.id,
+
+                            youtubeId:
+                                videoId ??
+                                null,
+                        }
                     );
 
                     return null;
                 }
-
 
                 resolvedYouTubeIds.set(
                     track.id,
