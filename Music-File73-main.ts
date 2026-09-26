@@ -3521,7 +3521,9 @@ function updateTrackInfo(): void {
             source.name;
 
         trackArtist.textContent =
-            'RADIO';
+            getPlaybackStatusLabel(
+                audioPlayer.getState().status
+            );
 
         updateArtwork(
             source.artwork ?? null,
@@ -3667,6 +3669,39 @@ function updateTrackMarquee(): void {
        UI
     -------------------------------------------------- */
 
+function getPlaybackStatusLabel(
+    status:
+        string
+):
+    string {
+
+    switch (
+        status
+    ) {
+
+        case 'loading':
+            return 'CONECTANDO';
+
+        case 'buffering':
+            return 'CARGANDO';
+
+        case 'playing':
+            return 'EN VIVO';
+
+        case 'paused':
+            return 'PAUSADO';
+
+        case 'error':
+            return 'ERROR';
+
+        case 'ended':
+            return 'DETENIDO';
+
+        default:
+            return 'LISTO';
+    }
+}
+
     function updateUI(): void {
 
         const state =
@@ -3678,6 +3713,16 @@ function updateTrackMarquee(): void {
         const isYouTube =
             activePlaybackSource ===
             'youtube';
+
+        if (
+            !isYouTube
+        ) {
+
+            trackArtist.textContent =
+                getPlaybackStatusLabel(
+                    state.status
+                );
+        }            
 
         progressSeek.disabled =
             !isYouTube ||
