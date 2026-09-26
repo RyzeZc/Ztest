@@ -14,6 +14,8 @@ import type {
     MusicPanelTab,
     PlaybackAudioAdapter,
     PlaybackController,
+    PlaybackEvent,
+    PlaybackEventListener,
     PlaybackListSource,
     PlaybackSelectionOptions,
     PlaybackSource,
@@ -656,6 +658,9 @@ export function createPlaybackController(
     const state =
         createPlaybackState();
 
+    const listeners =
+        new Set<PlaybackEventListener>();        
+
     const {
         youtubePlayer,
         audioPlayer,
@@ -739,7 +744,65 @@ export function createPlaybackController(
         get youtubeShuffleHistoryPosition() {
             return state.youtubeShuffleHistoryPosition;
         },
-    };    
+    };
+
+    function emit(
+        event:
+            PlaybackEvent
+    ):
+        void {
+
+        if (
+            listeners.size ===
+            0
+        ) {
+            return;
+        }
+
+
+        for (
+            const listener of
+                listeners
+        ) {
+            try {
+
+                listener(
+                    event,
+                    playbackStateView
+                );
+
+            } catch (
+                error
+            ) {
+
+                console.error(
+                    '[Playback] Playback event listener failed:',
+                    error
+                );
+
+            }
+        }
+    }
+
+    function subscribe(
+        listener:
+            PlaybackEventListener
+    ):
+        () => void {
+
+        listeners.add(
+            listener
+        );
+
+
+        return () => {
+
+            listeners.delete(
+                listener
+            );
+
+        };
+    }    
 
     function arePlaybackListsEqual(
         first: MusicTrack[],
@@ -781,8 +844,24 @@ export function createPlaybackController(
     ):
         void {
 
+        if (
+            state.playbackIntent ===
+            intent
+        ) {
+            return;
+        }
+
+
         state.playbackIntent =
             intent;
+
+
+        emit({
+            type:
+                'playback-intent-changed',
+
+            intent,
+        });
     }
 
 
@@ -791,6 +870,16 @@ export function createPlaybackController(
 
         state.youtubeRepeat =
             !state.youtubeRepeat;
+
+
+        emit({
+            type:
+                'repeat-changed',
+
+            enabled:
+                state.youtubeRepeat,
+        });
+
 
         return state.youtubeRepeat;
     }
@@ -829,6 +918,14 @@ export function createPlaybackController(
             state.youtubeShuffleHistoryPosition =
                 -1;
         }
+
+        emit({
+            type:
+                'shuffle-changed',
+
+            enabled:
+                state.youtubeShuffle,
+        });
 
         return state.youtubeShuffle;
     }
