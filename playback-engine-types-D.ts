@@ -172,6 +172,155 @@ export interface PlaybackState {
         number;
 }
 
+export interface PlaybackStateView {
+
+    readonly playbackList:
+        readonly MusicTrack[];
+
+    readonly playbackListCurrentIndex:
+        number;
+
+    readonly playbackListMode:
+        PlaybackListMode;
+
+    readonly playbackListSource:
+        PlaybackListSource;
+
+    readonly playbackListNext:
+        string | null;
+
+    readonly playbackListTotal:
+        number | null;
+
+    readonly playbackListLoadingMore:
+        boolean;
+
+    readonly parkedPlaybackContext:
+        Readonly<ParkedPlaybackContext> | null;
+
+    readonly currentMusicTrack:
+        MusicTrack | null;
+
+    readonly currentYouTubeVideoId:
+        string | null;
+
+    readonly playbackIntent:
+        'play' | 'pause';
+
+    readonly playbackRequestId:
+        number;
+
+    readonly queueRequestId:
+        number;
+
+    readonly youtubeRepeat:
+        boolean;
+
+    readonly youtubeShuffle:
+        boolean;
+
+    readonly youtubeShuffleHistory:
+        readonly number[];
+
+    readonly youtubeShuffleHistoryPosition:
+        number;
+}
+
+
+export type PlaybackEvent =
+    | {
+        type:
+            'track-selected';
+
+        track:
+            MusicTrack;
+
+        source:
+            PlaybackSource;
+    }
+    | {
+        type:
+            'queue-changed';
+
+        reason:
+            'replaced' |
+            'appended' |
+            'cleared';
+    }
+    | {
+        type:
+            'queue-index-changed';
+
+        index:
+            number;
+    }
+    | {
+        type:
+            'playback-intent-changed';
+
+        intent:
+            'play' |
+            'pause';
+    }
+    | {
+        type:
+            'repeat-changed';
+
+        enabled:
+            boolean;
+    }
+    | {
+        type:
+            'shuffle-changed';
+
+        enabled:
+            boolean;
+    };
+
+
+export type PlaybackEventListener =
+    (
+        event:
+            PlaybackEvent,
+
+        state:
+            PlaybackStateView
+    ) =>
+        void;
+
+
+export interface PlaybackSessionRestore {
+
+    playbackList:
+        MusicTrack[];
+
+    playbackListCurrentIndex:
+        number;
+
+    playbackListMode:
+        PlaybackListMode;
+
+    playbackListSource:
+        PlaybackListSource;
+
+    playbackListNext:
+        string | null;
+
+    playbackListTotal:
+        number | null;
+
+    youtubeRepeat:
+        boolean;
+
+    youtubeShuffle:
+        boolean;
+
+    youtubeShuffleHistory:
+        number[];
+
+    youtubeShuffleHistoryPosition:
+        number;
+}
 
 /* ============================================================
  * MEDIA ADAPTERS
