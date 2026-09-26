@@ -1703,18 +1703,37 @@ function updateYouTubeProgress(): void {
         youtubePlayer.getDuration();
 
     if (
-        !Number.isFinite(currentTime) ||
+        !Number.isFinite(
+            currentTime
+        )
+    ) {
+        return;
+    }
+
+    /*
+     * El snapshot puede guardarse aunque
+     * YouTube todavía no nos entregue
+     * una duración válida.
+     */
+    scheduleMusicPlaybackSave();
+
+    if (
         !Number.isFinite(duration) ||
         duration <= 0
     ) {
         progressCurrent.textContent =
-            '0:00';
+            formatTime(
+                currentTime
+            );
 
         progressTotal.textContent =
             '0:00';
 
         progressSeek.value =
             '0';
+
+        progressSeekProgress.style.width =
+            '0%';
 
         return;
     }
@@ -1738,7 +1757,6 @@ function updateYouTubeProgress(): void {
     progressSeekProgress.style.width =
     `${(currentTime / duration) * 100}%`;
 
-    scheduleMusicPlaybackSave();
 }
 
 function startYouTubeProgress(): void {
@@ -4066,7 +4084,7 @@ shuffleButton.addEventListener('click', () => {
         updateUI
     );
 
-    youtubePlayer.subscribe(
+youtubePlayer.subscribe(
     state => {
 
         if (
@@ -4074,11 +4092,20 @@ shuffleButton.addEventListener('click', () => {
             'playing'
         ) {
             startYouTubeProgress();
+
+            /*
+             * Guardamos inmediatamente la nueva
+             * reproducción. Esto evita depender
+             * exclusivamente del intervalo de
+             * progreso para crear el primer snapshot.
+             */
+            scheduleMusicPlaybackSave();
+
             return;
         }
 
         stopYouTubeProgress();
-        
+
         scheduleMusicPlaybackSave();
     }
 );
@@ -4588,16 +4615,17 @@ progressSeek.addEventListener(
     );
 
     updateUI();
+
+        window.addEventListener(
+        'pagehide',
+        () => {
+
+            saveMusicPlaybackNow();
+
+        }
+    );
     
 }
-
-window.addEventListener(
-    'pagehide',
-    () => {
-
-        saveMusicPlaybackNow();
-    }
-);
 
 document.addEventListener(
     'astro:page-load',
