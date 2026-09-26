@@ -37,9 +37,11 @@ interface YouTubePlayerInstance {
 
     cueVideoById(
         videoId:
-            string
+            string,
+        startSeconds?:
+            number
     ):
-        void;        
+        void;       
 
     playVideo():
         void;
@@ -674,6 +676,11 @@ export class YouTubePlayer {
         null =
         null;
 
+    private pendingVideoStartSeconds:
+        number |
+        null =
+        null;        
+
     private pendingPlayVideoId:
         string |
         null =
@@ -1001,14 +1008,47 @@ export class YouTubePlayer {
                                                     },
 
 
-                                                onStateChange:
-                                                    event => {
+                                                    onStateChange:
+                                                        event => {
+
+                                                        const currentPlayer =
+                                                            createdPlayer;
+
+                                                        if (
+                                                            !currentPlayer
+                                                        ) {
+                                                            console.warn(
+                                                                '[YouTubePlayer] Ignoring state change: YouTube player instance is unavailable.'
+                                                            );
+
+                                                            return;
+                                                        }
 
                                                         switch (
                                                             event.data
                                                         ) {
 
                                                             case YT.PlayerState.PLAYING:
+
+                                                                /*
+                                                                * Mientras una nueva canción está siendo
+                                                                * preparada, PLAYING no puede ser una
+                                                                * transición válida de esa carga.
+                                                                *
+                                                                * La reproducción de una canción nueva
+                                                                * solo puede comenzar después de CUED.
+                                                                *
+                                                                * Si YouTube entrega aquí un PLAYING
+                                                                * tardío de la reproducción anterior,
+                                                                * lo ignoramos para no destruir el estado
+                                                                * pendiente de la canción actual.
+                                                                */
+                                                                if (
+                                                                    this.state.status ===
+                                                                    'loading'
+                                                                ) {
+                                                                    break;
+                                                                }
 
                                                                 this.cuedStartTime =
                                                                     null;
@@ -1024,16 +1064,50 @@ export class YouTubePlayer {
 
                                                                 break;
 
-
                                                             case YT.PlayerState.BUFFERING:
+
+                                                                /*
+                                                                * Durante una nueva carga todavía estamos
+                                                                * esperando CUED.
+                                                                *
+                                                                * No debemos transformar loading → buffering
+                                                                * por un evento tardío de la canción anterior.
+                                                                *
+                                                                * Esto también evita que un seek posterior
+                                                                * trate la nueva canción como si ya estuviera
+                                                                * reproduciéndose.
+                                                                */
+                                                                if (
+                                                                    this.state.status ===
+                                                                    'loading'
+                                                                ) {
+                                                                    break;
+                                                                }
 
                                                                 this.state.status =
                                                                     'buffering';
 
                                                                 break;
 
-
                                                             case YT.PlayerState.PAUSED:
+
+                                                                /*
+                                                                * Si estamos preparando una nueva canción,
+                                                                * una señal PAUSED no debe cancelar el
+                                                                * PLAY pendiente de esa canción.
+                                                                *
+                                                                * El PAUSED válido durante una carga solo
+                                                                * será reflejado si el usuario realmente
+                                                                * canceló la reproducción, en cuyo caso
+                                                                * pause() ya habrá cambiado el estado a
+                                                                * 'paused' y limpiado los pendientes.
+                                                                */
+                                                                if (
+                                                                    this.state.status ===
+                                                                    'loading'
+                                                                ) {
+                                                                    break;
+                                                                }
 
                                                                 this.cuedStartTime =
                                                                     null;
@@ -1051,6 +1125,25 @@ export class YouTubePlayer {
 
 
                                                             case YT.PlayerState.ENDED:
+
+                                                                /*
+                                                                * ENDED solo es válido cuando la canción
+                                                                * que estamos reproduciendo llegó realmente
+                                                                * al final.
+                                                                *
+                                                                * Mientras cargamos una nueva canción o
+                                                                * estamos iniciando una reproducción pendiente,
+                                                                * un ENDED tardío no debe disparar
+                                                                * Next / Repeat.
+                                                                */
+                                                                if (
+                                                                    this.state.status ===
+                                                                        'loading' ||
+                                                                    this.state.status ===
+                                                                        'buffering'
+                                                                ) {
+                                                                    break;
+                                                                }
 
                                                                 this.cuedStartTime =
                                                                     null;
@@ -1101,7 +1194,7 @@ export class YouTubePlayer {
                                                                     this.state.status =
                                                                         'loading';
 
-                                                                    player.cueVideoById(
+                                                                    currentPlayer.cueVideoById(
                                                                         this.state.videoId,
                                                                         targetTime
                                                                     );
@@ -1136,7 +1229,7 @@ export class YouTubePlayer {
                                                                     this.state.status =
                                                                         'buffering';
 
-                                                                    player.playVideo();
+                                                                    currentPlayer.playVideo();
 
                                                                     this.notify();
 
@@ -1322,22 +1415,37 @@ export class YouTubePlayer {
         if (
             this.pendingVideoId
         ) {
-
             const videoId =
                 this.pendingVideoId;
 
+            /*
+            * Si existe un seek manual pendiente,
+            * tiene prioridad sobre la posición
+            * inicial de la carga.
+            *
+            * Esto permite que un usuario haga seek
+            * mientras el vídeo todavía está cargando.
+            */
             const startSeconds =
                 this.pendingSeek !== null
                     ? Math.max(
                         0,
                         this.pendingSeek
                     )
-                    : 0;
+                    : this.pendingVideoStartSeconds !== null
+                        ? Math.max(
+                            0,
+                            this.pendingVideoStartSeconds
+                        )
+                        : 0;
 
             this.pendingVideoId =
                 null;
 
             this.pendingSeek =
+                null;
+
+            this.pendingVideoStartSeconds =
                 null;
 
             this.state.videoId =
@@ -1447,12 +1555,26 @@ export class YouTubePlayer {
 
     load(
         videoId:
-            string
+            string,
+        startSeconds?:
+            number
     ):
         void {
 
         const normalizedVideoId =
             videoId.trim();
+
+        const normalizedStartSeconds =
+            typeof startSeconds ===
+                'number' &&
+            Number.isFinite(
+                startSeconds
+            )
+                ? Math.max(
+                    0,
+                    startSeconds
+                )
+                : 0;
 
         if (
             normalizedVideoId.length ===
@@ -1472,14 +1594,24 @@ export class YouTubePlayer {
         this.pendingPlayVideoId =
             null;
 
+        /*
+        * Una nueva carga comienza con una
+        * nueva posición inicial.
+        *
+        * El seek manual pendiente anterior
+        * ya no pertenece a esta canción.
+        */
         this.pendingSeek =
             null;
+
+        this.pendingVideoStartSeconds =
+            normalizedStartSeconds;
 
         this.state.videoId =
             normalizedVideoId;
 
         this.cuedStartTime =
-            0;
+            normalizedStartSeconds;
 
         this.state.status =
             'loading';
@@ -1494,15 +1626,22 @@ export class YouTubePlayer {
             this.player &&
             this.state.ready
         ) {
+            /*
+            * El player ya está listo.
+            *
+            * cueVideoById() prepara el vídeo
+            * sin iniciar la reproducción.
+            */
+            this.pendingVideoStartSeconds =
+                null;
 
             this.player.cueVideoById(
                 normalizedVideoId,
-                0
+                normalizedStartSeconds
             );
 
             return;
         }
-
 
         /*
         * PLAYER TODAVÍA NO LISTO
@@ -1510,21 +1649,26 @@ export class YouTubePlayer {
         this.pendingVideoId =
             normalizedVideoId;
 
+        this.pendingVideoStartSeconds =
+            normalizedStartSeconds;
+
         void this.initialize()
             .catch(
                 error => {
-
                     this.state.status =
                         'error';
 
                     this.pendingVideoId =
                         null;
 
+                    this.pendingVideoStartSeconds =
+                        null;
+
                     this.pendingPlaybackAction =
                         null;
 
                     this.pendingPlayVideoId =
-                        null;
+                        null;                    
 
                     this.notify();
 
@@ -2065,12 +2209,15 @@ export class YouTubePlayer {
         this.pendingSeek =
             null;
 
+        this.pendingVideoStartSeconds =
+            null;
+
         this.pendingVolume =
             null;
 
         this.pendingMuted =
             null;
-            
+
         this.pendingPlayVideoId =
             null;
 
