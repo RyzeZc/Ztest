@@ -22,6 +22,56 @@ const MUSIC_API_BASE_URL =
     '/api/v1';
 
 
+export type MusicGlobalSearchCategory =
+    | 'tracks'
+    | 'artists'
+    | 'albums'
+    | 'playlists';
+
+
+export interface MusicGlobalSearchPreview<T> {
+
+    data:
+        T[];
+
+    total:
+        number;
+}
+
+
+export interface MusicGlobalSearchResponse {
+
+    query:
+        string;
+
+    preview_limit:
+        number;
+
+    tracks:
+        MusicGlobalSearchPreview<MusicTrack>;
+
+    artists:
+        MusicGlobalSearchPreview<MusicArtist>;
+
+    albums:
+        MusicGlobalSearchPreview<MusicAlbum>;
+
+    playlists:
+        MusicGlobalSearchPreview<MusicPlaylist>;
+
+    available:
+        MusicGlobalSearchCategory[];
+
+    status:
+        'success'
+        | 'partial'
+        | 'not_found'
+        | 'error';
+
+    errors?:
+        string[];
+}
+
 /* ============================================================
  * INTERNAL REQUEST HELPER
  * ============================================================ */
@@ -57,6 +107,55 @@ async function requestJSON<T>(
     return response.json() as Promise<T>;
 }
 
+
+async function requestNextJSON<T>(
+    next: string
+): Promise<T> {
+
+    if (
+        !next.startsWith('/api/v1/')
+    ) {
+        throw new Error(
+            'Invalid Music API next URL.'
+        );
+    }
+
+    const response =
+        await fetch(next);
+
+    if (!response.ok) {
+
+        const errorText =
+            await response.text();
+
+        console.error(
+            '[Music Service] Next request failed:',
+            response.status,
+            next,
+            errorText
+        );
+
+        throw new Error(
+            `Music API next request failed: ${response.status}`
+        );
+    }
+
+    const data:
+        unknown =
+        await response.json();
+
+    return data as T;
+}
+
+
+export async function getMusicApiNext<T>(
+    next: string
+): Promise<T> {
+
+    return requestNextJSON<T>(
+        next
+    );
+}
 
 /* ============================================================
  * ARTISTS
@@ -264,8 +363,28 @@ export async function getRadioStations(): Promise<
  * SEARCH
  * ============================================================ */
 
-export async function searchArtists(
+export async function searchGlobal(
     query: string
+): Promise<
+    MusicGlobalSearchResponse
+> {
+
+    const encodedQuery =
+        encodeURIComponent(
+            query.trim()
+        );
+
+    return requestJSON<
+        MusicGlobalSearchResponse
+    >(
+        `/search?q=${encodedQuery}`
+    );
+}
+
+export async function searchArtists(
+    query: string,
+    index = 0,
+    limit = 10
 ): Promise<
     MusicSearchResponse<MusicArtist>
 > {
@@ -275,17 +394,17 @@ export async function searchArtists(
             query.trim()
         );
 
-
     return requestJSON<
         MusicSearchResponse<MusicArtist>
     >(
-        `/search/artist?q=${encodedQuery}`
+        `/search/artist?q=${encodedQuery}&index=${index}&limit=${limit}`
     );
 }
 
-
 export async function searchTracks(
-    query: string
+    query: string,
+    index = 0,
+    limit = 10
 ): Promise<
     MusicSearchResponse<MusicTrack>
 > {
@@ -295,17 +414,18 @@ export async function searchTracks(
             query.trim()
         );
 
-
     return requestJSON<
         MusicSearchResponse<MusicTrack>
     >(
-        `/search/track?q=${encodedQuery}`
+        `/search/track?q=${encodedQuery}&index=${index}&limit=${limit}`
     );
 }
 
 
 export async function searchAlbums(
-    query: string
+    query: string,
+    index = 0,
+    limit = 10
 ): Promise<
     MusicSearchResponse<MusicAlbum>
 > {
@@ -315,17 +435,17 @@ export async function searchAlbums(
             query.trim()
         );
 
-
     return requestJSON<
         MusicSearchResponse<MusicAlbum>
     >(
-        `/search/album?q=${encodedQuery}`
+        `/search/album?q=${encodedQuery}&index=${index}&limit=${limit}`
     );
 }
 
-
 export async function searchPlaylists(
-    query: string
+    query: string,
+    index = 0,
+    limit = 10
 ): Promise<
     MusicSearchResponse<MusicPlaylist>
 > {
@@ -335,11 +455,10 @@ export async function searchPlaylists(
             query.trim()
         );
 
-
     return requestJSON<
         MusicSearchResponse<MusicPlaylist>
     >(
-        `/search/playlist?q=${encodedQuery}`
+        `/search/playlist?q=${encodedQuery}&index=${index}&limit=${limit}`
     );
 }
 
