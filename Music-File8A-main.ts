@@ -401,6 +401,8 @@ function initializeMusicPlayer(): void {
         lastMedia !==
             'radio';
 
+    let currentStationId =
+        audioStations[0]?.id ?? null;
 
     if (
         !shouldRestoreMusic
@@ -415,12 +417,6 @@ function initializeMusicPlayer(): void {
         );
 
     } else {
-
-        /*
-        * El contenido estático del panel no debe
-        * esperar a YouTube.
-        */
-        initializeStaticPanelContent();
 
         /*
         * restoreMusicPlayback() hará que
@@ -458,10 +454,6 @@ function initializeMusicPlayer(): void {
     /* --------------------------------------------------
        ESTACIONES
     -------------------------------------------------- */
-
-    let currentStationId =
-        audioStations[0]?.id ?? null;
-
 
     function closeStationMenu(): void {
 
@@ -939,7 +931,6 @@ const {
 
     localLibraryController =
         createLocalLibraryController({
-
             player,
 
             openPanel:
@@ -972,10 +963,14 @@ const {
 
         });
 
-const searchCategoryTabs =
-    player.querySelector<HTMLElement>(
-        '[data-music-search-tabs]'
-    );
+
+    initializeStaticPanelContent();
+
+
+    const searchCategoryTabs =
+        player.querySelector<HTMLElement>(
+            '[data-music-search-tabs]'
+        );
 
 if (
     !(searchCategoryTabs instanceof HTMLElement)
@@ -4407,37 +4402,99 @@ progressSeek.addEventListener(
    PLAY / PAUSE
 -------------------------------------------------- */
 
-playButton.addEventListener(
-    'click',
-    () => {
-
-        if (
-            activePlaybackSource ===
-            'youtube'
-        ) {
-
-            const state =
-                youtubePlayer.getState();
-
-            console.log(
-                '[MusicPlayer] YouTube toggle:',
-                state.status
-            );
+    playButton.addEventListener(
+        'click',
+        () => {
 
             if (
-                state.status ===
-                'playing'
+                activePlaybackSource ===
+                'youtube'
             ) {
 
-                playbackState.playbackIntent =
-                    'pause';
+                const state =
+                    youtubePlayer.getState();
 
-                youtubePlayer.pause();
+                console.log(
+                    '[MusicPlayer] YouTube toggle:',
+                    {
+                        status:
+                            state.status,
 
-                scheduleMusicPlaybackSave();
+                        playbackIntent:
+                            playbackState.playbackIntent,
+                    }
+                );
 
-            } else {
 
+                /*
+                * PLAYING
+                *
+                * La canción está reproduciéndose
+                * realmente, por lo que el clic debe
+                * solicitar PAUSE.
+                */
+                if (
+                    state.status ===
+                    'playing'
+                ) {
+
+                    playbackState.playbackIntent =
+                        'pause';
+
+                    youtubePlayer.pause();
+
+                    scheduleMusicPlaybackSave();
+
+                    return;
+                }
+
+
+                /*
+                * LOADING / BUFFERING
+                *
+                * En estos estados no debemos mirar
+                * solamente state.status.
+                *
+                * También debemos respetar la intención
+                * actual del reproductor.
+                *
+                * Ejemplo:
+                *
+                * loading + intent=play
+                *     → el usuario pulsa PAUSE
+                *
+                * buffering + intent=play
+                *     → el usuario pulsa PAUSE
+                */
+                if (
+                    (
+                        state.status ===
+                            'loading' ||
+                        state.status ===
+                            'buffering'
+                    ) &&
+                    playbackState.playbackIntent ===
+                        'play'
+                ) {
+
+                    playbackState.playbackIntent =
+                        'pause';
+
+                    youtubePlayer.pause();
+
+                    scheduleMusicPlaybackSave();
+
+                    return;
+                }
+
+
+                /*
+                * PAUSED / ENDED / LISTO / ERROR
+                *
+                * Cualquier estado que no esté
+                * reproduciendo ni tenga una reproducción
+                * pendiente debe solicitar PLAY.
+                */
                 playbackState.playbackIntent =
                     'play';
 
@@ -4446,21 +4503,21 @@ playButton.addEventListener(
                 scheduleMusicPlaybackSave();
             }
 
-            return;
-        }
+            else {
 
-        audioPlayer
-            .toggle()
-            .catch(
-                error => {
-                    console.error(
-                        '[MusicPlayer] Unable to toggle audio:',
-                        error
+                audioPlayer
+                    .toggle()
+                    .catch(
+                        error => {
+                            console.error(
+                                '[MusicPlayer] Unable to toggle audio:',
+                                error
+                            );
+                        }
                     );
-                }
-            );
-    }
-);
+            }
+        }
+    );
 
     /* --------------------------------------------------
        MUTE
