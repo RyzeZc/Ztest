@@ -145,6 +145,8 @@ export type PlaybackQueueAction =
 
 export interface PlaybackSelectionOptions {
     autoplay?: boolean;
+    startSeconds?: number;
+
     queueIndex?: number;
     queueAction?: PlaybackQueueAction;
 
@@ -203,7 +205,8 @@ export interface PlaybackYouTubeAdapter {
     play(): void;
 
     load(
-        videoId: string
+        videoId: string,
+        startSeconds?: number
     ): void;
 
     seekTo(
