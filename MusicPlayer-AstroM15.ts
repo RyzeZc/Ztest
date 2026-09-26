@@ -37,9 +37,6 @@ import LoadingSpinner
   </svg>
 
   <!-- Se mantienen porque MusicPlayer.ts los utiliza -->
-  <span class="music-player-label">
-    RADIO
-  </span>
 
   <span class="music-player-station">
     Z Rock & Pop
