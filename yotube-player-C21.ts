@@ -1291,10 +1291,47 @@ load(
 
     this.notify();
 
+    /*
+     * --------------------------------------------------
+     * YOUTUBE YA ESTÁ LISTO
+     * --------------------------------------------------
+     *
+     * Cargamos el vídeo inmediatamente pero
+     * SIN iniciar su reproducción.
+     *
+     * cueVideoById() es importante aquí porque
+     * loadVideoById() comenzaría la reproducción.
+     */
+    if (
+        this.player &&
+        this.state.ready &&
+        typeof this.player.cueVideoById ===
+            'function'
+    ) {
+
+        this.pendingVideoId =
+            null;
+
+        this.player.cueVideoById(
+            normalizedVideoId
+        );
+
+        return;
+    }
+
+    /*
+     * --------------------------------------------------
+     * YOUTUBE TODAVÍA NO ESTÁ LISTO
+     * --------------------------------------------------
+     *
+     * Guardamos el vídeo y dejamos que
+     * initialize() → onReady → applyPendingCommands()
+     * lo cargue posteriormente.
+     */
     this.pendingVideoId =
         normalizedVideoId;
 
-    void this.ensureInitialization()
+    void this.initialize()
         .catch(
             error => {
 
