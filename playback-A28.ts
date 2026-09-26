@@ -2525,6 +2525,8 @@ if (
 
         getState,
 
+        subscribe,
+
         setPlaybackIntent,
 
         toggleRepeat,
