@@ -403,53 +403,6 @@ function initializeMusicPlayer(): void {
     let currentStationId =
         audioStations[0]?.id ?? null;
 
-    if (
-        !shouldRestoreMusic
-    ) {
-
-        queueMicrotask(
-            () => {
-
-                initializeDefaultRadio();
-
-            }
-        );
-
-    } else {
-
-        /*
-        * restoreMusicPlayback() hará que
-        * YouTube se inicialice solo cuando
-        * realmente sea necesario.
-        */
-        void restoreMusicPlayback(
-            savedMusicSnapshot
-        )
-            .then(
-                restored => {
-
-                    if (
-                        restored
-                    ) {
-                        return;
-                    }
-
-                    initializeDefaultRadio();
-                }
-            )
-            .catch(
-                error => {
-
-                    console.warn(
-                        '[MusicPlayer] Previous music session could not be restored:',
-                        error
-                    );
-
-                    initializeDefaultRadio();
-                }
-            );
-    }
-
     /* --------------------------------------------------
        ESTACIONES
     -------------------------------------------------- */
@@ -1231,6 +1184,53 @@ const searchController:
 
     let isRestoringPlayback =
         false;
+
+    if (
+        !shouldRestoreMusic
+    ) {
+
+        queueMicrotask(
+            () => {
+
+                initializeDefaultRadio();
+
+            }
+        );
+
+    } else {
+
+        /*
+         * restoreMusicPlayback() hará que
+         * YouTube se inicialice solo cuando
+         * realmente sea necesario.
+         */
+        void restoreMusicPlayback(
+            savedMusicSnapshot
+        )
+            .then(
+                restored => {
+
+                    if (
+                        restored
+                    ) {
+                        return;
+                    }
+
+                    initializeDefaultRadio();
+                }
+            )
+            .catch(
+                error => {
+
+                    console.warn(
+                        '[MusicPlayer] Previous music session could not be restored:',
+                        error
+                    );
+
+                    initializeDefaultRadio();
+                }
+            );
+    }
 
     type MusicEntityWithEmbeddedTracks = {
         title?: string;
@@ -3140,8 +3140,6 @@ function initializeDefaultRadio():
 
 
     renderQueuePanel();
-
-    initializeStaticPanelContent();
 }
 
 
