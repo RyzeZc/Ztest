@@ -394,9 +394,6 @@ export function loadMusicPlaybackSnapshot():
                 parsed.playbackList
             ) ||
 
-            parsed.playbackList.length ===
-                0 ||
-
             !parsed.playbackList.every(
                 isMusicTrackSnapshot
             ) ||
@@ -405,10 +402,17 @@ export function loadMusicPlaybackSnapshot():
                 parsed.playbackListCurrentIndex
             ) ||
 
-            parsed.playbackListCurrentIndex < 0 ||
-
-            parsed.playbackListCurrentIndex >=
-                parsed.playbackList.length ||
+            (
+                parsed.playbackList.length ===
+                    0
+                    ? parsed.playbackListCurrentIndex !==
+                        -1
+                    : (
+                        parsed.playbackListCurrentIndex < 0 ||
+                        parsed.playbackListCurrentIndex >=
+                            parsed.playbackList.length
+                    )
+            ) ||                
 
             (
                 parsed.playbackListMode !==
