@@ -333,30 +333,8 @@ export function loadMusicPlaybackSnapshot():
 
 
         if (
-            !parsed ||
-            typeof parsed !==
-                'object'
-        ) {
-
-            return null;
-        }
-
-
-        const snapshot =
-            parsed as
-            Partial<MusicPlaybackSnapshot>;
-
-
-        if (
-            snapshot.version !==
-                1 ||
-            !snapshot.track ||
-            typeof snapshot.youtubeVideoId !==
-                'string' ||
-            snapshot.youtubeVideoId.length ===
-                0 ||
-            !Array.isArray(
-                snapshot.playbackList
+            !isRecord(
+                parsed
             )
         ) {
 
@@ -364,10 +342,234 @@ export function loadMusicPlaybackSnapshot():
         }
 
 
-        return (
-            snapshot as
-            MusicPlaybackSnapshot
-        );
+        if (
+            parsed.version !==
+                1 ||
+
+            !isFiniteNumber(
+                parsed.savedAt
+            ) ||
+
+            !isMusicTrackSnapshot(
+                parsed.track
+            ) ||
+
+            typeof parsed.youtubeVideoId !==
+                'string' ||
+
+            parsed.youtubeVideoId.trim().length ===
+                0 ||
+
+            !isFiniteNumber(
+                parsed.currentTime
+            ) ||
+
+            parsed.currentTime < 0 ||
+
+            (
+                parsed.duration !==
+                    undefined &&
+
+                (
+                    !isFiniteNumber(
+                        parsed.duration
+                    ) ||
+
+                    parsed.duration < 0
+                )
+            ) ||
+
+            !isFiniteNumber(
+                parsed.volume
+            ) ||
+
+            parsed.volume < 0 ||
+
+            parsed.volume > 1 ||
+
+            typeof parsed.muted !==
+                'boolean' ||
+
+            !Array.isArray(
+                parsed.playbackList
+            ) ||
+
+            parsed.playbackList.length ===
+                0 ||
+
+            !parsed.playbackList.every(
+                isMusicTrackSnapshot
+            ) ||
+
+            !Number.isInteger(
+                parsed.playbackListCurrentIndex
+            ) ||
+
+            parsed.playbackListCurrentIndex < 0 ||
+
+            parsed.playbackListCurrentIndex >=
+                parsed.playbackList.length ||
+
+            (
+                parsed.playbackListMode !==
+                    'queue' &&
+
+                parsed.playbackListMode !==
+                    'context'
+            ) ||
+
+            !(
+                parsed.playbackListSource ===
+                    null ||
+
+                parsed.playbackListSource ===
+                    'search-tracks-queue' ||
+
+                parsed.playbackListSource ===
+                    'search-all' ||
+
+                parsed.playbackListSource ===
+                    'search-artist' ||
+
+                parsed.playbackListSource ===
+                    'search-album' ||
+
+                parsed.playbackListSource ===
+                    'search-playlist' ||
+
+                parsed.playbackListSource ===
+                    'home-trending' ||
+
+                parsed.playbackListSource ===
+                    'home-album' ||
+
+                parsed.playbackListSource ===
+                    'home-playlist' ||
+
+                parsed.playbackListSource ===
+                    'home-genre' ||
+
+                parsed.playbackListSource ===
+                    'local-list'
+            ) ||
+
+            !(
+                parsed.playbackListNext ===
+                    null ||
+
+                typeof parsed.playbackListNext ===
+                    'string'
+            ) ||
+
+            !(
+                parsed.playbackListTotal ===
+                    null ||
+
+                (
+                    isFiniteNumber(
+                        parsed.playbackListTotal
+                    ) &&
+
+                    parsed.playbackListTotal >=
+                        0
+                )
+            ) ||
+
+            typeof parsed.youtubeRepeat !==
+                'boolean' ||
+
+            typeof parsed.youtubeShuffle !==
+                'boolean' ||
+
+            !Array.isArray(
+                parsed.youtubeShuffleHistory
+            ) ||
+
+            !parsed.youtubeShuffleHistory.every(
+                Number.isInteger
+            ) ||
+
+            !parsed.youtubeShuffleHistory.every(
+                index =>
+                    index >= 0 &&
+                    index <
+                        parsed.playbackList.length
+            ) ||
+
+            !Number.isInteger(
+                parsed.youtubeShuffleHistoryPosition
+            ) ||
+
+            parsed.youtubeShuffleHistoryPosition <
+                -1 ||
+
+            parsed.youtubeShuffleHistoryPosition >=
+                parsed.youtubeShuffleHistory.length
+        ) {
+
+            return null;
+        }
+
+
+        return {
+            version:
+                1,
+
+            savedAt:
+                parsed.savedAt,
+
+            track:
+                parsed.track,
+
+            youtubeVideoId:
+                parsed.youtubeVideoId.trim(),
+
+            currentTime:
+                parsed.currentTime,
+
+            ...(parsed.duration !== undefined
+                ? {
+                    duration:
+                        parsed.duration,
+                }
+                : {}),
+
+            volume:
+                parsed.volume,
+
+            muted:
+                parsed.muted,
+
+            playbackList:
+                parsed.playbackList,
+
+            playbackListCurrentIndex:
+                parsed.playbackListCurrentIndex,
+
+            playbackListMode:
+                parsed.playbackListMode,
+
+            playbackListSource:
+                parsed.playbackListSource,
+
+            playbackListNext:
+                parsed.playbackListNext,
+
+            playbackListTotal:
+                parsed.playbackListTotal,
+
+            youtubeRepeat:
+                parsed.youtubeRepeat,
+
+            youtubeShuffle:
+                parsed.youtubeShuffle,
+
+            youtubeShuffleHistory:
+                parsed.youtubeShuffleHistory,
+
+            youtubeShuffleHistoryPosition:
+                parsed.youtubeShuffleHistoryPosition,
+        };
 
     } catch (
         error
