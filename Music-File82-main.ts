@@ -1399,9 +1399,6 @@ function getMusicPlaybackSnapshot():
         muted:
             youtubeState.muted,
 
-        playbackIntent:
-            playbackState.playbackIntent,
-
         playbackList:
             [
                 ...playbackState.playbackList,
