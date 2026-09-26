@@ -9,7 +9,6 @@ import {
 
 import {
     createPlaybackController,
-    createPlaybackState,
     hasResolveInFlight,
     isPlaybackPanelSource,
     primeResolvedYouTubeTracks,
@@ -758,20 +757,6 @@ function selectStation(
         'radio' | 'youtube' =
         'radio';
 
-
-    /*
-    * --------------------------------------------------
-    * ESTADO DE REPRODUCCIÓN
-    * --------------------------------------------------
-    *
-    * Debe existir antes de crear controladores que
-    * pueden ejecutar callbacks durante su inicialización.
-    */
-
-    const playbackState =
-        createPlaybackState();
-
-
     interface PlaybackContextInfo {
 
         key:
@@ -890,6 +875,12 @@ const {
 });
 
 const {
+    getState,
+    setPlaybackIntent,
+    toggleRepeat,
+    toggleShuffle,
+    restoreSessionState,
+
     selectMusicTrack,
     playMusicQueueTrack,
     playNextMusicQueueTrack,
@@ -898,12 +889,11 @@ const {
     restoreParkedPlaybackContext,
 } = createPlaybackController({
 
-        state:
-            playbackState,
+        youtubePlayer:
+            youtubePlayer,
 
-        youtubePlayer,
-
-        audioPlayer,
+        audioPlayer:
+            audioPlayer,
 
         getActivePlaybackSource:
             () =>
@@ -928,6 +918,9 @@ const {
 
         activatePanelTab,
     });
+
+    const playbackState =
+    getState();
 
     localLibraryController =
         createLocalLibraryController({
@@ -1604,43 +1597,48 @@ async function restoreMusicPlayback(
             return false;
         }        
 
-        /*
-         * Nos aseguramos de conservar
-         * exactamente el índice que tenía
-         * la sesión guardada.
-         */
-        if (
-            snapshot.playbackListCurrentIndex >=
-                0 &&
-            snapshot.playbackListCurrentIndex <
-                playbackState.playbackList.length
-        ) {
-
-            playbackState.playbackListCurrentIndex =
-                snapshot.playbackListCurrentIndex;
-        }
+        const restoredPlaybackListCurrentIndex =
+            snapshot.playbackList.length >
+                0
+                ? snapshot.playbackListCurrentIndex
+                : 0;
 
 
-        /*
-         * Estado de Repeat / Shuffle.
-         */
-        playbackState.youtubeRepeat =
-            snapshot.youtubeRepeat;
+        restoreSessionState({
+            playbackList:
+                [
+                    ...playbackList,
+                ],
 
+            playbackListCurrentIndex:
+                restoredPlaybackListCurrentIndex,
 
-        playbackState.youtubeShuffle =
-            snapshot.youtubeShuffle;
+            playbackListMode:
+                snapshot.playbackListMode,
 
+            playbackListSource:
+                snapshot.playbackListSource,
 
-        playbackState.youtubeShuffleHistory =
-            [
-                ...snapshot.youtubeShuffleHistory,
-            ];
+            playbackListNext:
+                snapshot.playbackListNext,
 
+            playbackListTotal:
+                snapshot.playbackListTotal,
 
-        playbackState.youtubeShuffleHistoryPosition =
-            snapshot.youtubeShuffleHistoryPosition;
+            youtubeRepeat:
+                snapshot.youtubeRepeat,
 
+            youtubeShuffle:
+                snapshot.youtubeShuffle,
+
+            youtubeShuffleHistory:
+                [
+                    ...snapshot.youtubeShuffleHistory,
+                ],
+
+            youtubeShuffleHistoryPosition:
+                snapshot.youtubeShuffleHistoryPosition,
+        });        
 
         /*
          * Restauramos volumen y mute.
@@ -4012,70 +4010,69 @@ repeatButton.addEventListener(
             return;
         }
 
-        playbackState.youtubeRepeat =
-            !playbackState.youtubeRepeat;
+
+        const repeatEnabled =
+            toggleRepeat();
+
 
         repeatButton.setAttribute(
             'aria-pressed',
-            String(playbackState.youtubeRepeat)
+            String(
+                repeatEnabled
+            )
         );
+
 
         repeatButton.classList.toggle(
             'is-active',
-            playbackState.youtubeRepeat
+            repeatEnabled
         );
+
 
         console.log(
             '[MusicPlayer] YouTube repeat:',
-            playbackState.youtubeRepeat
+            repeatEnabled
         );
     }
 );
 
-shuffleButton.addEventListener('click', () => {
-    if (activePlaybackSource !== 'youtube') return;
-
-    playbackState.youtubeShuffle = !playbackState.youtubeShuffle;
-
-    if (playbackState.youtubeShuffle) {
-        playbackState.youtubeShuffleHistory = [];
+shuffleButton.addEventListener(
+    'click',
+    () => {
 
         if (
-            playbackState.playbackListCurrentIndex >= 0
+            activePlaybackSource !==
+            'youtube'
         ) {
-            playbackState.youtubeShuffleHistory.push(
-                playbackState.playbackListCurrentIndex
-            );
+            return;
         }
 
-        playbackState.youtubeShuffleHistoryPosition =
-            playbackState.youtubeShuffleHistory.length - 1;
 
-        console.log(
-            '[MusicPlayer] Shuffle history reset:',
-            playbackState.youtubeShuffleHistory
+        const shuffleEnabled =
+            toggleShuffle();
+
+
+        shuffleButton.setAttribute(
+            'aria-pressed',
+            String(
+                shuffleEnabled
+            )
         );
 
-    } else {
-        playbackState.youtubeShuffleHistory = [];
-        playbackState.youtubeShuffleHistoryPosition = -1;
+
+        shuffleButton.classList.toggle(
+            'is-active',
+            shuffleEnabled
+        );
+
+
+        console.log(
+            '[MusicPlayer] YouTube shuffle:',
+            shuffleEnabled
+        );
     }
+);
 
-    shuffleButton.setAttribute(
-        'aria-pressed',
-        String(playbackState.youtubeShuffle)
-    );
-
-    shuffleButton.classList.toggle(
-        'is-active',
-        playbackState.youtubeShuffle
-    );
-
-    console.log(
-        '[MusicPlayer] YouTube shuffle:',
-        playbackState.youtubeShuffle
-    );
-});
     audioPlayer.subscribe(
         updateUI
     );
@@ -4465,8 +4462,9 @@ progressSeek.addEventListener(
                     'playing'
                 ) {
 
-                    playbackState.playbackIntent =
-                        'pause';
+                    setPlaybackIntent(
+                        'pause'
+                    );
 
                     youtubePlayer.pause();
 
@@ -4504,8 +4502,9 @@ progressSeek.addEventListener(
                         'play'
                 ) {
 
-                    playbackState.playbackIntent =
-                        'pause';
+                    setPlaybackIntent(
+                        'pause'
+                    );
 
                     youtubePlayer.pause();
 
@@ -4522,8 +4521,9 @@ progressSeek.addEventListener(
                 * reproduciendo ni tenga una reproducción
                 * pendiente debe solicitar PLAY.
                 */
-                playbackState.playbackIntent =
-                    'play';
+                setPlaybackIntent(
+                    'play'
+                );
 
                 youtubePlayer.play();
 
