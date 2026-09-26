@@ -1357,6 +1357,9 @@ function getMusicPlaybackSnapshot():
     const currentTime =
         youtubePlayer.getCurrentTime();
 
+    const duration =
+        youtubePlayer.getDuration();        
+
     if (
         !Number.isFinite(
             currentTime
@@ -1383,6 +1386,12 @@ function getMusicPlaybackSnapshot():
                 0,
                 currentTime
             ),
+
+        duration:
+            Number.isFinite(duration) &&
+            duration > 0
+                ? duration
+                : undefined,            
 
         volume:
             youtubeState.volume,
@@ -1523,10 +1532,40 @@ async function restoreMusicPlayback(
                 ];
 
 
+
+        let targetTime =
+            Math.max(
+                0,
+                snapshot.currentTime
+            );
+
+        const savedDuration =
+            snapshot.duration;
+
+        if (
+            typeof savedDuration === 'number' &&
+            Number.isFinite(savedDuration) &&
+            savedDuration > 0
+        ) {
+            if (
+                targetTime >=
+                savedDuration - 2
+            ) {
+                targetTime =
+                    0;
+
+            } else {
+                targetTime =
+                    Math.min(
+                        targetTime,
+                        savedDuration
+                    );
+            }
+        }
+                        
         await selectMusicTrack(
             snapshot.track,
             {
-
                 queueAction:
                     'clear',
 
@@ -1544,15 +1583,11 @@ async function restoreMusicPlayback(
                 playbackListTotal:
                     snapshot.playbackListTotal,
 
-                /*
-                 * Restaurar estado NO significa
-                 * forzar autoplay.
-                 *
-                 * El usuario pulsa Play para continuar.
-                 */
                 autoplay:
                     false,
 
+                startSeconds:
+                    targetTime,
             }
         );
 
@@ -1568,7 +1603,7 @@ async function restoreMusicPlayback(
 
             return false;
         }
-        
+
         if (
             youtubePlayer.getState().status ===
             'error'
@@ -1626,54 +1661,6 @@ async function restoreMusicPlayback(
 
         youtubePlayer.setMuted(
             snapshot.muted
-        );
-
-        /*
-        * Restauramos la posición.
-
-        * YouTubePlayer se encarga de hacerlo
-        * de forma segura incluso si el vídeo
-        * todavía está en estado CUED / loading.
-        */
-        let targetTime =
-            Math.max(
-                0,
-                snapshot.currentTime
-            );
-
-        const duration =
-            youtubePlayer.getDuration();
-
-        if (
-            Number.isFinite(
-                duration
-            ) &&
-            duration > 0
-        ) {
-
-            /*
-            * Si la canción ya estaba prácticamente
-            * terminada, empezará de nuevo desde 0
-            * cuando el usuario pulse Play.
-            */
-            if (
-                targetTime >=
-                duration - 2
-            ) {
-
-                targetTime =
-                    0;
-            }
-
-            targetTime =
-                Math.min(
-                    targetTime,
-                    duration
-                );
-        }
-
-        youtubePlayer.seekTo(
-            targetTime
         );
 
         updateUI();
