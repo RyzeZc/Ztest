@@ -35,6 +35,14 @@ interface YouTubePlayerInstance {
     ):
         void;
 
+    cueVideoById(
+        videoId:
+            string,
+        startSeconds?:
+            number
+    ):
+        void;       
+
     playVideo():
         void;
 
@@ -49,6 +57,9 @@ interface YouTubePlayerInstance {
 
     getDuration():
         number;
+
+    getPlayerState():
+        number;        
 
     seekTo(
         seconds:
@@ -128,7 +139,7 @@ interface YouTubePlayerConstructor {
                                     data:
                                         number;
                                 }
-                        ) => void;
+                        ) => void;                    
 
                     onError?:
                         (
@@ -138,6 +149,9 @@ interface YouTubePlayerConstructor {
                                         number;
                                 }
                         ) => void;
+
+                    onAutoplayBlocked?:
+                        () => void;                        
                 };
             }
     ):
@@ -662,6 +676,20 @@ export class YouTubePlayer {
         null =
         null;
 
+    private pendingVideoStartSeconds:
+        number |
+        null =
+        null;        
+
+    private pendingPlayVideoId:
+        string |
+        null =
+        null;
+
+    private cuedStartTime:
+        number |
+        null =
+        null;
 
     private pendingVolume:
         number |
@@ -989,6 +1017,15 @@ export class YouTubePlayer {
 
                                                             case YT.PlayerState.PLAYING:
 
+                                                                this.cuedStartTime =
+                                                                    null;
+
+                                                                this.pendingPlaybackAction =
+                                                                    null;
+
+                                                                this.pendingPlayVideoId =
+                                                                    null;
+
                                                                 this.state.status =
                                                                     'playing';
 
@@ -1005,6 +1042,15 @@ export class YouTubePlayer {
 
                                                             case YT.PlayerState.PAUSED:
 
+                                                                this.cuedStartTime =
+                                                                    null;
+
+                                                                this.pendingPlaybackAction =
+                                                                    null;
+
+                                                                this.pendingPlayVideoId =
+                                                                    null;
+
                                                                 this.state.status =
                                                                     'paused';
 
@@ -1012,6 +1058,15 @@ export class YouTubePlayer {
 
 
                                                             case YT.PlayerState.ENDED:
+
+                                                                this.cuedStartTime =
+                                                                    null;
+
+                                                                this.pendingPlaybackAction =
+                                                                    null;
+
+                                                                this.pendingPlayVideoId =
+                                                                    null;
 
                                                                 this.state.status =
                                                                     'ended';
@@ -1021,17 +1076,86 @@ export class YouTubePlayer {
 
                                                             case YT.PlayerState.CUED:
 
+                                                                /*
+                                                                * Si había un seek pendiente porque
+                                                                * el cue anterior todavía no estaba
+                                                                * listo, volvemos a cuear el mismo
+                                                                * vídeo usando startSeconds.
+                                                                *
+                                                                * NO usamos seekTo() aquí porque
+                                                                * YouTube documenta que seekTo()
+                                                                * desde CUED puede iniciar
+                                                                * reproducción.
+                                                                */
+                                                                if (
+                                                                    this.pendingSeek !==
+                                                                    null &&
+                                                                    this.state.videoId
+                                                                ) {
+
+                                                                    const targetTime =
+                                                                        Math.max(
+                                                                            0,
+                                                                            this.pendingSeek
+                                                                        );
+
+                                                                    this.pendingSeek =
+                                                                        null;
+
+                                                                    this.cuedStartTime =
+                                                                        targetTime;
+
+                                                                    this.state.status =
+                                                                        'loading';
+
+                                                                    player.cueVideoById(
+                                                                        this.state.videoId,
+                                                                        targetTime
+                                                                    );
+
+                                                                    this.notify();
+
+                                                                    return;
+                                                                }
+
+
                                                                 this.state.status =
                                                                     'paused';
+
+                                                                /*
+                                                                * Aquí es donde finalmente
+                                                                * convertimos "quiero reproducir"
+                                                                * en playVideo().
+                                                                */
+                                                                if (
+                                                                    this.pendingPlaybackAction ===
+                                                                        'play' &&
+                                                                    this.pendingPlayVideoId ===
+                                                                        this.state.videoId
+                                                                ) {
+
+                                                                    this.pendingPlaybackAction =
+                                                                        null;
+
+                                                                    this.pendingPlayVideoId =
+                                                                        null;
+
+                                                                    this.state.status =
+                                                                        'buffering';
+
+                                                                    player.playVideo();
+
+                                                                    this.notify();
+
+                                                                    return;
+                                                                }
 
                                                                 break;
 
 
                                                             default:
-
                                                                 break;
                                                         }
-
 
                                                         this.notify();
                                                     },
@@ -1064,6 +1188,24 @@ export class YouTubePlayer {
                                                             );
                                                         }
                                                     },
+                                                onAutoplayBlocked:
+                                                    () => {
+
+                                                        console.warn(
+                                                            '[YouTubePlayer] Playback was blocked by the browser.'
+                                                        );
+
+                                                        this.pendingPlaybackAction =
+                                                            null;
+
+                                                        this.pendingPlayVideoId =
+                                                            null;
+
+                                                        this.state.status =
+                                                            'paused';
+
+                                                        this.notify();
+                                                    },                                                
                                             },
 
                                         }
@@ -1115,20 +1257,17 @@ export class YouTubePlayer {
         }
     }
 
-
-    private ensureInitialization():
-        Promise<void> {
-
-        return this.initialize();
-    }
-
-
     private applyPendingCommands(
         player:
             YouTubePlayerInstance
     ):
         void {
 
+        /*
+        * ---------------------------------------------
+        * VOLUME
+        * ---------------------------------------------
+        */
         if (
             this.pendingVolume !==
             null
@@ -1138,17 +1277,20 @@ export class YouTubePlayer {
                 this.pendingVolume
             );
 
-
             this.state.volume =
                 this.pendingVolume /
                 100;
-
 
             this.pendingVolume =
                 null;
         }
 
 
+        /*
+        * ---------------------------------------------
+        * MUTE
+        * ---------------------------------------------
+        */
         if (
             this.pendingMuted !==
             null
@@ -1165,86 +1307,137 @@ export class YouTubePlayer {
                 player.unMute();
             }
 
-
             this.state.muted =
                 this.pendingMuted;
-
 
             this.pendingMuted =
                 null;
         }
 
 
+        /*
+        * ---------------------------------------------
+        * VIDEO PENDIENTE
+        * ---------------------------------------------
+        *
+        * Nunca llamamos PLAY inmediatamente después
+        * de cueVideoById().
+        *
+        * Si existe un seek pendiente, aprovechamos
+        * startSeconds al hacer el cue.
+        */
         if (
             this.pendingVideoId
         ) {
-
-            player.loadVideoById(
-                this.pendingVideoId
-            );
-
-
-            this.state.videoId =
+            const videoId =
                 this.pendingVideoId;
 
+            /*
+            * Si existe un seek manual pendiente,
+            * tiene prioridad sobre la posición
+            * inicial de la carga.
+            *
+            * Esto permite que un usuario haga seek
+            * mientras el vídeo todavía está cargando.
+            */
+            const startSeconds =
+                this.pendingSeek !== null
+                    ? Math.max(
+                        0,
+                        this.pendingSeek
+                    )
+                    : this.pendingVideoStartSeconds !== null
+                        ? Math.max(
+                            0,
+                            this.pendingVideoStartSeconds
+                        )
+                        : 0;
+
+            this.pendingVideoId =
+                null;
+
+            this.pendingSeek =
+                null;
+
+            this.pendingVideoStartSeconds =
+                null;
+
+            this.state.videoId =
+                videoId;
+
+            this.cuedStartTime =
+                startSeconds;
+
+            player.cueVideoById(
+                videoId,
+                startSeconds
+            );
 
             this.state.status =
                 'loading';
 
-
-            this.pendingVideoId =
-                null;
-        }
-
-
-        if (
-            this.pendingSeek !==
-            null
-        ) {
-
-            const duration =
-                player.getDuration();
-
-
+            /*
+            * El PLAY pendiente se conserva.
+            *
+            * onStateChange(CUED) será quien
+            * decida cuándo ejecutarlo.
+            *
+            * pause/stop no necesitan ejecutarse
+            * sobre un vídeo que acaba de ser
+            * preparado y todavía está pausado.
+            */
             if (
-                Number.isFinite(
-                    duration
-                ) &&
-                duration > 0
+                this.pendingPlaybackAction !==
+                'play'
             ) {
 
-                player.seekTo(
-                    Math.min(
-                        duration,
-                        Math.max(
-                            0,
-                            this.pendingSeek
-                        )
-                    ),
-                    true
-                );
+                this.pendingPlaybackAction =
+                    null;
 
-
-                this.pendingSeek =
+                this.pendingPlayVideoId =
                     null;
             }
+
+            this.notify();
+
+            return;
         }
 
 
+        /*
+        * ---------------------------------------------
+        * PLAY / PAUSE / STOP PENDIENTE
+        * ---------------------------------------------
+        *
+        * Solo llegamos aquí cuando no existe
+        * un vídeo pendiente de ser cued.
+        */
         if (
             this.pendingPlaybackAction ===
             'play'
         ) {
 
-            player.playVideo();
+            this.pendingPlaybackAction =
+                null;
+
+            this.pendingPlayVideoId =
+                this.state.videoId;
 
             this.state.status =
-                'playing';
+                'buffering';
+
+            player.playVideo();
 
         } else if (
             this.pendingPlaybackAction ===
             'pause'
         ) {
+
+            this.pendingPlaybackAction =
+                null;
+
+            this.pendingPlayVideoId =
+                null;
 
             player.pauseVideo();
 
@@ -1256,15 +1449,17 @@ export class YouTubePlayer {
             'stop'
         ) {
 
+            this.pendingPlaybackAction =
+                null;
+
+            this.pendingPlayVideoId =
+                null;
+
             player.stopVideo();
 
             this.state.status =
                 'paused';
         }
-
-
-        this.pendingPlaybackAction =
-            null;
     }
 
 
@@ -1274,13 +1469,26 @@ export class YouTubePlayer {
 
     load(
         videoId:
-            string
+            string,
+        startSeconds?:
+            number
     ):
         void {
 
         const normalizedVideoId =
             videoId.trim();
 
+        const normalizedStartSeconds =
+            typeof startSeconds ===
+                'number' &&
+            Number.isFinite(
+                startSeconds
+            )
+                ? Math.max(
+                    0,
+                    startSeconds
+                )
+                : 0;
 
         if (
             normalizedVideoId.length ===
@@ -1290,8 +1498,34 @@ export class YouTubePlayer {
         }
 
 
+        /*
+        * Una nueva canción cancela cualquier
+        * intención de PLAY anterior.
+        */
+        this.pendingPlaybackAction =
+            null;
+
+        this.pendingPlayVideoId =
+            null;
+
+        /*
+        * Una nueva carga comienza con una
+        * nueva posición inicial.
+        *
+        * El seek manual pendiente anterior
+        * ya no pertenece a esta canción.
+        */
+        this.pendingSeek =
+            null;
+
+        this.pendingVideoStartSeconds =
+            normalizedStartSeconds;
+
         this.state.videoId =
             normalizedVideoId;
+
+        this.cuedStartTime =
+            normalizedStartSeconds;
 
         this.state.status =
             'loading';
@@ -1299,25 +1533,58 @@ export class YouTubePlayer {
         this.notify();
 
 
+        /*
+        * PLAYER YA LISTO
+        */
+        if (
+            this.player &&
+            this.state.ready
+        ) {
+            /*
+            * El player ya está listo.
+            *
+            * cueVideoById() prepara el vídeo
+            * sin iniciar la reproducción.
+            */
+            this.pendingVideoStartSeconds =
+                null;
+
+            this.player.cueVideoById(
+                normalizedVideoId,
+                normalizedStartSeconds
+            );
+
+            return;
+        }
+
+        /*
+        * PLAYER TODAVÍA NO LISTO
+        */
         this.pendingVideoId =
             normalizedVideoId;
 
+        this.pendingVideoStartSeconds =
+            normalizedStartSeconds;
 
-        /*
-         * Lazy initialization.
-         *
-         * Cargar una canción es el punto en
-         * que realmente necesitamos YouTube.
-         */
-        void this.ensureInitialization()
+        void this.initialize()
             .catch(
                 error => {
-
                     this.state.status =
                         'error';
 
-                    this.notify();
+                    this.pendingVideoId =
+                        null;
 
+                    this.pendingVideoStartSeconds =
+                        null;
+
+                    this.pendingPlaybackAction =
+                        null;
+
+                    this.pendingPlayVideoId =
+                        null;                    
+
+                    this.notify();
 
                     console.error(
                         '[YouTubePlayer] Unable to initialize player:',
@@ -1327,7 +1594,6 @@ export class YouTubePlayer {
             );
     }
 
-
     /* ========================================================
        PLAY
        ======================================================== */
@@ -1335,68 +1601,90 @@ export class YouTubePlayer {
     play():
         void {
 
-        this.pendingPlaybackAction =
-            'play';
-
-
-        /*
-         * Si ya está listo ejecutamos
-         * inmediatamente.
-         */
-        if (
-            this.player &&
-            this.state.ready &&
-            typeof this.player.playVideo ===
-                'function'
-        ) {
-
-            this.player.playVideo();
-
-            this.state.status =
-                'playing';
-
-            this.notify();
-
-            return;
-        }
-
-
-        /*
-         * Si todavía no existe un vídeo,
-         * no intentamos inicializar YouTube
-         * innecesariamente.
-         */
         if (
             !this.state.videoId &&
             !this.pendingVideoId
         ) {
 
-            this.pendingPlaybackAction =
-                null;
+            return;
+        }
+
+
+        this.pendingPlaybackAction =
+            'play';
+
+
+        /*
+        * Si todavía no existe el iframe,
+        * esperamos a initialize().
+        */
+        if (
+            !this.player ||
+            !this.state.ready
+        ) {
+
+            this.pendingPlayVideoId =
+                this.state.videoId ??
+                this.pendingVideoId;
+
+            void this.initialize()
+                .catch(
+                    error => {
+
+                        this.pendingPlaybackAction =
+                            null;
+
+                        this.pendingPlayVideoId =
+                            null;
+
+                        this.state.status =
+                            'error';
+
+                        this.notify();
+
+                        console.error(
+                            '[YouTubePlayer] Unable to initialize player:',
+                            error
+                        );
+                    }
+                );
 
             return;
         }
 
 
-        void this.ensureInitialization()
-            .catch(
-                error => {
+        /*
+        * La canción está siendo preparada.
+        *
+        * Esperamos CUED.
+        */
+        if (
+            this.state.status ===
+            'loading'
+        ) {
 
-                    this.pendingPlaybackAction =
-                        null;
+            this.pendingPlayVideoId =
+                this.state.videoId;
 
-                    this.state.status =
-                        'error';
-
-                    this.notify();
+            return;
+        }
 
 
-                    console.error(
-                        '[YouTubePlayer] Unable to initialize player:',
-                        error
-                    );
-                }
-            );
+        /*
+        * El vídeo ya está disponible.
+        */
+        this.pendingPlaybackAction =
+            null;
+
+        this.pendingPlayVideoId =
+            null;
+
+        this.state.status =
+            'buffering';
+
+        this.notify();
+
+        this.player.playVideo();
     }
 
 
@@ -1406,6 +1694,12 @@ export class YouTubePlayer {
 
     pause():
         void {
+
+        this.pendingPlaybackAction =
+            null;
+
+        this.pendingPlayVideoId =
+            null;
 
         /*
          * IMPORTANTE:
@@ -1514,19 +1808,36 @@ export class YouTubePlayer {
 
         if (
             this.player &&
-            this.state.ready &&
-            typeof this.player.getCurrentTime ===
-                'function'
+            this.state.ready
         ) {
+
+            const playerState =
+                this.player.getPlayerState();
+
+            if (
+                (
+                    playerState ===
+                        YT.PlayerState.CUED ||
+                    playerState ===
+                        YT.PlayerState.UNSTARTED
+                ) &&
+                this.cuedStartTime !==
+                    null
+            ) {
+
+                return this.cuedStartTime;
+            }
 
             return this.player.getCurrentTime();
         }
 
 
-        return this.pendingSeek ??
-            0;
+        return (
+            this.pendingSeek ??
+            this.cuedStartTime ??
+            0
+        );
     }
-
 
     getDuration():
         number {
@@ -1568,13 +1879,15 @@ export class YouTubePlayer {
             );
 
 
+        /*
+        * YouTube todavía no está preparado
+        * o estamos en medio de una nueva carga.
+        */
         if (
             !this.player ||
             !this.state.ready ||
-            typeof this.player.getDuration !==
-                'function' ||
-            typeof this.player.seekTo !==
-                'function'
+            this.state.status ===
+                'loading'
         ) {
 
             this.pendingSeek =
@@ -1584,31 +1897,71 @@ export class YouTubePlayer {
         }
 
 
-        const duration =
-            this.player.getDuration();
+        const playerState =
+            this.player.getPlayerState();
 
 
+        /*
+        * CUED / UNSTARTED / ENDED
+        *
+        * NO usamos seekTo().
+        *
+        * Volvemos a cuear el vídeo con
+        * startSeconds para mantenerlo pausado.
+        */
         if (
-            !Number.isFinite(
-                duration
-            ) ||
-            duration <= 0
+            playerState ===
+                YT.PlayerState.CUED ||
+            playerState ===
+                YT.PlayerState.UNSTARTED ||
+            playerState ===
+                YT.PlayerState.ENDED
         ) {
 
-            this.pendingSeek =
+            if (
+                !this.state.videoId
+            ) {
+
+                this.pendingSeek =
+                    safeSeconds;
+
+                return;
+            }
+
+            this.cuedStartTime =
                 safeSeconds;
+
+            this.state.status =
+                'loading';
+
+            this.player.cueVideoById(
+                this.state.videoId,
+                safeSeconds
+            );
+
+            this.notify();
 
             return;
         }
 
 
+        /*
+        * PAUSED / PLAYING / BUFFERING
+        *
+        * Aquí sí usamos seekTo().
+        *
+        * Si ya está pausado, YouTube mantiene
+        * el estado pausado.
+        */
         this.player.seekTo(
-            Math.min(
-                duration,
-                safeSeconds
-            ),
+            safeSeconds,
             true
         );
+
+        this.cuedStartTime =
+            null;
+
+        this.notify();
     }
 
 
@@ -1770,11 +2123,20 @@ export class YouTubePlayer {
         this.pendingSeek =
             null;
 
+        this.pendingVideoStartSeconds =
+            null;
+
         this.pendingVolume =
             null;
 
         this.pendingMuted =
             null;
+
+        this.pendingPlayVideoId =
+            null;
+
+        this.cuedStartTime =
+            null;            
 
 
         this.state = {
