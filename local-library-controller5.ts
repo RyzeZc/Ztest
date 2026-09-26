@@ -233,6 +233,12 @@ export function createLocalLibraryController(
         LocalLibraryTrack[] =
         [];
 
+    let savedTrackIds =
+        new Set<number>();
+
+    let savedTrackIdsLoaded =
+        false;
+
     let renderRequestId =
         0;
 
@@ -336,21 +342,40 @@ export function createLocalLibraryController(
      * ==================================================
      */
 
-function setSaveButtonIcon(): void {
+function setSaveButtonIcon(
+    saved:
+        boolean
+):
+    void {
 
     localSaveButton.innerHTML =
-        `
-            <svg class="music-player-local-save-icon" viewBox="0 0 16 16" aria-hidden="true">
-                <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8"></path>
-                <path d="M11.75 8a.75.75 0 0 1-.75.75H8.75V11a.75.75 0 0 1-1.5 0V8.75H5a.75.75 0 0 1 0-1.5h2.25V5a.75.75 0 0 1 1.5 0v2.25H11a.75.75 0 0 1 .75.75"></path>
-            </svg>
-
-        `;
+        saved
+            ? `
+                <svg
+                    class="music-player-local-save-icon"
+                    viewBox="0 0 16 16"
+                    aria-hidden="true"
+                >
+                    <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m11.748-1.97a.75.75 0 0 0-1.06-1.06l-4.47 4.47-1.405-1.406a.75.75 0 1 0-1.061 1.06l2.466 2.467 5.53-5.53z"></path>
+                </svg>
+            `
+            : `
+                <svg
+                    class="music-player-local-save-icon"
+                    viewBox="0 0 16 16"
+                    aria-hidden="true"
+                >
+                    <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8"></path>
+                    <path d="M11.75 8a.75.75 0 0 1-.75.75H8.75V11a.75.75 0 0 1-1.5 0V8.75H5a.75.75 0 0 1 0-1.5h2.25V5a.75.75 0 0 1 1.5 0v2.25H11a.75.75 0 0 1 .75.75"></path>
+                </svg>
+            `;
 }
 
 function setSaveButtonState(
-    saved: boolean
-): void {
+    saved:
+        boolean
+):
+    void {
 
     localSaveButton.classList.toggle(
         'is-saved',
@@ -369,7 +394,9 @@ function setSaveButtonState(
             : 'Guardar en Mi Música'
     );
 
-    setSaveButtonIcon();
+    setSaveButtonIcon(
+        saved
+    );
 }
 
 
@@ -1371,11 +1398,21 @@ async function refreshSavedTrackIds():
                 return;
             }
 
-
             localLibraryTracks =
                 tracks;
 
             localLibraryLoaded =
+                true;
+
+            savedTrackIds =
+                new Set(
+                    tracks.map(
+                        track =>
+                            track.id
+                    )
+                );
+
+            savedTrackIdsLoaded =
                 true;
 
             localLibraryName.textContent =
@@ -2188,6 +2225,8 @@ async function refreshSavedTrackIds():
         updateSavedTrackIndicators();
     }
 
+
+    void refreshSavedTrackIds();
 
     return {
 
