@@ -1516,7 +1516,7 @@ if (
                 ) {
 
                     console.log(
-                        '[MusicPlayer] YouTube playback started:',
+                        '[MusicPlayer] YouTube playback requested:',
                         {
                             deezerId:
                                 track.id,
