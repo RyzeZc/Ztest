@@ -609,9 +609,6 @@ export function getNextShuffleIndex(
 
 interface PlaybackControllerOptions {
 
-    state:
-        PlaybackState;
-
     youtubePlayer:
         PlaybackYouTubeAdapter;
 
@@ -653,10 +650,13 @@ interface PlaybackControllerOptions {
 export function createPlaybackController(
     options:
         PlaybackControllerOptions
-): PlaybackController {
+):
+    PlaybackController {
+
+    const state =
+        createPlaybackState();
 
     const {
-        state,
         youtubePlayer,
         audioPlayer,
         getActivePlaybackSource,
@@ -669,6 +669,77 @@ export function createPlaybackController(
         activatePanelTab,
     } = options;
 
+    const playbackStateView:
+        PlaybackStateView = {
+
+        get playbackList() {
+            return state.playbackList;
+        },
+
+        get playbackListCurrentIndex() {
+            return state.playbackListCurrentIndex;
+        },
+
+        get playbackListMode() {
+            return state.playbackListMode;
+        },
+
+        get playbackListSource() {
+            return state.playbackListSource;
+        },
+
+        get playbackListNext() {
+            return state.playbackListNext;
+        },
+
+        get playbackListTotal() {
+            return state.playbackListTotal;
+        },
+
+        get playbackListLoadingMore() {
+            return state.playbackListLoadingMore;
+        },
+
+        get parkedPlaybackContext() {
+            return state.parkedPlaybackContext;
+        },
+
+        get currentMusicTrack() {
+            return state.currentMusicTrack;
+        },
+
+        get currentYouTubeVideoId() {
+            return state.currentYouTubeVideoId;
+        },
+
+        get playbackIntent() {
+            return state.playbackIntent;
+        },
+
+        get playbackRequestId() {
+            return state.playbackRequestId;
+        },
+
+        get queueRequestId() {
+            return state.queueRequestId;
+        },
+
+        get youtubeRepeat() {
+            return state.youtubeRepeat;
+        },
+
+        get youtubeShuffle() {
+            return state.youtubeShuffle;
+        },
+
+        get youtubeShuffleHistory() {
+            return state.youtubeShuffleHistory;
+        },
+
+        get youtubeShuffleHistoryPosition() {
+            return state.youtubeShuffleHistoryPosition;
+        },
+    };    
 
     function arePlaybackListsEqual(
         first: MusicTrack[],
@@ -697,6 +768,160 @@ export function createPlaybackController(
     Promise<boolean> | null =
     null;
 
+        function getState():
+        PlaybackStateView {
+
+        return playbackStateView;
+    }
+
+
+    function setPlaybackIntent(
+        intent:
+            'play' | 'pause'
+    ):
+        void {
+
+        state.playbackIntent =
+            intent;
+    }
+
+
+    function toggleRepeat():
+        boolean {
+
+        state.youtubeRepeat =
+            !state.youtubeRepeat;
+
+        return state.youtubeRepeat;
+    }
+
+
+    function toggleShuffle():
+        boolean {
+
+        state.youtubeShuffle =
+            !state.youtubeShuffle;
+
+        if (
+            state.youtubeShuffle
+        ) {
+            state.youtubeShuffleHistory =
+                [];
+
+            if (
+                state.playbackListCurrentIndex >=
+                0
+            ) {
+                state.youtubeShuffleHistory.push(
+                    state.playbackListCurrentIndex
+                );
+            }
+
+            state.youtubeShuffleHistoryPosition =
+                state.youtubeShuffleHistory.length -
+                1;
+
+        } else {
+
+            state.youtubeShuffleHistory =
+                [];
+
+            state.youtubeShuffleHistoryPosition =
+                -1;
+        }
+
+        return state.youtubeShuffle;
+    }
+
+
+    function restoreSessionState(
+        session:
+            PlaybackSessionRestore
+    ):
+        void {
+
+        state.playbackList =
+            [
+                ...session.playbackList,
+            ];
+
+        if (
+            state.playbackList.length ===
+            0
+        ) {
+
+            state.playbackListCurrentIndex =
+                -1;
+
+        } else {
+
+            state.playbackListCurrentIndex =
+                Math.min(
+                    Math.max(
+                        0,
+                        session.playbackListCurrentIndex
+                    ),
+                    state.playbackList.length -
+                    1
+                );
+        }
+
+
+        state.playbackListMode =
+            session.playbackListMode;
+
+        state.playbackListSource =
+            session.playbackListSource;
+
+        state.playbackListNext =
+            session.playbackListNext;
+
+        state.playbackListTotal =
+            session.playbackListTotal;
+
+
+        state.youtubeRepeat =
+            session.youtubeRepeat;
+
+        state.youtubeShuffle =
+            session.youtubeShuffle;
+
+
+        const validShuffleHistory =
+            session.youtubeShuffleHistory.filter(
+                index =>
+                    index >= 0 &&
+                    index <
+                        state.playbackList.length
+            );
+
+        state.youtubeShuffleHistory =
+            [
+                ...validShuffleHistory,
+            ];
+
+
+        if (
+            state.youtubeShuffleHistory.length ===
+            0
+        ) {
+
+            state.youtubeShuffleHistoryPosition =
+                -1;
+
+        } else {
+
+            state.youtubeShuffleHistoryPosition =
+                Math.min(
+                    Math.max(
+                        -1,
+                        session.youtubeShuffleHistoryPosition
+                    ),
+                    state.youtubeShuffleHistory.length -
+                    1
+                );
+        }
+    }
 
     async function loadMorePlaybackList():
         Promise<boolean> {
@@ -2201,12 +2426,21 @@ if (
 
     return {
 
+        getState,
+
+        setPlaybackIntent,
+
+        toggleRepeat,
+
+        toggleShuffle,
+
+        restoreSessionState,
+
         selectMusicTrack,
 
         playMusicQueueTrack,
 
         playNextMusicQueueTrack,
-
         playPreviousMusicQueueTrack,
 
         loadMorePlaybackList,
