@@ -41,15 +41,14 @@ export interface MusicPlaybackSnapshot {
     currentTime:
         number;
 
+    duration?:
+        number;
+
     volume:
         number;
 
     muted:
         boolean;
-
-    playbackIntent:
-        'play' |
-        'pause';
 
     playbackList:
         MusicTrack[];
@@ -239,6 +238,68 @@ export function saveMusicPlaybackSnapshot(
     }
 }
 
+
+function isRecord(
+    value:
+        unknown
+):
+    value is Record<string, unknown> {
+    return (
+        typeof value ===
+        'object' &&
+        value !== null
+    );
+}
+
+
+function isFiniteNumber(
+    value:
+        unknown
+):
+    value is number {
+    return (
+        typeof value ===
+            'number' &&
+        Number.isFinite(
+            value
+        )
+    );
+}
+
+
+function isMusicTrackSnapshot(
+    value:
+        unknown
+):
+    value is MusicTrack {
+    if (
+        !isRecord(value)
+    ) {
+        return false;
+    }
+
+    const artist =
+        value.artist;
+
+    if (
+        !isRecord(artist)
+    ) {
+        return false;
+    }
+
+    return (
+        isFiniteNumber(
+            value.id
+        ) &&
+        typeof value.title ===
+            'string' &&
+        isFiniteNumber(
+            artist.id
+        ) &&
+        typeof artist.name ===
+            'string'
+    );
+}
 
 /* ============================================================
  * LOAD
