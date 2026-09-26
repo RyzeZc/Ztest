@@ -220,6 +220,12 @@ export interface PlaybackController {
     getState():
         PlaybackStateView;
 
+    subscribe(
+        listener:
+            PlaybackEventListener
+    ):
+        () => void;
+                
     setPlaybackIntent(
         intent:
             'play' | 'pause'
@@ -237,7 +243,7 @@ export interface PlaybackController {
             PlaybackSessionRestore
     ):
         void;
-            
+
     selectMusicTrack(
         track:
             MusicTrack,
