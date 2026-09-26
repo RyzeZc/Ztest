@@ -416,50 +416,44 @@ function initializeMusicPlayer(): void {
 
     } else {
 
-        void youtubePlayer
-            .initialize()
+        /*
+        * El contenido estático del panel no debe
+        * esperar a YouTube.
+        */
+        initializeStaticPanelContent();
+
+        /*
+        * restoreMusicPlayback() hará que
+        * YouTube se inicialice solo cuando
+        * realmente sea necesario.
+        */
+        void restoreMusicPlayback(
+            savedMusicSnapshot
+        )
             .then(
-                async () => {
-
-                    console.log(
-                        '[MusicPlayer] YouTube player ready for session restore.'
-                    );
-
-                    const restored =
-                        await restoreMusicPlayback(
-                            savedMusicSnapshot
-                        );
+                restored => {
 
                     if (
                         restored
                     ) {
-
-                        initializeStaticPanelContent();
-
-                    } else {
-
-                        initializeDefaultRadio();
+                        return;
                     }
+
+                    initializeDefaultRadio();
                 }
             )
             .catch(
                 error => {
 
-                    /*
-                    * Una falla de YouTube NO debe
-                    * destruir el snapshot.
-                    */
                     console.warn(
                         '[MusicPlayer] Previous music session could not be restored:',
                         error
                     );
 
-
                     initializeDefaultRadio();
                 }
             );
     }
-
 
     /* --------------------------------------------------
        ESTACIONES
@@ -1568,6 +1562,14 @@ async function restoreMusicPlayback(
          * a que aparezca una duración.
          */
         if (
+            playbackState.currentYouTubeVideoId ===
+            null
+        ) {
+
+            return false;
+        }
+        
+        if (
             youtubePlayer.getState().status ===
             'error'
         ) {
@@ -1626,122 +1628,53 @@ async function restoreMusicPlayback(
             snapshot.muted
         );
 
-
         /*
-         * Esperamos a que el vídeo tenga
-         * una duración válida antes del seek.
-         */
-        const restoreStart =
-            performance.now();
+        * Restauramos la posición.
 
-
-        const durationReady =
-            await new Promise<boolean>(
-                resolve => {
-
-                    const check =
-                        () => {
-
-                            const youtubeState =
-                                youtubePlayer.getState();
-
-                            /*
-                             * Error definitivo de YouTube:
-                             * no seguimos esperando.
-                             */
-                            if (
-                                youtubeState.status ===
-                                'error'
-                            ) {
-
-                                resolve(
-                                    false
-                                );
-
-                                return;
-                            }
-
-                            const duration =
-                                youtubePlayer.getDuration();
-
-                            /*
-                             * YouTube ya tiene una duración
-                             * válida. Podemos restaurar
-                             * la posición.
-                             */
-                            if (
-                                Number.isFinite(
-                                    duration
-                                ) &&
-                                duration > 0
-                            ) {
-
-                                let targetTime =
-                                    snapshot.currentTime;
-
-
-                                if (
-                                    targetTime >=
-                                    duration - 2
-                                ) {
-
-                                    targetTime =
-                                        0;
-                                }
-
-
-                                if (
-                                    targetTime > 0
-                                ) {
-
-                                    youtubePlayer.seekTo(
-                                        targetTime
-                                    );
-                                }
-
-
-                                resolve(
-                                    true
-                                );
-
-                                return;
-                            }
-
-
-                            /*
-                             * Evitamos esperar indefinidamente
-                             * si YouTube nunca entrega duración.
-                             */
-                            if (
-                                performance.now() -
-                                restoreStart >
-                                7000
-                            ) {
-
-                                resolve(
-                                    false
-                                );
-
-                                return;
-                            }
-
-
-                            requestAnimationFrame(
-                                check
-                            );
-                        };
-
-
-                    check();
-                }
+        * YouTubePlayer se encarga de hacerlo
+        * de forma segura incluso si el vídeo
+        * todavía está en estado CUED / loading.
+        */
+        let targetTime =
+            Math.max(
+                0,
+                snapshot.currentTime
             );
 
+        const duration =
+            youtubePlayer.getDuration();
+
         if (
-            !durationReady
+            Number.isFinite(
+                duration
+            ) &&
+            duration > 0
         ) {
 
-            return false;
+            /*
+            * Si la canción ya estaba prácticamente
+            * terminada, empezará de nuevo desde 0
+            * cuando el usuario pulse Play.
+            */
+            if (
+                targetTime >=
+                duration - 2
+            ) {
+
+                targetTime =
+                    0;
+            }
+
+            targetTime =
+                Math.min(
+                    targetTime,
+                    duration
+                );
         }
+
+        youtubePlayer.seekTo(
+            targetTime
+        );
 
         updateUI();
 
