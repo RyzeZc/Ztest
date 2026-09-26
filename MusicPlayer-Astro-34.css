@@ -346,6 +346,24 @@
 
 /* ESTADO OCULTO POR DEFECTO */
 
+.music-player.is-radio.is-loading
+.music-player-track-artist {
+    color:
+        #ffffff;
+}
+
+.music-player.is-radio.is-playing
+.music-player-track-artist {
+    color:
+        #20e40f;
+}
+
+.music-player.is-radio.has-error
+.music-player-track-artist {
+    color:
+        #888;
+}
+
 .music-player-status {
     display:
         none;
@@ -372,7 +390,7 @@
 .music-player.is-radio
 .music-player-status {
     display:
-        flex;
+        none;
 }
 
 
