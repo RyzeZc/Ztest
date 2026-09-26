@@ -1,8 +1,3 @@
-import type {
-    MusicTrack,
-} from '../music/music-types';
-
-
 /* ============================================================
  * PANEL
  * ============================================================ */
@@ -190,6 +185,93 @@ export interface PlaybackState {
     youtubeShuffleHistoryPosition: number;
 }
 
+export interface PlaybackStateView {
+
+    readonly playbackList:
+        readonly MusicTrack[];
+
+    readonly playbackListCurrentIndex:
+        number;
+
+    readonly playbackListMode:
+        PlaybackListMode;
+
+    readonly playbackListSource:
+        PlaybackListSource;
+
+    readonly playbackListNext:
+        string | null;
+
+    readonly playbackListTotal:
+        number | null;
+
+    readonly playbackListLoadingMore:
+        boolean;
+
+    readonly parkedPlaybackContext:
+        Readonly<ParkedPlaybackContext> | null;
+
+    readonly currentMusicTrack:
+        MusicTrack | null;
+
+    readonly currentYouTubeVideoId:
+        string | null;
+
+    readonly playbackIntent:
+        'play' | 'pause';
+
+    readonly playbackRequestId:
+        number;
+
+    readonly queueRequestId:
+        number;
+
+    readonly youtubeRepeat:
+        boolean;
+
+    readonly youtubeShuffle:
+        boolean;
+
+    readonly youtubeShuffleHistory:
+        readonly number[];
+
+    readonly youtubeShuffleHistoryPosition:
+        number;
+}
+
+export interface PlaybackSessionRestore {
+
+    playbackList:
+        MusicTrack[];
+
+    playbackListCurrentIndex:
+        number;
+
+    playbackListMode:
+        PlaybackListMode;
+
+    playbackListSource:
+        PlaybackListSource;
+
+    playbackListNext:
+        string | null;
+
+    playbackListTotal:
+        number | null;
+
+    youtubeRepeat:
+        boolean;
+
+    youtubeShuffle:
+        boolean;
+
+    youtubeShuffleHistory:
+        number[];
+
+    youtubeShuffleHistoryPosition:
+        number;
+}
+
 /* ============================================================
  * PLAYBACK ADAPTERS
  * ============================================================
@@ -222,35 +304,27 @@ export interface PlaybackAudioAdapter {
     pause(): void;
 }
 
-
 /* ============================================================
- * PLAYBACK CONTROLLER
+ * PLAYBACK ENGINE TYPES
  * ============================================================ */
 
-export interface PlaybackController {
+export type {
+    PlaybackListMode,
+    PlaybackListSource,
+    ParkedPlaybackContext,
+    PlaybackSource,
+    PlaybackQueueAction,
+    PlaybackSelectionOptions,
+    PlaybackState,
+    PlaybackYouTubeAdapter,
+    PlaybackAudioAdapter,
+    PlaybackController,
+} from './playback-engine-types';
 
-    selectMusicTrack(
-        track: MusicTrack,
-        options?: PlaybackSelectionOptions
-    ): Promise<void>;
 
-    playMusicQueueTrack(
-        index: number
-    ): Promise<void>;
-
-    playNextMusicQueueTrack():
-        Promise<void>;
-
-    playPreviousMusicQueueTrack():
-        Promise<void>;
-
-    loadMorePlaybackList():
-        Promise<boolean>;
-
-    restoreParkedPlaybackContext(
-        index: number
-    ): Promise<void>;        
-}
+/* ============================================================
+ * UI CONTROLLERS
+ * ============================================================ */
 
 export interface MusicPanelController {
 
