@@ -88,6 +88,7 @@ export type PlaybackListMode =
 
 export type PlaybackListSource =
     | 'search-tracks-queue'
+    | 'search-all'
     | 'search-artist'
     | 'search-album'
     | 'search-playlist'
@@ -95,8 +96,41 @@ export type PlaybackListSource =
     | 'home-album'
     | 'home-playlist'
     | 'home-genre'
+    | 'local-list'
     | null;
 
+export interface ParkedPlaybackContext {
+
+    playbackList:
+        MusicTrack[];
+
+    playbackListCurrentIndex:
+        number;
+
+    playbackListMode:
+        PlaybackListMode;
+
+    playbackListSource:
+        PlaybackListSource;
+
+    playbackListNext:
+        string | null;
+
+    playbackListTotal:
+        number | null;
+
+    youtubeRepeat:
+        boolean;
+
+    youtubeShuffle:
+        boolean;
+
+    youtubeShuffleHistory:
+        number[];
+
+    youtubeShuffleHistoryPosition:
+        number;
+}
 
 export type PlaybackSource =
     | 'radio'
@@ -110,12 +144,16 @@ export type PlaybackQueueAction =
 
 
 export interface PlaybackSelectionOptions {
+    autoplay?: boolean;
     queueIndex?: number;
     queueAction?: PlaybackQueueAction;
 
     playbackList?: MusicTrack[];
     playbackListMode?: PlaybackListMode;
     playbackListSource?: PlaybackListSource;
+
+    playbackListNext?: string | null;
+    playbackListTotal?: number | null;
 }
 
 
@@ -130,6 +168,12 @@ export interface PlaybackState {
     playbackListMode: PlaybackListMode;
     playbackListSource: PlaybackListSource;
 
+    playbackListNext: string | null;
+    playbackListTotal: number | null;
+    playbackListLoadingMore: boolean;
+
+    parkedPlaybackContext: ParkedPlaybackContext | null;
+
     currentMusicTrack: MusicTrack | null;
     currentYouTubeVideoId: string | null;
 
@@ -143,7 +187,6 @@ export interface PlaybackState {
     youtubeShuffleHistory: number[];
     youtubeShuffleHistoryPosition: number;
 }
-
 
 /* ============================================================
  * PLAYBACK ADAPTERS
@@ -197,6 +240,13 @@ export interface PlaybackController {
 
     playPreviousMusicQueueTrack():
         Promise<void>;
+
+    loadMorePlaybackList():
+        Promise<boolean>;
+
+    restoreParkedPlaybackContext(
+        index: number
+    ): Promise<void>;        
 }
 
 export interface MusicPanelController {
