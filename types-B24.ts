@@ -239,6 +239,67 @@ export interface PlaybackStateView {
         number;
 }
 
+export type PlaybackEvent =
+    | {
+        type:
+            'track-selected';
+
+        track:
+            MusicTrack;
+
+        source:
+            PlaybackSource;
+    }
+    | {
+        type:
+            'queue-changed';
+
+        reason:
+            'replaced' |
+            'appended' |
+            'cleared';
+    }
+    | {
+        type:
+            'queue-index-changed';
+
+        index:
+            number;
+    }
+    | {
+        type:
+            'playback-intent-changed';
+
+        intent:
+            'play' |
+            'pause';
+    }
+    | {
+        type:
+            'repeat-changed';
+
+        enabled:
+            boolean;
+    }
+    | {
+        type:
+            'shuffle-changed';
+
+        enabled:
+            boolean;
+    };
+
+
+export type PlaybackEventListener =
+    (
+        event:
+            PlaybackEvent,
+
+        state:
+            PlaybackStateView
+    ) =>
+        void;
+
 export interface PlaybackSessionRestore {
 
     playbackList:
