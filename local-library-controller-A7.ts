@@ -24,12 +24,6 @@ import {
     type LocalLibraryTrack,
 } from './local-library';
 
-
-type ActivePlaybackSource =
-    | 'radio'
-    | 'youtube';
-
-
 interface LocalLibraryControllerOptions {
 
     player:
@@ -41,25 +35,12 @@ interface LocalLibraryControllerOptions {
     activateHomeTab:
         () => void;
 
-    getCurrentTrack:
-        () => MusicTrack | null;
-
-    getActivePlaybackSource:
-        () => ActivePlaybackSource;
-
-    getCurrentYouTubeVideoId:
-        () => string | null;
-
-    getPlaybackListSource:
-        () => string | null;
-
     selectMusicTrack:
         (
             track: MusicTrack,
             options: PlaybackSelectionOptions
         ) => Promise<void>;
 }
-
 
 export interface LocalLibraryController {
 
@@ -92,13 +73,8 @@ export function createLocalLibraryController(
         player,
         openPanel,
         activateHomeTab,
-        getCurrentTrack,
-        getActivePlaybackSource,
-        getCurrentYouTubeVideoId,
-        getPlaybackListSource,
         selectMusicTrack,
     } = options;
-
 
     /*
      * ==================================================
@@ -252,6 +228,13 @@ export function createLocalLibraryController(
     let lastPlayerSavedState:
         boolean | null =
         null;
+
+    let currentPlayerTrack:
+        MusicTrack | null =
+        null;
+
+    let currentPlayerIsYouTube =
+        false;        
 
     let draggedTrackId:
         number | null =
@@ -410,6 +393,12 @@ function setSaveButtonState(
         lastPlayerSavedState =
             null;
 
+        currentPlayerTrack =
+            null;
+
+        currentPlayerIsYouTube =
+            false;  
+
         localSaveButton.hidden =
             true;
 
@@ -428,6 +417,11 @@ function setSaveButtonState(
         const requestId =
             ++saveButtonRequestId;
 
+        currentPlayerTrack =
+            track;
+
+        currentPlayerIsYouTube =
+            isYouTube;            
 
         if (
             !isYouTube ||
@@ -658,13 +652,19 @@ async function refreshSavedTrackIds():
         Promise<void> {
 
         const track =
-            getCurrentTrack();
+            currentPlayerTrack;
 
 
         if (
-            getActivePlaybackSource() !==
-                'youtube' ||
+            !currentPlayerIsYouTube ||
             !track
+        ) {
+            return;
+        }
+
+
+        if (
+            localSaveButton.hidden
         ) {
             return;
         }
@@ -716,20 +716,10 @@ async function refreshSavedTrackIds():
 
             } else {
 
-                let youtubeVideoId =
-                    getCurrentYouTubeVideoId();
-
-
-                if (
-                    !youtubeVideoId
-                ) {
-
-                    youtubeVideoId =
-                        await resolveYouTubeTrack(
-                            track
-                        );
-                }
-
+                const youtubeVideoId =
+                    await resolveYouTubeTrack(
+                        track
+                    );
 
                 if (
                     !youtubeVideoId
@@ -741,7 +731,6 @@ async function refreshSavedTrackIds():
 
                     return;
                 }
-
 
                 const now =
                     Date.now();
@@ -1343,7 +1332,7 @@ async function refreshSavedTrackIds():
              * refrescamos el corazón.
              */
             if (
-                getCurrentTrack()?.id ===
+                currentPlayerTrack?.id ===
                 trackId
             ) {
 
@@ -1354,12 +1343,10 @@ async function refreshSavedTrackIds():
                     null;
 
                 syncCurrentTrack(
-                    getCurrentTrack(),
-                    getActivePlaybackSource() ===
-                        'youtube'
+                    currentPlayerTrack,
+                    currentPlayerIsYouTube
                 );
             }
-
 
             await renderLocalLibrary();
 
@@ -2132,18 +2119,13 @@ async function refreshSavedTrackIds():
 
     function updatePlaybackIndicators(
         isVisuallyPlaying:
+            boolean,
+        isLocalPlayback:
             boolean
     ): void {
 
         const currentTrack =
-            getCurrentTrack();
-
-
-        const isLocalPlayback =
-            getActivePlaybackSource() ===
-                'youtube' &&
-            getPlaybackListSource() ===
-                'local-list';
+            currentPlayerTrack;
 
         localLibraryEqualizer.classList.toggle(
             'is-active',
