@@ -7,11 +7,6 @@ import type {
 } from './types';
 
 import {
-    primeResolvedYouTubeTracks,
-    resolveYouTubeTrack,
-} from './playback';
-
-import {
     createNewLocalLibrary,
     exportLocalLibrary,
     getLocalLibrary,
@@ -23,6 +18,10 @@ import {
     saveLocalTrack,
     type LocalLibraryTrack,
 } from './local-library';
+
+import type {
+    YouTubeTrackResolver,
+} from './youtube-track-resolver';
 
 interface LocalLibraryControllerOptions {
 
@@ -40,6 +39,9 @@ interface LocalLibraryControllerOptions {
             track: MusicTrack,
             options: PlaybackSelectionOptions
         ) => Promise<void>;
+        
+    youtubeResolver:
+        YouTubeTrackResolver;        
 }
 
 export interface LocalLibraryController {
@@ -74,6 +76,7 @@ export function createLocalLibraryController(
         openPanel,
         activateHomeTab,
         selectMusicTrack,
+        youtubeResolver,
     } = options;
 
     /*
@@ -717,7 +720,7 @@ async function refreshSavedTrackIds():
             } else {
 
                 const youtubeVideoId =
-                    await resolveYouTubeTrack(
+                    await youtubeResolver.resolve(
                         track
                     );
 
@@ -1739,10 +1742,9 @@ async function refreshSavedTrackIds():
          * Los colocamos directamente en
          * el caché del sistema de playback.
          */
-        primeResolvedYouTubeTracks(
+        youtubeResolver.prime(
             localLibraryTracks.map(
                 track => ({
-
                     id:
                         track.id,
 
