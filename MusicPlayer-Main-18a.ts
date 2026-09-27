@@ -607,8 +607,9 @@ function selectStation(
         return;
     }
 
-    activePlaybackSource =
-        'radio';
+    setPlaybackSource(
+        'radio'
+    );
 
     setLastMedia(
         'radio'
@@ -706,9 +707,6 @@ function selectStation(
         /* --------------------------------------------------
        YOUTUBE SEARCH
     -------------------------------------------------- */
-    let activePlaybackSource:
-        'radio' | 'youtube' =
-        'radio';
 
     interface PlaybackContextInfo {
 
@@ -830,6 +828,7 @@ const {
 const {
     getState,
     subscribe,
+    setPlaybackSource,
     setPlaybackIntent,
     toggleRepeat,
     toggleShuffle,
@@ -848,16 +847,6 @@ const {
 
     audioPlayer:
         audioPlayer,
-
-    getActivePlaybackSource:
-        () =>
-            activePlaybackSource,
-
-    setActivePlaybackSource:
-        source => {
-            activePlaybackSource =
-                source;
-        },
 
 });
 
@@ -920,6 +909,12 @@ const {
                     event.type
                 ) {
 
+                    case 'source-changed':
+
+                        updateUI();
+
+                        break;
+
                     case 'track-selected':
 
                         updateTrackInfo();
@@ -927,7 +922,6 @@ const {
                         updateUI();
 
                         break;
-
 
                     case 'queue-changed':
 
@@ -1425,8 +1419,8 @@ function getMusicPlaybackSnapshot():
     null {
 
     if (
-        activePlaybackSource !==
-        'youtube'
+        playbackState.playbackSource !==
+            'youtube'
     ) {
         return null;
     }
@@ -2807,8 +2801,8 @@ function updateTrackPlaybackIndicators(): void {
         youtubePlayer.getState();
 
     const currentTrackId =
-        activePlaybackSource ===
-        'youtube'
+        playbackState.playbackSource !==
+            'youtube'
             ? playbackState.currentMusicTrack?.id ??
               null
             : null;
@@ -4081,8 +4075,8 @@ previousButton.addEventListener(
     () => {
 
         if (
-            activePlaybackSource !==
-            'youtube'
+            playbackState.playbackSource !==
+                'youtube'
         ) {
             return;
         }
@@ -4096,8 +4090,8 @@ nextButton.addEventListener(
     () => {
 
         if (
-            activePlaybackSource !==
-            'youtube'
+            playbackState.playbackSource !==
+                'youtube'
         ) {
             return;
         }
@@ -4111,8 +4105,8 @@ repeatButton.addEventListener(
     () => {
 
         if (
-            activePlaybackSource !==
-            'youtube'
+            playbackState.playbackSource !==
+                'youtube'
         ) {
             return;
         }
@@ -4148,8 +4142,8 @@ shuffleButton.addEventListener(
     () => {
 
         if (
-            activePlaybackSource !==
-            'youtube'
+            playbackState.playbackSource !==
+                'youtube'
         ) {
             return;
         }
@@ -4296,8 +4290,8 @@ videoToggle.addEventListener(
     () => {
 
         if (
-            activePlaybackSource !==
-            'youtube'
+            playbackState.playbackSource !==
+                'youtube'
         ) {
             return;
         }
@@ -4336,8 +4330,8 @@ progressSeek.addEventListener(
     () => {
 
         if (
-            activePlaybackSource !==
-            'youtube'
+            playbackState.playbackSource !==
+                'youtube'
         ) {
             return;
         }
@@ -4354,8 +4348,8 @@ progressSeek.addEventListener(
     () => {
 
         if (
-            activePlaybackSource !==
-            'youtube'
+            playbackState.playbackSource !==
+                'youtube'
         ) {
             return;
         }
@@ -4399,8 +4393,8 @@ progressSeek.addEventListener(
     () => {
 
         if (
-            activePlaybackSource !==
-            'youtube'
+            playbackState.playbackSource !==
+                'youtube'
         ) {
             youtubeIsSeeking =
                 false;
@@ -4538,7 +4532,7 @@ progressSeek.addEventListener(
         () => {
 
             if (
-                activePlaybackSource ===
+                playbackState.playbackSource ===
                 'youtube'
             ) {
 
@@ -4662,7 +4656,7 @@ progressSeek.addEventListener(
         () => {
 
             if (
-                activePlaybackSource ===
+                playbackState.playbackSource ===
                 'youtube'
             ) {
 
@@ -4702,7 +4696,7 @@ progressSeek.addEventListener(
                 );
 
             if (
-                activePlaybackSource ===
+                playbackState.playbackSource ===
                 'youtube'
             ) {
 
