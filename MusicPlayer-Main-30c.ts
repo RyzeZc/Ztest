@@ -9,10 +9,12 @@ import {
 
 import {
     createPlaybackController,
-    hasResolveInFlight,
     isPlaybackPanelSource,
-    primeResolvedYouTubeTracks,
 } from '../../lib/MusicPlayer/playback';
+
+import {
+    createYouTubeTrackResolver,
+} from '../../lib/MusicPlayer/youtube-track-resolver';
 
 import type {
     MusicTrack,
@@ -825,6 +827,9 @@ const {
         },
 });
 
+const youtubeTrackResolver =
+    createYouTubeTrackResolver();
+    
 const {
     getState,
     subscribe,
@@ -848,8 +853,10 @@ const {
     audioPlayer:
         audioPlayer,
 
-});
+    youtubeResolver:
+        youtubeTrackResolver,
 
+});
     const playbackState =
     getState();
 
@@ -993,6 +1000,9 @@ const {
                 },
 
             selectMusicTrack,
+
+            youtubeResolver:
+                youtubeTrackResolver,
         });
 
 
@@ -1572,27 +1582,23 @@ async function restoreMusicPlayback(
     isRestoringPlayback =
         true;
 
-
     try {
 
         /*
          * El snapshot ya contiene el ID resuelto
          * de la canción actual.
          */
-        primeResolvedYouTubeTracks(
+        youtubeTrackResolver.prime(
             [
                 {
-
                     id:
                         snapshot.track.id,
 
                     youtubeVideoId:
                         snapshot.youtubeVideoId,
-
                 },
             ]
         );
-
 
         const playbackList =
             snapshot.playbackList.length >
@@ -2802,9 +2808,11 @@ function updateTrackPlaybackIndicators(): void {
 
     const isPendingPlayback =
         currentTrackId !== null &&
-        playbackState.playbackIntent === 'play' &&
-        playbackState.currentYouTubeVideoId === null &&
-        hasResolveInFlight(
+        playbackState.playbackIntent ===
+            'play' &&
+        playbackState.currentYouTubeVideoId ===
+            null &&
+        youtubeTrackResolver.hasInFlight(
             currentTrackId
         );
 
