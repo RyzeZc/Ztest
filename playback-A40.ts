@@ -1,7 +1,6 @@
 import {
     getArtistRadio,
     getMusicApiNext,
-    resolveTrack,
 } from '../music/music-service';
 
 import type {
@@ -23,357 +22,9 @@ import type {
     PlaybackYouTubeAdapter,
 } from './types';
 
-/* ============================================================
- * RESOLVE CACHE
- * ============================================================ */
-
-const resolveCache =
-    new Map<
-        number,
-        Promise<string | null>
-    >();
-
-
-const resolvedYouTubeIds =
-    new Map<
-        number,
-        string
-    >();
-
-const YOUTUBE_VIDEO_ID_REGEX =
-    /^[A-Za-z0-9_-]{11}$/;
-
-
-export function isValidYouTubeVideoId(
-    videoId:
-        string
-): boolean {
-
-    return YOUTUBE_VIDEO_ID_REGEX.test(
-        videoId
-    );
-}    
-
-export function primeResolvedYouTubeTracks(
-    tracks:
-        Array<{
-            id:
-                number;
-
-            youtubeVideoId:
-                string;
-        }>
-):
-    void {
-
-    for (
-        const track of tracks
-    ) {
-
-        const videoId =
-            track.youtubeVideoId
-                .trim();
-
-
-        if (
-            !isValidYouTubeVideoId(
-                videoId
-            )
-        ) {
-
-            console.warn(
-                '[MusicPlayer] Ignoring invalid cached YouTube ID:',
-                {
-                    deezerId:
-                        track.id,
-
-                    youtubeId:
-                        videoId,
-                }
-            );
-
-            continue;
-        }
-
-
-        resolvedYouTubeIds.set(
-            track.id,
-            videoId
-        );
-    }
-}
-
-/* ============================================================
- * ARTIST RADIO CACHE
- * ============================================================ */
-
-const artistRadioCache =
-    new Map<
-        number,
-        Promise<MusicRadioTrack[]>
-    >();
-
-
-const artistRadioResults =
-    new Map<
-        number,
-        MusicRadioTrack[]
-    >();
-
-
-/* ============================================================
- * PLAYBACK STATE
- * ============================================================ */
-
-export function createPlaybackState():
-    PlaybackState {
-
-    return {
-        playbackSource:
-            'radio',        
-        playbackList: [],
-        playbackListCurrentIndex: -1,
-        playbackListMode: 'context',
-        playbackListSource: null,
-
-        playbackListNext: null,
-        playbackListTotal: null,
-        playbackListLoadingMore: false,
-
-        parkedPlaybackContext: null,
-
-        currentMusicTrack: null,
-
-        currentYouTubeVideoId: null,
-
-        playbackIntent: 'pause',
-
-        playbackRequestId: 0,
-        queueRequestId: 0,
-
-        youtubeRepeat: false,
-        youtubeShuffle: false,
-        youtubeShuffleHistory: [],
-        youtubeShuffleHistoryPosition: -1,
-    };
-}
-
-export function isPlaybackPanelSource(
-    source: PlaybackListSource
-): boolean {
-
-    return (
-        source !== null &&
-        source !== 'home-trending' &&
-        source !== 'search-all' &&
-        source !== 'local-list'
-    );
-}
-
-/* ============================================================
- * RESOLVE HELPERS
- * ============================================================ */
-
-export function hasResolveInFlight(
-    trackId: number
-): boolean {
-
-    return resolveCache.has(
-        trackId
-    );
-}
-
-
-export async function resolveYouTubeTrack(
-    track: MusicTrack
-): Promise<string | null> {
-
-    const cachedVideoId =
-        resolvedYouTubeIds.get(
-            track.id
-        );
-
-
-    if (
-        cachedVideoId
-    ) {
-
-        if (
-            isValidYouTubeVideoId(
-                cachedVideoId
-            )
-        ) {
-
-            console.log(
-                '[MusicPlayer] Using cached YouTube ID:',
-                {
-                    deezerId:
-                        track.id,
-
-                    youtubeId:
-                        cachedVideoId,
-                }
-            );
-
-
-            return cachedVideoId;
-        }
-
-
-        /*
-        * El caché contenía un ID inválido.
-        * Lo eliminamos y hacemos una resolución
-        * nueva.
-        */
-        resolvedYouTubeIds.delete(
-            track.id
-        );
-    }
-
-
-    const existingRequest =
-        resolveCache.get(
-            track.id
-        );
-
-    if (existingRequest) {
-
-        console.log(
-            '[MusicPlayer] Reusing in-flight resolve:',
-            track.id
-        );
-
-        return existingRequest;
-    }
-
-
-    const artistName =
-        track.artist?.name ??
-        '';
-
-    const trackName =
-        track.title ??
-        '';
-
-
-    if (
-        !artistName ||
-        !trackName
-    ) {
-
-        console.log(
-            '[MusicPlayer] Cannot resolve track: missing artist or title.'
-        );
-
-        return null;
-    }
-
-
-    console.log(
-        '[MusicPlayer] Starting resolve:',
-        {
-            deezerId:
-                track.id,
-
-            artist:
-                artistName,
-
-            title:
-                trackName,
-        }
-    );
-
-
-    const request =
-        (async (): Promise<
-            string | null
-        > => {
-
-            try {
-
-                const response =
-                    await resolveTrack(
-                        track.id,
-                        artistName,
-                        trackName
-                    );
-
-
-                const videoId =
-                    response.results?.[0]?.id?.trim();
-
-                if (
-                    !videoId ||
-                    !isValidYouTubeVideoId(
-                        videoId
-                    )
-                ) {
-
-                    console.log(
-                        '[MusicPlayer] Invalid YouTube video ID returned:',
-                        {
-                            deezerId:
-                                track.id,
-
-                            youtubeId:
-                                videoId ??
-                                null,
-                        }
-                    );
-
-                    return null;
-                }
-
-                resolvedYouTubeIds.set(
-                    track.id,
-                    videoId
-                );
-
-
-                console.log(
-                    '[MusicPlayer] Resolve completed:',
-                    {
-                        deezerId:
-                            track.id,
-
-                        youtubeId:
-                            videoId,
-                    }
-                );
-
-
-                return videoId;
-
-            } catch (error) {
-
-                console.error(
-                    '[MusicPlayer] Music resolve failed:',
-                    error
-                );
-
-                return null;
-            }
-
-        })();
-
-
-    resolveCache.set(
-        track.id,
-        request
-    );
-
-
-    try {
-
-        return await request;
-
-    } finally {
-
-        resolveCache.delete(
-            track.id
-        );
-    }
-}
+import type {
+    YouTubeTrackResolver,
+} from './youtube-track-resolver';
 
 
 /* ============================================================
@@ -618,8 +269,10 @@ interface PlaybackControllerOptions {
 
     audioPlayer:
         PlaybackAudioAdapter;
-}
 
+    youtubeResolver:
+        YouTubeTrackResolver;
+}
 
 export function createPlaybackController(
     options:
@@ -636,6 +289,7 @@ export function createPlaybackController(
     const {
         youtubePlayer,
         audioPlayer,
+        youtubeResolver,
     } = options;
 
     const playbackStateView:
@@ -1456,7 +1110,7 @@ if (
             (
                 state.currentYouTubeVideoId !==
                     null ||
-                hasResolveInFlight(
+                youtubeResolver.hasInFlight(
                     track.id
                 )
             )
@@ -1735,10 +1389,9 @@ if (
          */
 
         const resolvePromise =
-            resolveYouTubeTrack(
+            youtubeResolver.resolve(
                 track
             );
-
 
         const queuePromise =
             selectionOptions.queueAction ===
@@ -1747,7 +1400,6 @@ if (
                     track.artist.id
                 )
                 : null;
-
 
         /*
          * --------------------------------------------------
