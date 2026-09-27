@@ -120,6 +120,9 @@ export interface PlaybackState {
      * la primera etapa de la refactorización.
      */
 
+    playbackSource:
+        PlaybackSource;
+
     playbackList:
         MusicTrack[];
 
@@ -173,6 +176,9 @@ export interface PlaybackState {
 }
 
 export interface PlaybackStateView {
+
+    readonly playbackSource:
+        PlaybackSource;
 
     readonly playbackList:
         readonly MusicTrack[];
@@ -228,6 +234,13 @@ export interface PlaybackStateView {
 
 
 export type PlaybackEvent =
+    | {
+        type:
+            'source-changed';
+
+        source:
+            PlaybackSource;
+    }
     | {
         type:
             'track-selected';
@@ -383,7 +396,13 @@ export interface PlaybackController {
             PlaybackEventListener
     ):
         () => void;
-                
+
+    setPlaybackSource(
+        source:
+            PlaybackSource
+    ):
+        void;   
+                     
     setPlaybackIntent(
         intent:
             'play' | 'pause'
