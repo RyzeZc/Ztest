@@ -11,7 +11,6 @@ import type {
 } from '../music/music-types';
 
 import type {
-    MusicPanelTab,
     PlaybackAudioAdapter,
     PlaybackController,
     PlaybackEvent,
@@ -20,6 +19,7 @@ import type {
     PlaybackSelectionOptions,
     PlaybackSource,
     PlaybackState,
+    PlaybackStateView,
     PlaybackYouTubeAdapter,
 } from './types';
 
@@ -624,28 +624,6 @@ interface PlaybackControllerOptions {
         (
             source: PlaybackSource
         ) => void;
-
-    updateTrackInfo:
-        () => void;
-
-    updateUI:
-        () => void;
-
-    updateTrackPlaybackIndicators:
-        () => void;
-
-    renderQueuePanel:
-        () => void;
-
-    scrollQueueTrackIntoView:
-        (
-            index: number
-        ) => void;
-
-    activatePanelTab:
-        (
-            tab: MusicPanelTab
-        ) => void;
 }
 
 
@@ -666,12 +644,6 @@ export function createPlaybackController(
         audioPlayer,
         getActivePlaybackSource,
         setActivePlaybackSource,
-        updateTrackInfo,
-        updateUI,
-        updateTrackPlaybackIndicators,
-        renderQueuePanel,
-        scrollQueueTrackIntoView,
-        activatePanelTab,
     } = options;
 
     const playbackStateView:
@@ -802,6 +774,64 @@ export function createPlaybackController(
             );
 
         };
+    }
+
+    function emitQueueChanged(
+        reason:
+            'replaced' |
+            'appended' |
+            'cleared'
+    ):
+        void {
+
+        emit({
+            type:
+                'queue-changed',
+
+            reason,
+        });
+    }
+
+
+    function setQueueLoadingMore(
+        loading:
+            boolean
+    ):
+        void {
+
+        if (
+            state.playbackListLoadingMore ===
+            loading
+        ) {
+            return;
+        }
+
+
+        state.playbackListLoadingMore =
+            loading;
+
+
+        emit({
+            type:
+                'queue-loading-changed',
+
+            loading,
+        });
+    }
+
+
+    function emitQueueIndexChanged(
+        index:
+            number
+    ):
+        void {
+
+        emit({
+            type:
+                'queue-index-changed',
+
+            index,
+        });
     }    
 
     function arePlaybackListsEqual(
@@ -1047,9 +1077,9 @@ export function createPlaybackController(
         const loadPromise =
             (async () => {
 
-                state.playbackListLoadingMore =
-                    true;
-
+                setQueueLoadingMore(
+                    true
+                );
 
                 try {
 
@@ -1126,11 +1156,9 @@ export function createPlaybackController(
                         state.playbackListTotal ??
                         state.playbackList.length;
 
-
-                    renderQueuePanel();
-
-                    updateTrackPlaybackIndicators();
-
+                    emitQueueChanged(
+                        'appended'
+                    );
 
                     return (
                         newTracks.length >
@@ -1158,7 +1186,6 @@ export function createPlaybackController(
                             null;
                     }
 
-
                     return false;
 
                 } finally {
@@ -1170,8 +1197,9 @@ export function createPlaybackController(
                             state.queueRequestId
                     ) {
 
-                        state.playbackListLoadingMore =
-                            false;
+                        setQueueLoadingMore(
+                            false
+                        );
                     }
                 }
             })();
@@ -1412,12 +1440,12 @@ if (
             )
         ) {
 
-            state.playbackIntent =
+            setPlaybackIntent(
                 state.playbackIntent ===
                     'play'
                     ? 'pause'
-                    : 'play';
-
+                    : 'play'
+            );
 
             console.log(
                 '[MusicPlayer] Toggling current track:',
@@ -1447,12 +1475,6 @@ if (
                     youtubePlayer.play();
                 }
             }
-
-
-            updateTrackPlaybackIndicators();
-            updateUI();
-
-
             return;
         }
 
@@ -1571,47 +1593,9 @@ if (
             state.youtubeShuffleHistoryPosition =
                 -1;
 
-            renderQueuePanel();
-
-            if (
-                state.playbackListSource ===
-                'local-list'
-            ) {
-
-                /*
-                * MI MÚSICA se reproduce dentro de HOME.
-                *
-                * No cambiamos a REPRODUCIENDO.
-                */
-                activatePanelTab(
-                    'home'
-                );
-
-            } else if (
-                isPlaybackPanelSource(
-                    state.playbackListSource
-                )
-            ) {
-
-                activatePanelTab(
-                    'playback'
-                );
-
-            } else if (
-                state.playbackListSource ===
-                'search-all'
-            ) {
-
-                activatePanelTab(
-                    'search'
-                );
-
-            } else {
-
-                activatePanelTab(
-                    'home'
-                );
-            }
+            emitQueueChanged(
+                'replaced'
+            );
 
         } else if (
             selectionOptions.queueIndex !==
@@ -1621,9 +1605,7 @@ if (
             state.playbackListCurrentIndex =
                 selectionOptions.queueIndex;
 
-            renderQueuePanel();
-
-            scrollQueueTrackIntoView(
+            emitQueueIndexChanged(
                 selectionOptions.queueIndex
             );
 
@@ -1637,11 +1619,20 @@ if (
 
             state.playbackListCurrentIndex =
                 -1;
-            state.playbackListNext = null;
-            state.playbackListTotal = null;
-            state.playbackListLoadingMore = false;
 
-            renderQueuePanel();
+            state.playbackListNext =
+                null;
+
+            state.playbackListTotal =
+                null;
+
+            setQueueLoadingMore(
+                false
+            );
+
+            emitQueueChanged(
+                'cleared'
+            );
 
         } else if (
             selectionOptions.queueAction ===
@@ -1655,9 +1646,13 @@ if (
                 -1;
             state.playbackListNext = null;
             state.playbackListTotal = null;
-            state.playbackListLoadingMore = false;
+            setQueueLoadingMore(
+                false
+            );
 
-            renderQueuePanel();
+            emitQueueChanged(
+                'cleared'
+            );
         }
 
 
@@ -1684,18 +1679,21 @@ if (
         state.currentYouTubeVideoId =
             null;
 
-
         /*
          * Detener la canción anterior
          */
 
         youtubePlayer.pause();
 
+        emit({
+            type:
+                'track-selected',
 
-        updateTrackInfo();
-        updateUI();
-        updateTrackPlaybackIndicators();
+            track,
 
+            source:
+                'youtube',
+        });
 
         console.log(
             '[MusicPlayer] Music track selected:',
@@ -1767,14 +1765,9 @@ if (
                     track.id
                 );
 
-
-                state.playbackIntent =
-                    'pause';
-
-
-                updateUI();
-                updateTrackPlaybackIndicators();
-
+                setPlaybackIntent(
+                    'pause'
+                );
 
             } else {
 
@@ -1828,12 +1821,6 @@ if (
                     );
                 }
 
-
-                updateUI();
-
-                updateTrackPlaybackIndicators();
-
-
                 if (
                     state.playbackIntent ===
                     'play'
@@ -1872,13 +1859,9 @@ if (
                 error
             );
 
-
-            state.playbackIntent =
-                'pause';
-
-
-            updateUI();
-            updateTrackPlaybackIndicators();
+            setPlaybackIntent(
+                'pause'
+            );
         }
 
 
@@ -1962,16 +1945,12 @@ if (
                 }
             );
 
-
             if (
                 state.playbackList.length > 0
             ) {
 
-                renderQueuePanel();
-
-
-                activatePanelTab(
-                    'playback'
+                emitQueueChanged(
+                    'replaced'
                 );
             }
 
@@ -2064,6 +2043,9 @@ if (
         state.youtubeShuffleHistoryPosition =
             parked.youtubeShuffleHistoryPosition;
 
+        emitQueueChanged(
+            'replaced'
+        );            
 
         /*
         * El contexto aparcado deja de existir.
@@ -2101,14 +2083,6 @@ if (
             }
         );
 
-
-        renderQueuePanel();
-
-        activatePanelTab(
-            'playback'
-        );
-
-        updateTrackPlaybackIndicators();
     }
 
     async function playMusicQueueTrack(
