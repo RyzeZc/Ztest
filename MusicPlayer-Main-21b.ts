@@ -998,7 +998,7 @@ const {
 
             getActivePlaybackSource:
                 () =>
-                    activePlaybackSource,
+                    playbackState.playbackSource,
 
             getCurrentYouTubeVideoId:
                 () =>
@@ -2820,7 +2820,7 @@ function updateTrackPlaybackIndicators(): void {
         );
 
     const isVisuallyPlaying =
-        activePlaybackSource ===
+        playbackState.playbackSource ===
             'youtube' &&
         (
             isActuallyPlaying ||
@@ -2828,23 +2828,21 @@ function updateTrackPlaybackIndicators(): void {
         );
 
     const isTrendingPlayback =
-        activePlaybackSource ===
+        playbackState.playbackSource ===
             'youtube' &&
         playbackState.playbackListSource ===
             'home-trending' &&
         playbackState.playbackList.length >
             0;
 
-
     const isQueuePlayback =
-        activePlaybackSource ===
+        playbackState.playbackSource ===
             'youtube' &&
         isPlaybackPanelSource(
             playbackState.playbackListSource
         ) &&
         playbackState.playbackList.length >
             0;
-
 
     const trendingEqualizer =
         player.querySelector<HTMLElement>(
@@ -2911,11 +2909,10 @@ function updateTrackPlaybackIndicators(): void {
                 );
 
             const isSearchAllPlayback =
-                activePlaybackSource ===
+                playbackState.playbackSource ===
                     'youtube' &&
                 playbackState.playbackListSource ===
                     'search-all';
-
 
             const isCurrent =
                 isSearchAllPlayback &&
@@ -3094,7 +3091,7 @@ function updateTrackPlaybackIndicators(): void {
     */
 
     const activeContextKey =
-        activePlaybackSource ===
+        playbackState.playbackSource ===
             'youtube' &&
         playbackState.playbackListSource !==
             'local-list'
@@ -3401,7 +3398,10 @@ function updateTrackInfo(): void {
      * YOUTUBE
      * --------------------------------------------------
      */
-    if (activePlaybackSource === 'youtube') {
+        if (
+            playbackState.playbackSource ===
+            'youtube'
+        ) {
 
         setLastMedia(
             'music'
@@ -3734,13 +3734,13 @@ function getPlaybackStatusLabel(
     function updateUI(): void {
 
         const state =
-            activePlaybackSource ===
+            playbackState.playbackSource ===
             'youtube'
                 ? youtubePlayer.getState()
                 : audioPlayer.getState();
 
         const isYouTube =
-            activePlaybackSource ===
+            playbackState.playbackSource ===
             'youtube';
 
         if (
@@ -3839,7 +3839,7 @@ function getPlaybackStatusLabel(
         }
 
         const hasMusicQueue =
-            activePlaybackSource === 'youtube' &&
+            playbackState.playbackSource === 'youtube' &&
             playbackState.playbackList.length > 0 &&
             playbackState.playbackListCurrentIndex >= 0;
 
