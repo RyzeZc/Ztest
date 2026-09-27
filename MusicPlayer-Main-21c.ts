@@ -992,24 +992,7 @@ const {
                     );
                 },
 
-            getCurrentTrack:
-                () =>
-                    playbackState.currentMusicTrack,
-
-            getActivePlaybackSource:
-                () =>
-                    playbackState.playbackSource,
-
-            getCurrentYouTubeVideoId:
-                () =>
-                    playbackState.currentYouTubeVideoId,
-
-            getPlaybackListSource:
-                () =>
-                    playbackState.playbackListSource,
-
             selectMusicTrack,
-
         });
 
 
@@ -2797,6 +2780,12 @@ function updateTrackPlaybackIndicators(): void {
         playbackState.parkedPlaybackContext !==
             null;
 
+    const isLocalPlayback =
+        playbackState.playbackSource ===
+            'youtube' &&
+        playbackState.playbackListSource ===
+            'local-list';            
+
     const state =
         youtubePlayer.getState();
 
@@ -3159,8 +3148,9 @@ function updateTrackPlaybackIndicators(): void {
     );
     
     localLibraryController?.updatePlaybackIndicators(
-        isVisuallyPlaying
-    );    
+        isVisuallyPlaying,
+        isLocalPlayback
+    );
 }
 
     youtubeButton.addEventListener(
