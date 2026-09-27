@@ -843,50 +843,144 @@ const {
     restoreParkedPlaybackContext,
 } = createPlaybackController({
 
-        youtubePlayer:
-            youtubePlayer,
+    youtubePlayer:
+        youtubePlayer,
 
-        audioPlayer:
-            audioPlayer,
+    audioPlayer:
+        audioPlayer,
 
-        getActivePlaybackSource:
-            () =>
-                activePlaybackSource,
+    getActivePlaybackSource:
+        () =>
+            activePlaybackSource,
 
-        setActivePlaybackSource:
-            source => {
+    setActivePlaybackSource:
+        source => {
+            activePlaybackSource =
+                source;
+        },
 
-                activePlaybackSource =
-                    source;
-            },
-
-        updateTrackInfo,
-
-        updateUI,
-
-        updateTrackPlaybackIndicators,
-
-        renderQueuePanel,
-
-        scrollQueueTrackIntoView,
-
-        activatePanelTab,
-    });
+});
 
     const playbackState =
     getState();
 
+    function activatePlaybackPanelForState():
+        void {
+
+        if (
+            playbackState.playbackListSource ===
+            'local-list'
+        ) {
+
+            activatePanelTab(
+                'home'
+            );
+
+            return;
+        }
+
+
+        if (
+            isPlaybackPanelSource(
+                playbackState.playbackListSource
+            )
+        ) {
+
+            activatePanelTab(
+                'playback'
+            );
+
+            return;
+        }
+
+
+        if (
+            playbackState.playbackListSource ===
+            'search-all'
+        ) {
+
+            activatePanelTab(
+                'search'
+            );
+
+            return;
+        }
+
+
+        activatePanelTab(
+            'home'
+        );
+    }
+
     const unsubscribePlayback =
         subscribe(
-            (
-                event
-            ) => {
+            event => {
 
-                console.log(
-                    '[MusicPlayer] Playback event:',
+                switch (
                     event.type
-                );
+                ) {
 
+                    case 'track-selected':
+
+                        updateTrackInfo();
+
+                        updateUI();
+
+                        break;
+
+
+                    case 'queue-changed':
+
+                        renderQueuePanel();
+
+                        if (
+                            event.reason ===
+                            'replaced'
+                        ) {
+                            activatePlaybackPanelForState();
+                        }
+
+                        break;
+
+
+                    case 'queue-index-changed':
+
+                        renderQueuePanel();
+
+                        scrollQueueTrackIntoView(
+                            event.index
+                        );
+
+                        break;
+
+
+                    case 'queue-loading-changed':
+
+                        renderQueuePanel();
+
+                        break;
+
+
+                    case 'playback-intent-changed':
+
+                        updateUI();
+
+                        break;
+
+
+                    case 'repeat-changed':
+
+                        updateUI();
+
+                        break;
+
+
+                    case 'shuffle-changed':
+
+                        updateUI();
+
+                        break;
+                }
             }
         );
 
