@@ -254,6 +254,15 @@ export type PlaybackEvent =
         index:
             number;
     }
+
+    | {
+        type:
+            'queue-loading-changed';
+
+        loading:
+            boolean;
+    }
+    
     | {
         type:
             'playback-intent-changed';
