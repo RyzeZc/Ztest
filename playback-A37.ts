@@ -129,6 +129,8 @@ export function createPlaybackState():
     PlaybackState {
 
     return {
+        playbackSource:
+            'radio',        
         playbackList: [],
         playbackListCurrentIndex: -1,
         playbackListMode: 'context',
@@ -616,14 +618,6 @@ interface PlaybackControllerOptions {
 
     audioPlayer:
         PlaybackAudioAdapter;
-
-    getActivePlaybackSource:
-        () => PlaybackSource;
-
-    setActivePlaybackSource:
-        (
-            source: PlaybackSource
-        ) => void;
 }
 
 
@@ -642,12 +636,14 @@ export function createPlaybackController(
     const {
         youtubePlayer,
         audioPlayer,
-        getActivePlaybackSource,
-        setActivePlaybackSource,
     } = options;
 
     const playbackStateView:
         PlaybackStateView = {
+
+        get playbackSource() {
+            return state.playbackSource;
+        },            
 
         get playbackList() {
             return state.playbackList;
@@ -865,6 +861,32 @@ export function createPlaybackController(
         PlaybackStateView {
 
         return playbackStateView;
+    }
+
+    function setPlaybackSource(
+        source:
+            PlaybackSource
+    ):
+        void {
+
+        if (
+            state.playbackSource ===
+            source
+        ) {
+            return;
+        }
+
+
+        state.playbackSource =
+            source;
+
+
+        emit({
+            type:
+                'source-changed',
+
+            source,
+        });
     }
 
 
@@ -1233,7 +1255,7 @@ export function createPlaybackController(
     ): Promise<void> {
 
         const isSameCurrentTrack =
-            getActivePlaybackSource() ===
+            state.playbackSource ===
                 'youtube' &&
             state.currentMusicTrack?.id ===
                 track.id;
@@ -1347,8 +1369,8 @@ if (
          * REPRODUCIENDO.
          */
         } else if (
-            getActivePlaybackSource() ===
-                'youtube' &&
+            state.playbackSource ===
+                    'youtube' &&
             state.playbackList.length >
                 0 &&
             isPlaybackPanelSource(
@@ -1655,7 +1677,6 @@ if (
             );
         }
 
-
         /*
          * Nueva pista actual
          */
@@ -1663,18 +1684,15 @@ if (
         state.currentMusicTrack =
             track;
 
-
-        setActivePlaybackSource(
+        setPlaybackSource(
             'youtube'
         );
-
 
         state.playbackIntent =
             selectionOptions.autoplay ===
                 false
                 ? 'pause'
                 : 'play';
-
 
         state.currentYouTubeVideoId =
             null;
@@ -1788,16 +1806,14 @@ if (
                 */
                 audioPlayer.pause();
 
-                setActivePlaybackSource(
+                setPlaybackSource(
                     'youtube'
                 );
-
 
                 youtubePlayer.load(
                     videoId,
                     selectionOptions.startSeconds
                 );
-
 
                 if (
                     state.playbackIntent ===
@@ -2500,6 +2516,8 @@ if (
         getState,
 
         subscribe,
+
+        setPlaybackSource,
 
         setPlaybackIntent,
 
